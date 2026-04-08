@@ -14,6 +14,8 @@ import { adminRefundMethodsMiddlewares } from "./refund-methods/middlewares"
 import { adminRequestsMiddlewares } from "./requests/middlewares"
 import { shopifyProductVariantImportMiddlewares } from "./shopify-product-variant-import/middlewares"
 import { iconsMiddlewares } from "./icons/middlewares"
+import { zonesRoutesMiddlewares } from "./zones/middlewares"
+import { controlsRoutesMiddlewares } from "./controls/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -30,4 +32,6 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRefundMethodsMiddlewares,
   ...shopifyProductVariantImportMiddlewares,
   ...iconsMiddlewares,
+  ...zonesRoutesMiddlewares,
+  ...controlsRoutesMiddlewares,
 ]

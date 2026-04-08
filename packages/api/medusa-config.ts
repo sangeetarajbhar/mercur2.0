@@ -85,6 +85,24 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "./src/modules/zone",
+    },
+    {
+      resolve: "./src/modules/instant-promises",
+    },
+    {
+      resolve: "./src/modules/slot-definitions",
+    },
+    {
+      resolve: "./src/modules/slot-overrides",
+    },
+    {
+      resolve: "./src/modules/stock-location-extension",
+    },
+    {
+      resolve: "./src/modules/controls",
+    },
+    {
       resolve: "./src/modules/brand",
     },
     {
