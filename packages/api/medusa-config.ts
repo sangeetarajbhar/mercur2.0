@@ -37,48 +37,25 @@ module.exports = defineConfig({
       } as DashboardModuleOptions
     },
     {
+      resolve: "@medusajs/medusa/notification",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/notification-local",
+            id: "local",
+            options: {
+              channels: ["email"],
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "@mercurjs/core-plugin/modules/custom-fields",
       options: {
         customFields: {
-          ProductCollection: {
-            request_status: {
-              type: "enum",
-              enum: ["draft", "pending", "accepted", "rejected"],
-              defaultValue: "draft",
-            },
-            submitter_id: { type: "string", nullable: true },
-            reviewer_id: { type: "string", nullable: true },
-            reviewer_note: { type: "text", nullable: true },
-          },
-          ProductCategory: {
-            request_status: {
-              type: "enum",
-              enum: ["draft", "pending", "accepted", "rejected"],
-              defaultValue: "draft",
-            },
-            submitter_id: { type: "string", nullable: true },
-            reviewer_id: { type: "string", nullable: true },
-            reviewer_note: { type: "text", nullable: true },
-          },
-          ProductType: {
-            request_status: {
-              type: "enum",
-              enum: ["draft", "pending", "accepted", "rejected"],
-              defaultValue: "draft",
-            },
-            submitter_id: { type: "string", nullable: true },
-            reviewer_id: { type: "string", nullable: true },
-            reviewer_note: { type: "text", nullable: true },
-          },
-          ProductTag: {
-            request_status: {
-              type: "enum",
-              enum: ["draft", "pending", "accepted", "rejected"],
-              defaultValue: "draft",
-            },
-            submitter_id: { type: "string", nullable: true },
-            reviewer_id: { type: "string", nullable: true },
-            reviewer_note: { type: "text", nullable: true },
+          CartLineItem: {
+            seller_id: { type: "string", nullable: true },
           },
         },
       },
