@@ -148,6 +148,15 @@ module.exports = defineConfig({
       resolve: "./src/modules/partner",
     },
     {
+      resolve: "./src/modules/tier",
+    },
+    {
+      resolve: "./src/modules/variant-images-settings",
+    },
+    {
+      resolve: "./src/modules/video-encoding-jobs",
+    },
+    {
       resolve: "./src/modules/payout-transactions",
     },
     {
