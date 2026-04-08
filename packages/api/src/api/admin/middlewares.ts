@@ -9,8 +9,11 @@ import { extraChargeMiddlewares } from "./extra-charge/middlewares"
 import { extraChargeRuleMiddlewares } from "./extra-charge-rules/middlewares"
 import { imageConfigurationMiddlewares } from "./image-configuration/middlewares"
 import { partnerMiddlewares } from "./partner/middlewares"
+import { adminPayoutTransactionsMiddlewares } from "./payout-transactions/middlewares"
 import { adminRefundMethodsMiddlewares } from "./refund-methods/middlewares"
 import { adminRequestsMiddlewares } from "./requests/middlewares"
+import { shopifyProductVariantImportMiddlewares } from "./shopify-product-variant-import/middlewares"
+import { iconsMiddlewares } from "./icons/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -23,5 +26,8 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...extraChargeRuleMiddlewares,
   ...imageConfigurationMiddlewares,
   ...partnerMiddlewares,
+  ...adminPayoutTransactionsMiddlewares,
   ...adminRefundMethodsMiddlewares,
+  ...shopifyProductVariantImportMiddlewares,
+  ...iconsMiddlewares,
 ]
