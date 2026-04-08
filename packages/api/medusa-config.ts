@@ -78,6 +78,48 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/controls",
     },
+    {
+      resolve: "./src/modules/brand",
+    },
+    {
+      resolve: "./src/modules/attribute",
+    },
+    {
+      resolve: "./src/modules/customer-bank-account-verification",
+    },
+    {
+      resolve: "./src/modules/customer-bank-detail",
+    },
+    {
+      resolve: "./src/modules/customer-upi-detail",
+    },
+    {
+      resolve: "./src/modules/extra-charge",
+    },
+    {
+      resolve: "./src/modules/cart-order-extra-charge",
+    },
+    {
+      resolve: "./src/modules/customer-payment-preferences",
+    },
+    {
+      resolve: "./src/modules/customer_refund_methods",
+    },
+    {
+      resolve: "./src/modules/google-location",
+      options: {
+        apiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+      },
+    },
+    {
+      resolve: "./src/modules/image-configuration",
+    },
+    {
+      resolve: "./src/modules/location-hierarchy",
+    },
+    {
+      resolve: "./src/modules/partner",
+    }
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",
