@@ -7,6 +7,7 @@ import { vendorProductTypeRequestsMiddlewares } from "./vendor/requests/product-
 import { vendorProductTagRequestsMiddlewares } from "./vendor/requests/product-tags/middlewares"
 import { storeRequestsMiddlewares } from "./store/requests/middlewares"
 import { zonesRoutesMiddlewares } from "./admin/zones/middlewares"
+import { controlsRoutesMiddlewares } from "./admin/controls/middlewares"
 
 export default defineMiddlewares({
   routes: [
@@ -17,5 +18,6 @@ export default defineMiddlewares({
     ...vendorProductTagRequestsMiddlewares,
     ...storeRequestsMiddlewares,
     ...zonesRoutesMiddlewares,
+    ...controlsRoutesMiddlewares,
   ],
 })

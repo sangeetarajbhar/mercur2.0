@@ -98,6 +98,9 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/stock-location-extension",
     },
+    {
+      resolve: "./src/modules/controls",
+    },
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",

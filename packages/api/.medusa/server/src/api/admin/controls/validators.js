@@ -1,0 +1,45 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AdminUpdateControl = exports.AdminCreateControl = exports.AdminGetControlsParams = void 0;
+const zod_1 = require("zod");
+exports.AdminGetControlsParams = zod_1.z.object({
+    limit: zod_1.z.string().optional().transform((val) => val ? parseInt(val) : undefined),
+    offset: zod_1.z.string().optional().transform((val) => val ? parseInt(val) : undefined),
+    scope: zod_1.z.enum(['zone', 'darkstore']).optional(),
+    q: zod_1.z.string().optional(),
+});
+const ImageMimeType = zod_1.z.enum(["image/png", "image/jpeg", "image/svg+xml"]);
+const MessageIconFile = zod_1.z.object({
+    base64Content: zod_1.z.string().min(1, "base64 content is required"),
+    file: zod_1.z.object({
+        type: ImageMimeType,
+        name: zod_1.z.string().optional(),
+    })
+});
+exports.AdminCreateControl = zod_1.z.object({
+    scope: zod_1.z.enum(["zone", "darkstore"]),
+    scope_id: zod_1.z.string().min(1, "Scope ID is required"),
+    is_active: zod_1.z.boolean().default(true),
+    is_instant_enabled: zod_1.z.boolean().default(true),
+    is_slotted_enabled: zod_1.z.boolean().default(true),
+    delay_minutes: zod_1.z.number().min(0, "Delay minutes must be non-negative").default(0),
+    delay_message: zod_1.z.string().optional(),
+    // either provide a URL/path directly
+    message_icon: zod_1.z.string().url().optional(),
+    // or provide an inline file to upload
+    message_icon_file: MessageIconFile.optional(),
+    reason: zod_1.z.record(zod_1.z.unknown()).nullable().default(null),
+});
+exports.AdminUpdateControl = zod_1.z.object({
+    scope: zod_1.z.enum(["zone", "darkstore"]).optional(),
+    scope_id: zod_1.z.string().min(1, "Scope ID is required").optional(),
+    is_active: zod_1.z.boolean().optional(),
+    is_instant_enabled: zod_1.z.boolean().optional(),
+    is_slotted_enabled: zod_1.z.boolean().optional(),
+    delay_minutes: zod_1.z.number().min(0, "Delay minutes must be non-negative").optional(),
+    delay_message: zod_1.z.string().optional(),
+    message_icon: zod_1.z.string().url().optional(),
+    message_icon_file: MessageIconFile.optional(),
+    reason: zod_1.z.record(zod_1.z.unknown()).nullable().optional(),
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidmFsaWRhdG9ycy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uLy4uLy4uL3NyYy9hcGkvYWRtaW4vY29udHJvbHMvdmFsaWRhdG9ycy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSw2QkFBdUI7QUFFVixRQUFBLHNCQUFzQixHQUFHLE9BQUMsQ0FBQyxNQUFNLENBQUM7SUFDN0MsS0FBSyxFQUFFLE9BQUMsQ0FBQyxNQUFNLEVBQUUsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxTQUFTLENBQUMsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsUUFBUSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxTQUFTLENBQUM7SUFDaEYsTUFBTSxFQUFFLE9BQUMsQ0FBQyxNQUFNLEVBQUUsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxTQUFTLENBQUMsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsUUFBUSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxTQUFTLENBQUM7SUFDakYsS0FBSyxFQUFFLE9BQUMsQ0FBQyxJQUFJLENBQUMsQ0FBQyxNQUFNLEVBQUUsV0FBVyxDQUFDLENBQUMsQ0FBQyxRQUFRLEVBQUU7SUFDL0MsQ0FBQyxFQUFFLE9BQUMsQ0FBQyxNQUFNLEVBQUUsQ0FBQyxRQUFRLEVBQUU7Q0FDekIsQ0FBQyxDQUFBO0FBRUYsTUFBTSxhQUFhLEdBQUcsT0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLFdBQVcsRUFBRSxZQUFZLEVBQUUsZUFBZSxDQUFDLENBQUMsQ0FBQTtBQUUxRSxNQUFNLGVBQWUsR0FBRyxPQUFDLENBQUMsTUFBTSxDQUFDO0lBQy9CLGFBQWEsRUFBRSxPQUFDLENBQUMsTUFBTSxFQUFFLENBQUMsR0FBRyxDQUFDLENBQUMsRUFBRSw0QkFBNEIsQ0FBQztJQUM5RCxJQUFJLEVBQUUsT0FBQyxDQUFDLE1BQU0sQ0FBQztRQUNi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

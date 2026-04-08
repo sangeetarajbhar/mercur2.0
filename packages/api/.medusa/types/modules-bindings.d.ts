@@ -35,6 +35,7 @@ import type InstantPromises from '../../src/modules/instant-promises'
 import type SlotDefinitions from '../../src/modules/slot-definitions'
 import type SlotOverrides from '../../src/modules/slot-overrides'
 import type StockLocationExtension from '../../src/modules/stock-location-extension'
+import type Controls from '../../src/modules/controls'
 
 declare module '@medusajs/framework/types' {
   interface ModuleImplementations {
@@ -74,6 +75,7 @@ declare module '@medusajs/framework/types' {
     'instant_promises': InstanceType<(typeof InstantPromises)['service']>,
     'slot_definitions': InstanceType<(typeof SlotDefinitions)['service']>,
     'slot_overrides': InstanceType<(typeof SlotOverrides)['service']>,
-    'stock_location_extension': InstanceType<(typeof StockLocationExtension)['service']>
+    'stock_location_extension': InstanceType<(typeof StockLocationExtension)['service']>,
+    'controls': InstanceType<(typeof Controls)['service']>
   }
 }
