@@ -70,7 +70,7 @@ export const addTierPromotionToCartWorkflow = createWorkflow(
       }
 
       const appliedPromotionCodes =
-        data.carts[0].promotions?.map((promo: { code?: string }) => promo.code) || []
+        ((data.carts[0].promotions as any[]) || []).map((promo: any) => promo?.code)
 
       const promotionCode = data.validationResult.promotion_code
       return (
