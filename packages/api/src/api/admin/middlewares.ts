@@ -11,6 +11,8 @@ import { imageConfigurationMiddlewares } from "./image-configuration/middlewares
 import { partnerMiddlewares } from "./partner/middlewares"
 import { adminRefundMethodsMiddlewares } from "./refund-methods/middlewares"
 import { adminRequestsMiddlewares } from "./requests/middlewares"
+import { zonesRoutesMiddlewares } from "./zones/middlewares"
+import { controlsRoutesMiddlewares } from "./controls/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -24,4 +26,6 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...imageConfigurationMiddlewares,
   ...partnerMiddlewares,
   ...adminRefundMethodsMiddlewares,
+  ...zonesRoutesMiddlewares,
+  ...controlsRoutesMiddlewares,
 ]
