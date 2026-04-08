@@ -36,6 +36,19 @@ import type SlotDefinitions from '../../src/modules/slot-definitions'
 import type SlotOverrides from '../../src/modules/slot-overrides'
 import type StockLocationExtension from '../../src/modules/stock-location-extension'
 import type Controls from '../../src/modules/controls'
+import type Brand from '../../src/modules/brand'
+import type Attribute from '../../src/modules/attribute'
+import type CustomerBankAccountVerification from '../../src/modules/customer-bank-account-verification'
+import type CustomerBankDetail from '../../src/modules/customer-bank-detail'
+import type CustomerUpiDetail from '../../src/modules/customer-upi-detail'
+import type ExtraCharge from '../../src/modules/extra-charge'
+import type CartOrderExtraCharge from '../../src/modules/cart-order-extra-charge'
+import type CustomerPaymentPreferences from '../../src/modules/customer-payment-preferences'
+import type CustomerRefundMethods from '../../src/modules/customer_refund_methods'
+import type GoogleLocation from '../../src/modules/google-location'
+import type ImageConfiguration from '../../src/modules/image-configuration'
+import type LocationHierarchy from '../../src/modules/location-hierarchy'
+import type Partner from '../../src/modules/partner'
 
 declare module '@medusajs/framework/types' {
   interface ModuleImplementations {
@@ -76,6 +89,19 @@ declare module '@medusajs/framework/types' {
     'slot_definitions': InstanceType<(typeof SlotDefinitions)['service']>,
     'slot_overrides': InstanceType<(typeof SlotOverrides)['service']>,
     'stock_location_extension': InstanceType<(typeof StockLocationExtension)['service']>,
-    'controls': InstanceType<(typeof Controls)['service']>
+    'controls': InstanceType<(typeof Controls)['service']>,
+    'brand': InstanceType<(typeof Brand)['service']>,
+    'attribute': InstanceType<(typeof Attribute)['service']>,
+    'customer_bank_account_verification': InstanceType<(typeof CustomerBankAccountVerification)['service']>,
+    'customer_bank_detail': InstanceType<(typeof CustomerBankDetail)['service']>,
+    'customer_upi_detail': InstanceType<(typeof CustomerUpiDetail)['service']>,
+    'extra_charge': InstanceType<(typeof ExtraCharge)['service']>,
+    'cart_order_extra_charge': InstanceType<(typeof CartOrderExtraCharge)['service']>,
+    'customer_payment_preferences': InstanceType<(typeof CustomerPaymentPreferences)['service']>,
+    'customer_refund_methods': InstanceType<(typeof CustomerRefundMethods)['service']>,
+    'google_location': InstanceType<(typeof GoogleLocation)['service']>,
+    'image_configuration': InstanceType<(typeof ImageConfiguration)['service']>,
+    'location_hierarchy': InstanceType<(typeof LocationHierarchy)['service']>,
+    'partner': InstanceType<(typeof Partner)['service']>
   }
 }

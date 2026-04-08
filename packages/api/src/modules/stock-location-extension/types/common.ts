@@ -50,7 +50,7 @@ export enum DocumentType {
   FSSAI = 3,
 }
 
-export const DocumentMaxFileSize = 3145728
+export const DocumentMaxFileSize = 3145728 // 3MB in bytes
 
 export enum IsDelay {
   TRUE = 1,
