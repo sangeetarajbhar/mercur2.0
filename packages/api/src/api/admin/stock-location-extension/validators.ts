@@ -14,6 +14,7 @@ export const AdminGetStockLocationExtensionsParams = z.object({
     .string()
     .optional()
     .transform((val) => (val ? val.split(",").map((v) => v.trim()).filter(Boolean) : undefined)),
+  // Keep as string to match DB column type (text). Do not transform to number.
   location_type: z.string().optional(),
 })
 

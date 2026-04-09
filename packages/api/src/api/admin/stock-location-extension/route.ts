@@ -1,12 +1,15 @@
-import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework"
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import type { Knex } from "knex"
 
 const EXTENSION_TABLE = "stock_location_extension"
 const LINK_TABLE = "stock_location_stock_location_extension"
 const LOCATION_TABLE = "stock_location"
 
-/** Raw Knex instance from Medusa's PG_CONNECTION (no direct `knex` package dep). */
-function buildBaseQuery(knex: any, locationType?: string, searchQ?: string) {
+function buildBaseQuery(knex: Knex, locationType?: string, searchQ?: string) {
   let query = knex(`${EXTENSION_TABLE} as s0`)
     .innerJoin(`${LINK_TABLE} as link`, "link.stock_location_extension_id", "s0.id")
     .innerJoin(`${LOCATION_TABLE} as sl`, "sl.id", "link.stock_location_id")
@@ -23,8 +26,11 @@ function buildBaseQuery(knex: any, locationType?: string, searchQ?: string) {
   return query
 }
 
-export async function GET(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
-  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+export const GET = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+) => {
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
   const filterableFields = (req.filterableFields || {}) as Record<string, unknown>
   const q = typeof filterableFields.q === "string" ? filterableFields.q.trim() : ""
   const skipParam = req.queryConfig?.pagination?.skip ?? filterableFields.offset

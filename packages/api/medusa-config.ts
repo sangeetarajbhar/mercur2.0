@@ -57,6 +57,30 @@ module.exports = defineConfig({
           CartLineItem: {
             seller_id: { type: "string", nullable: true },
           },
+          ProductTag: {
+            request_status: { type: "string", nullable: true },
+            submitter_id: { type: "string", nullable: true },
+            reviewer_id: { type: "string", nullable: true },
+            reviewer_note: { type: "string", nullable: true },
+          },
+          ProductType: {
+            request_status: { type: "string", nullable: true },
+            submitter_id: { type: "string", nullable: true },
+            reviewer_id: { type: "string", nullable: true },
+            reviewer_note: { type: "string", nullable: true },
+          },
+          ProductCategory: {
+            request_status: { type: "string", nullable: true },
+            submitter_id: { type: "string", nullable: true },
+            reviewer_id: { type: "string", nullable: true },
+            reviewer_note: { type: "string", nullable: true },
+          },
+          ProductCollection: {
+            request_status: { type: "string", nullable: true },
+            submitter_id: { type: "string", nullable: true },
+            reviewer_id: { type: "string", nullable: true },
+            reviewer_note: { type: "string", nullable: true },
+          },
         },
       },
     },
@@ -83,6 +107,9 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/attribute",
+    },
+    {
+      resolve: "./src/modules/system-config",
     },
     {
       resolve: "./src/modules/customer-bank-account-verification",
@@ -112,6 +139,18 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "./src/modules/stock-location-extension",
+    },
+    {
+      resolve: "./src/modules/stock-location-section",
+    },
+    {
+      resolve: "./src/modules/stock-location-document",
+    },
+    {
+      resolve: "./src/modules/stock-location-contact",
+    },
+    {
       resolve: "./src/modules/image-configuration",
     },
     {
@@ -119,7 +158,66 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/partner",
-    }
+    },
+    {
+      resolve: "./src/modules/payout-transactions",
+    },
+    {
+      resolve: "./src/modules/shopify_product_variant",
+    },
+    {
+      resolve: "./src/modules/return-refund-type-link",
+    },
+    // Providers must be registered on the core payment/auth modules — standalone
+    // ModuleProvider entries have no `.service` and break defineConfig (Medusa 2.13+).
+    // {
+    //   resolve: "@medusajs/medusa/payment",
+    //   // dependencies: [Modules.PAYMENT, ContainerRegistrationKeys.LOGGER],
+    //   options: {
+    //     providers: [
+    //       {
+    //         resolve: "./src/modules/payment-razorpay",
+    //         id: "razorpay",
+    //         options: {
+    //           key_id:
+    //             process?.env?.RAZORPAY_TEST_KEY_ID ??
+    //             process?.env?.RAZORPAY_ID,
+    //           key_secret:
+    //             process?.env?.RAZORPAY_TEST_KEY_SECRET ??
+    //             process?.env?.RAZORPAY_SECRET,
+    //           razorpay_account:
+    //             process?.env?.RAZORPAY_TEST_ACCOUNT ??
+    //             process?.env?.RAZORPAY_ACCOUNT,
+    //           automatic_expiry_period: 30 /* any value between 12minuts and 30 days expressed in minutes*/,
+    //           manual_expiry_period: 20,
+    //           refund_speed: "optimum",
+    //           webhook_secret:
+    //             process?.env?.RAZORPAY_TEST_WEBHOOK_SECRET ??
+    //             process?.env?.RAZORPAY_WEBHOOK_SECRET,
+    //           auto_capture: true // Automatic payment capture enabled
+    //         }
+    //       },
+    //     ],
+    //   },
+    // },
+    {
+      resolve: "@medusajs/medusa/auth",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/auth-emailpass",
+            id: "emailpass",
+          },
+          {
+            resolve: "./src/modules/phone-auth",
+            id: "phone-auth",
+            options: {
+              jwtSecret: process.env.JWT_SECRET || "supersecret",
+            },
+          },
+        ],
+      },
+    },
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",

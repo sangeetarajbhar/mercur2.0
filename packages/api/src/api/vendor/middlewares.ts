@@ -7,6 +7,7 @@ import { vendorProductCollectionRequestsMiddlewares } from "./requests/product-c
 import { vendorProductCategoryRequestsMiddlewares } from "./requests/product-categories/middlewares"
 import { vendorProductTypeRequestsMiddlewares } from "./requests/product-types/middlewares"
 import { vendorProductTagRequestsMiddlewares } from "./requests/product-tags/middlewares"
+import { vendorStockLocationsMiddlewares } from "./stock-locations/middlewares"
 
 export const vendorMiddlewares: MiddlewareRoute[] = [
   ...vendorProductCollectionRequestsMiddlewares,
@@ -16,4 +17,5 @@ export const vendorMiddlewares: MiddlewareRoute[] = [
   ...vendorAttributesMiddlewares,
   ...vendorBrandsMiddlewares,
   ...vendorPartnerMiddlewares,
+  ...vendorStockLocationsMiddlewares
 ]
