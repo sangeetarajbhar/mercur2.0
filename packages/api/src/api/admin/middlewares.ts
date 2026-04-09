@@ -13,6 +13,7 @@ import { adminRefundMethodsMiddlewares } from "./refund-methods/middlewares"
 import { adminRequestsMiddlewares } from "./requests/middlewares"
 import { zonesRoutesMiddlewares } from "./zones/middlewares"
 import { controlsRoutesMiddlewares } from "./controls/middlewares"
+import { stockLocationExtensionRoutesMiddlewares } from "./stock-location-extension/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -28,4 +29,5 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRefundMethodsMiddlewares,
   ...zonesRoutesMiddlewares,
   ...controlsRoutesMiddlewares,
+  ...stockLocationExtensionRoutesMiddlewares,
 ]
