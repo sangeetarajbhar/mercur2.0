@@ -49,19 +49,10 @@ export const checkResourceOwnershipByResourceId = <Body>({
   ) => {
     const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
-    const {
-      data: [member]
-    } = await query.graph(
-      {
-        entity: 'member',
-        fields: ['seller.id'],
-        filters: {
-          id: req.auth_context.actor_id
-        }
-      },
-      { throwIfKeyNotFound: true }
-    )
+    // if (req.auth_context.actor_type === "seller") {
 
+    // }
+    const seller_id = req.auth_context.actor_id;
     const id = resourceId(req)
 
     const {
@@ -83,7 +74,7 @@ export const checkResourceOwnershipByResourceId = <Body>({
     }
 
     const ownsAny = resources.some(
-      (resource) => resource.seller_id === member.seller.id
+      (resource) => resource.seller_id === seller_id
     )
 
     if (!ownsAny) {

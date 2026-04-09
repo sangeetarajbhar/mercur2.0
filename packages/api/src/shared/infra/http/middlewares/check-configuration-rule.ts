@@ -7,22 +7,22 @@ import {
 } from '@medusajs/framework'
 import { MedusaError } from '@medusajs/framework/utils'
 
-import { CONFIGURATION_MODULE } from '@mercurjs/configuration'
-import { ConfigurationModuleService } from '@mercurjs/configuration'
+// import { CONFIGURATION_MODULE } from '@mercurjs/configuration'
+// import { ConfigurationModuleService } from '@mercurjs/configuration'
 
-import { ConfigurationRuleType } from '../../../../admin/routes/configuration/types'
+// import { ConfigurationRuleType } from '../../../../admin/routes/configuration/types'
 
-export function getRuleValue(
-  container: MedusaContainer,
-  rule_type: ConfigurationRuleType
-) {
-  const configurationService =
-    container.resolve<ConfigurationModuleService>(CONFIGURATION_MODULE)
-  return configurationService.isRuleEnabled(rule_type)
-}
+// export function getRuleValue(
+//   container: MedusaContainer,
+//   rule_type: ConfigurationRuleType
+// ) {
+//   const configurationService =
+//     container.resolve<ConfigurationModuleService>(CONFIGURATION_MODULE)
+//   return configurationService.isRuleEnabled(rule_type)
+// }
 
 export function checkConfigurationRule(
-  rule_type: ConfigurationRuleType,
+  rule_type: any,
   expected_value: boolean
 ) {
   return async (
@@ -30,13 +30,13 @@ export function checkConfigurationRule(
     res: MedusaResponse,
     next: NextFunction
   ) => {
-    if ((await getRuleValue(req.scope, rule_type)) !== expected_value) {
-      res.status(403).json({
-        message: `This feature is disabled!`,
-        type: MedusaError.Types.NOT_FOUND
-      })
-      return
-    }
+    // if ((await getRuleValue(req.scope, rule_type)) !== expected_value) {
+    //   res.status(403).json({
+    //     message: `This feature is disabled!`,
+    //     type: MedusaError.Types.NOT_FOUND
+    //   })
+    //   return
+    // }
 
     return next()
   }

@@ -1,7 +1,7 @@
 import { MedusaContainer } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
+import { SellerDTO } from '@mercurjs/types'
 
-import { SellerDTO } from '@mercurjs/framework'
 
 export const fetchSellerByAuthActorId = async (
   authActorId: string,
@@ -15,11 +15,9 @@ export const fetchSellerByAuthActorId = async (
   } = await query.graph({
     entity: 'seller',
     filters: {
-      members: {
         id: authActorId
-      }
     },
     fields
   })
-  return seller
+  return seller as SellerDTO
 }
