@@ -54,9 +54,9 @@ module.exports = defineConfig({
       resolve: "@mercurjs/core-plugin/modules/custom-fields",
       options: {
         customFields: {
-          CartLineItem: {
-            seller_id: { type: "string", nullable: true },
-          },
+          // CartLineItem: {
+          //   seller_id: { type: "string", nullable: true },
+          // },
           ProductTag: {
             request_status: { type: "string", nullable: true },
             submitter_id: { type: "string", nullable: true },
