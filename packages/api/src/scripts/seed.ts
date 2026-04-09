@@ -31,6 +31,7 @@ import {
 } from "@medusajs/medusa/core-flows";
 import { ApiKey } from "../../.medusa/types/query-entry-points";
 import { MercurModules } from "@mercurjs/types";
+import createMoengageAlertStaging from "./monengage-seed";
 
 const updateStoreCurrencies = createWorkflow(
   "update-store-currencies",
@@ -1212,4 +1213,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
   }
 
   logger.info("Finished seeding seller data.");
+
+  logger.info('Creating Moengage Alert...')
+
+  logger.info('Creating Moengage Alert...')
+  await createMoengageAlertStaging(container)
 }

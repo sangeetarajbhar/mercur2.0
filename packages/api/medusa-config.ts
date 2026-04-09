@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
+import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { DashboardModuleOptions } from '@mercurjs/types'
 import path from 'path'
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
@@ -37,6 +37,9 @@ module.exports = defineConfig({
       } as DashboardModuleOptions
     },
     {
+      resolve: "./src/modules/moengage_alert",
+    },
+    {
       resolve: "@medusajs/medusa/notification",
       options: {
         providers: [
@@ -46,6 +49,16 @@ module.exports = defineConfig({
             options: {
               channels: ["email"],
             },
+          },
+          {
+            resolve: './src/modules/moengage',
+            id: 'moengage',
+            options: {
+              channels: ['sms_moengage', 'whatsapp_moengage', 'email_moengage', 'push_moengage'],
+              workspace_id: process.env.MOENGAGE_WORKSPACE_ID,
+              inform_api_key: process.env.MOENGAGE_INFORM_API_KEY,
+              base_url: process.env.MOENGAGE_BASE_URL,
+            }
           },
         ],
       },
@@ -209,22 +222,28 @@ module.exports = defineConfig({
     //   },
     // },
     {
-      resolve: "@medusajs/medusa/auth",
+      resolve: '@medusajs/medusa/auth',
+      dependencies: [
+        Modules.CACHE,
+        ContainerRegistrationKeys.LOGGER,
+        Modules.EVENT_BUS
+      ],
       options: {
         providers: [
+          // default provider
           {
-            resolve: "@medusajs/medusa/auth-emailpass",
-            id: "emailpass",
+            resolve: '@medusajs/medusa/auth-emailpass',
+            id: 'emailpass'
           },
           {
-            resolve: "./src/modules/phone-auth",
-            id: "phone-auth",
+            resolve: './src/modules/phone-auth',
+            id: 'phone-auth',
             options: {
-              jwtSecret: process.env.JWT_SECRET || "supersecret",
-            },
-          },
-        ],
-      },
+              jwtSecret: process.env.PHONE_AUTH_JWT_SECRET || 'supersecret'
+            }
+          }
+        ]
+      }
     },
   ],
   plugins: [{
