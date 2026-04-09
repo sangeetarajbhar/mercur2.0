@@ -4,7 +4,8 @@ import {
 } from '@medusajs/framework/workflows-sdk'
 import { refetchCartWithExtraChargesStep } from '../steps/refetch-cart-with-extra-charges'
 import { MedusaContainer } from '@medusajs/framework'
-import { defaultRetentionTime } from '../../../shared/utils/constants'
+// import { defaultRetentionTime } from '../../../shared/utils/constants'
+const defaultRetentionTime = 60 * 60
 
 /**
  * This workflow refreshes a cart and includes extra charges in the response.

@@ -172,13 +172,31 @@ module.exports = defineConfig({
       resolve: "./src/modules/wishlist",
     },
     {
+      resolve: "./src/modules/pricing-extend",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/payout-transactions",
     },
     {
       resolve: "./src/modules/shopify_product_variant",
     },
     {
+      resolve: "./src/modules/promotion_extension",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/return-refund-type-link",
+    },
+    {
+      resolve: "./src/modules/refund-category",
+      definition: {
+        isQueryable: true,
+      },
     },
     // Providers must be registered on the core payment/auth modules — standalone
     // ModuleProvider entries have no `.service` and break defineConfig (Medusa 2.13+).

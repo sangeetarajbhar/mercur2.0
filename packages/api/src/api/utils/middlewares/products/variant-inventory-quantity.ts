@@ -6,7 +6,7 @@ import {
 } from "@medusajs/framework/utils"
 import { MedusaRequest, MedusaStoreRequest } from "@medusajs/framework/http"
 import { transformAndValidateSalesChannelIds } from "./filter-by-valid-sales-channels"
-import sellerStockLocation from '../../../../links/seller-stock-location'
+import sellerStockLocation from '@mercurjs/core-plugin/links/stock-location-seller-link'
 
 export const wrapVariantsWithTotalInventoryQuantity = async (
   req: MedusaRequest,

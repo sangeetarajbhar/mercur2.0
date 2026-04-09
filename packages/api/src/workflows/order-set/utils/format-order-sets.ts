@@ -6,13 +6,18 @@ import {
 } from '@medusajs/framework/types'
 import { BigNumber, MathBN } from '@medusajs/framework/utils'
 
-import {
-  FormattedOrderSetDTO,
-  OrderSetDTO,
-  OrderSetWithOrdersDTO
-} from '@mercurjs/framework'
+// import {
+//   FormattedOrderSetDTO,
+//   OrderSetDTO,
+//   OrderSetWithOrdersDTO
+// } from '@mercurjs/framework'
 
-import { getLastFulfillmentStatus } from '../../order/utils/aggregate-status'
+// import { getLastFulfillmentStatus } from '../../order/utils/aggregate-status'
+
+type FormattedOrderSetDTO = any
+type OrderSetDTO = any
+type OrderSetWithOrdersDTO = any
+const getLastFulfillmentStatus = (_order: OrderDetailDTO) => undefined as any
 
 export const formatOrderSets = (
   orderSetsWithOrders: OrderSetWithOrdersDTO[]

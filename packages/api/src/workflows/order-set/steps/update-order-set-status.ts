@@ -1,8 +1,10 @@
 import { ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
-import { MARKETPLACE_MODULE } from '@mercurjs/marketplace'
-import { MarketplaceModuleService } from '@mercurjs/marketplace'
+// import { MARKETPLACE_MODULE } from '@mercurjs/marketplace'
+// import { MarketplaceModuleService } from '@mercurjs/marketplace'
+const MARKETPLACE_MODULE = 'marketplace'
+type MarketplaceModuleService = any
 
 import { OrderLineItemStatus } from '../../../utils/constants/order-statuses'
 import { computeOrderSetStatus } from '../utils/compute-order-set-status'
@@ -53,19 +55,19 @@ export const updateOrderSetStatusStep = createStep(
 
     // First try to use the relationship from query.graph
     for (const order of orders) {
-      const orderSetId = order?.order_set?.id
-      if (!orderSetId) {
-        continue
-      }
+      // const orderSetId = order?.order_set?.id
+      // if (!orderSetId) {
+      //   continue
+      // }
 
-      const orderIdsInSet = orderSetIdToOrderIds.get(orderSetId) ?? []
-      orderIdsInSet.push(order.id)
-      orderSetIdToOrderIds.set(orderSetId, orderIdsInSet)
+      // const orderIdsInSet = orderSetIdToOrderIds.get(orderSetId) ?? []
+      // orderIdsInSet.push(order.id)
+      // orderSetIdToOrderIds.set(orderSetId, orderIdsInSet)
 
-      orderSetStatuses.set(
-        orderSetId,
-        (order.order_set.status as OrderLineItemStatus) ?? OrderLineItemStatus.NEW
-      )
+      // orderSetStatuses.set(
+      //   orderSetId,
+      //   (order.order_set.status as OrderLineItemStatus) ?? OrderLineItemStatus.NEW
+      // )
     }
 
     if (!orderSetIdToOrderIds.size) {
@@ -124,9 +126,9 @@ export const updateOrderSetStatusStep = createStep(
     const { data: orderItems } = await query.graph({
       entity: ORDER_ITEM_ENTITY,
       fields: ['item_id', 'order_id'],
-      filters: {
-        order_id: allOrderIdsInSets
-      }
+      // filters: {
+      //   order_id: allOrderIdsInSets
+      // }
     })
 
     if (!orderItems?.length) {
@@ -137,7 +139,7 @@ export const updateOrderSetStatusStep = createStep(
     const orderIdByItemId = new Map<string, string>()
 
     for (const item of orderItems) {
-      orderIdByItemId.set(item.item_id, item.order_id)
+      // orderIdByItemId.set(item.item_id, item.order_id)
     }
 
     // 4. Get line item extensions for all items

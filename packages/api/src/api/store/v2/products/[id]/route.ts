@@ -16,7 +16,7 @@ import {
   addWishlistFlagToProducts,
 } from "../../../products/helpers"
 import { HttpTypes } from "@medusajs/framework/types"
-import sellerStockLocation from "../../../../../links/seller-stock-location"
+import sellerStockLocationLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
 import stockLocationExtensionLink from "../../../../../links/stock-location-stock-location-extension"
 import { LocationType } from '../../../../../modules/stock-location-extension/types/common'
 import { calculateProductPromotions } from '../../../product-list/utils/calculate-product-promotions'
@@ -140,7 +140,7 @@ export const GET = async (
     // then check seller_id is linked to any of the omni store locations, where omni store locations are child locations of dark store location
     // if (!checkSeller.data.length) {
       const {data : sellerLocationLinks} = await query.graph({
-        entity: sellerStockLocation.entryPoint,
+        entity: sellerStockLocationLink.entryPoint,
         fields: ['seller_id', 'stock_location_id'],
         filters: {
           seller_id: seller_id,
@@ -279,7 +279,7 @@ export const GET = async (
     if (selectedSellerId) {
       // Step 4: Default seller-location relationship
       const {data : defaultSellerLocationLinks} = await query.graph({
-        entity: sellerStockLocation.entryPoint,
+        entity: sellerStockLocationLink.entryPoint,
         fields: ['seller_id', 'stock_location_id'],
         filters: {
           seller_id: selectedSellerId,

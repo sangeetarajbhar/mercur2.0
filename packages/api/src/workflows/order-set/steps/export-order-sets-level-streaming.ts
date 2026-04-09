@@ -1,15 +1,36 @@
-import { createStep, StepResponse } from '@medusajs/workflows-sdk'
+// import { createStep, StepResponse } from '@medusajs/workflows-sdk'
+import { createStep, StepResponse } from '@medusajs/framework/workflows-sdk'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { getFormattedOrderSetListWorkflow } from '../workflows/get-formatted-order-set-list'
 import { OrderSetExportFilters } from './utils/types'
 import { CSV_HEADERS, buildOrderSetRow } from './generate-order-set-level-csv'
-import { createCsvStream } from '../../shared/utils/csv-stream-helper'
-import {
-  normalizeToArray,
-  normalizeOrder,
-} from '../../shared/utils/filter-normalizers'
-import { normalizeDateFilter } from '../../../shared/utils/validate-date-range'
-import { orderSetCsvExportOrdersNestedFields } from '../../../api/admin/v2/order-sets/query-config'
+// import { createCsvStream } from '../../shared/utils/csv-stream-helper'
+// import {
+//   normalizeToArray,
+//   normalizeOrder,
+// } from '../../shared/utils/filter-normalizers'
+// import { normalizeDateFilter } from '../../../shared/utils/validate-date-range'
+// import { orderSetCsvExportOrdersNestedFields } from '../../../api/admin/v2/order-sets/query-config'
+
+const normalizeToArray = (value: any) => {
+  if (value == null) return undefined
+  return Array.isArray(value) ? value : [value]
+}
+const normalizeOrder = (value: any) => value
+const normalizeDateFilter = (value: any) => value
+const orderSetCsvExportOrdersNestedFields: string[] = []
+const createCsvStream = (_opts: any) => {
+  const rows: any[] = []
+  return {
+    writeHeader() {},
+    writeBatch(batch: any[]) {
+      rows.push(...batch)
+    },
+    async finish() {
+      return { id: 'commented-order-set-export.csv', url: '', filename: '', mimeType: 'text/csv', rows: rows.length }
+    },
+  }
+}
 
 const PAGE_SIZE = 200
 

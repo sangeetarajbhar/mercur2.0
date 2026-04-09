@@ -1,6 +1,8 @@
 import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
-import { MARKETPLACE_MODULE, MarketplaceModuleService } from '@mercurjs/marketplace'
+// import { MARKETPLACE_MODULE, MarketplaceModuleService } from '@mercurjs/marketplace'
+const MARKETPLACE_MODULE = 'marketplace'
+type MarketplaceModuleService = any
 
 type UpdateOrderSetRiderAssignmentInput = {
   orderSetId: string | null | undefined

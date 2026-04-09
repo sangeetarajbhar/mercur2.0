@@ -539,7 +539,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
               // Skip items without valid variants
               if (!variant) {
                 console.warn(
-                  `Variant not found for item ${item.id} with variant_id ${item.variant_id}`
+                  // `Variant not found for item ${item.id} with variant_id ${item.variant_id}`
+                  `Variant not found for item ${(item as any)?.id} with variant_id ${(item as any)?.variant_id}`
                 )
                 return null
               }
@@ -553,9 +554,9 @@ export const refreshCartItemsWorkflow = createWorkflow(
               // Get seller ID for this item
               // const sellerId = item.metadata?.seller_id || item.seller?.id || cartItemSellerMapping.get(item.variant_id)
               const sellerId =
-                item.metadata?.seller_id ||
-                item.seller?.id ||
-                cartItemSellerMapping?.[item.variant_id]
+                (item as any)?.metadata?.seller_id ||
+                (item as any)?.seller?.id ||
+                cartItemSellerMapping?.[(item as any)?.variant_id as any]
 
               // Get seller-specific pricing if available
               let sellerPrice: any = null
@@ -569,13 +570,17 @@ export const refreshCartItemsWorkflow = createWorkflow(
 
               const input: PrepareLineItemDataInput = {
                 item: {
-                  ...item,
-                  seller: sellerId ? { id: sellerId } : undefined
+                  // ...item,
+                  ...(item as any),
+                  // seller: sellerId ? { id: sellerId } : undefined
+                  seller: sellerId ? { id: sellerId as string } : undefined
                 },
                 variant: variant,
                 cartId: cart.id,
-                unitPrice: item.unit_price,
-                isTaxInclusive: item.is_tax_inclusive
+                // unitPrice: item.unit_price,
+                unitPrice: (item as any)?.unit_price,
+                // isTaxInclusive: item.is_tax_inclusive
+                isTaxInclusive: (item as any)?.is_tax_inclusive
               }
 
               // if (!item.is_custom_price) {
@@ -584,7 +589,7 @@ export const refreshCartItemsWorkflow = createWorkflow(
               //     variant.calculated_price?.is_calculated_price_tax_inclusive
               // }
 
-              if (!item.is_custom_price) {
+              if (!(item as any)?.is_custom_price) {
                 // Use seller-specific price if available, otherwise fall back to default
                 if (
                   sellerPrice &&
@@ -604,19 +609,22 @@ export const refreshCartItemsWorkflow = createWorkflow(
               const preparedItem = prepareLineItemData(input)
 
               return {
-                selector: { id: item.id },
+                // selector: { id: item.id },
+                selector: { id: (item as any)?.id },
                 data: preparedItem
               }
             })
             .filter(Boolean)
 
-          return items
+          // return items
+          return items as any
         }
       )
 
       updateLineItemsStep({
         id: cart.id,
-        items: lineItems
+        // items: lineItems
+        items: lineItems as any
       })
     })
 

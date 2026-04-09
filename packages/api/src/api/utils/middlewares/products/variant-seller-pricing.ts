@@ -5,14 +5,14 @@ import {
   Modules,
   PriceListType
 } from "@medusajs/framework/utils"
-import sellerPriceList from "../../../../links/seller-price-list"
-import sellerProduct from "../../../../links/seller-product"
+import sellerPriceList from '@mercurjs/core-plugin/links/price-list-seller-link'
+import sellerProduct from '@mercurjs/core-plugin/links/product-seller-link'
 import { Context, MedusaContainer } from "@medusajs/framework/types"
-import { groupBy, deduplicate } from "@medusajs/utils"
-import { isPresent } from "@medusajs/utils"
-import { MathBN } from "@medusajs/utils"
+import { groupBy, deduplicate } from "@medusajs/framework/utils"
+import { isPresent } from "@medusajs/framework/utils"
+import { MathBN } from "@medusajs/framework/utils"
 import priceExtendLink from "../../../../links/price-extend-price"
-import sellerStockLocation from "../../../../links/seller-stock-location"
+import sellerStockLocation from '@mercurjs/core-plugin/links/stock-location-seller-link'
 
 /**
  * Get sellers that are mapped to both the specified locations AND products (intersection)

@@ -1,5 +1,5 @@
 export * from './check-ownership'
-export * from './check-configuration-rule'
+// export * from './check-configuration-rule'
 export * from './filter-by-seller-id'
 export * from './apply-reference-filter'
 export * from './apply-request-status-filter'

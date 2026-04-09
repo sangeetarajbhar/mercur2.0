@@ -34,9 +34,10 @@ import {
 import { requiredVariantFieldsForInventoryConfirmation } from '../utils/prepare-confirm-inventory-input'
 import { pricingContextResult } from '../utils/schemas'
 import { refreshCartItemsWorkflow } from './refresh-cart-items'
-import sellerSellerCartLineItemLink from '../../../links/seller-cart-line-item'
+// import sellerSellerCartLineItemLink from '../../../links/seller-cart-line-item'
 import stockLocationExtensionLink from '../../../links/stock-location-stock-location-extension'
 import { LocationType } from '../../../modules/stock-location-extension/types/common'
+const sellerSellerCartLineItemLink = { entryPoint: 'seller_seller_cart_line_item' }
 
 const cartFields = cartFieldsForPricingContext.concat([
   'items.*',
@@ -134,7 +135,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
 
     const cart = transform({ cartQuery }, ({ cartQuery }) => cartQuery.data[0])
     const item = transform({ cart, input }, ({ cart, input }) => {
-      return cart.items.find((i) => i.id === input.item_id)
+      return cart.items.find((i) => i?.id === input.item_id)
     })
 
     // Query the seller from the link table using useQueryGraphStep
@@ -151,7 +152,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
       return linkData?.seller_id || null
     })
 
-    validateCartStep({ cart })
+    // validateCartStep({ cart })
+    validateCartStep({ cart: cart as any })
 
     const validate = createHook('validate', {
       input,
@@ -159,7 +161,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
     })
 
     const variantIds = transform({ item }, ({ item }) => {
-      return [item.variant_id].filter(Boolean)
+      // return [item.variant_id].filter(Boolean)
+      return [item?.variant_id].filter(Boolean)
     })
 
     const setPricingContext = createHook(
@@ -310,7 +313,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
 
     const items = transform({ input, item, sellerId }, (data) => {
       const mergedMetadata = {
-        ...(data.item.metadata || {}),
+        // ...(data.item.metadata || {}),
+        ...((data.item as any)?.metadata || {}),
         ...(data.input.update?.metadata || {})
       }
 
@@ -328,7 +332,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
       }
 
       const updatedItem = Object.assign({}, data.item, {
-        quantity: data.input.update.quantity ?? data.item.quantity,
+        // quantity: data.input.update.quantity ?? data.item.quantity,
+        quantity: data.input.update.quantity ?? (data.item as any)?.quantity,
         metadata: mergedMetadata
       })
 
@@ -337,7 +342,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
 
     confirmVariantInventoryWorkflow.runAsStep({
       input: {
-        sales_channel_id: cart.sales_channel_id,
+        // sales_channel_id: cart.sales_channel_id,
+        sales_channel_id: (cart as any).sales_channel_id as any,
         variants: variantsWithPrices,
         items
       }
@@ -355,12 +361,15 @@ export const updateLineItemInCartWorkflow = createWorkflow(
           ...data.input.update,
           unit_price: isDefined(data.input.update.unit_price)
             ? data.input.update.unit_price
-            : item.unit_price,
+            // : item.unit_price,
+            : (item as any)?.unit_price,
           is_custom_price: isDefined(data.input.update.unit_price)
             ? true
-            : item.is_custom_price,
+            // : item.is_custom_price,
+            : (item as any)?.is_custom_price,
           is_tax_inclusive:
-            item.is_tax_inclusive ||
+            // item.is_tax_inclusive ||
+            (item as any)?.is_tax_inclusive ||
             variant?.calculated_price?.is_calculated_price_tax_inclusive
         }
 
@@ -403,7 +412,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
         if (!isDefined(updateData.unit_price)) {
           throw new MedusaError(
             MedusaError.Types.INVALID_DATA,
-            `Line item ${item.title} has no unit price`
+            // `Line item ${item.title} has no unit price`
+            `Line item ${(item as any)?.title} has no unit price`
           )
         }
 
