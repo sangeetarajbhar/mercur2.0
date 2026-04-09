@@ -10,7 +10,6 @@ export enum PaymentMethod {
   PREPAID = 'PREPAID',
 }
 export const COD_PAYMENT_PROVIDER = 'pp_system_default';
-export const RAZORPAY_PAYMENT_PROVIDER = 'pp_razorpay_razorpay';
 
 export const PAYMENT_METHOD_COD = 'COD';
 export const PAYMENT_METHOD_PREPAID = 'PREPAID';
@@ -42,7 +41,3 @@ export const PAYMENT_PROVIDER_LABELS_DESCRIPTION: Record<string, string> = {
   [RAZORPAY_PAYMENT_PROVIDER]: '(UPI, Credit Card, Wallets, etc)'
 }
 
-export enum RAZORPAY_PAYOUT_MODE {
-  UPI = 'UPI',
-  IMPS = 'IMPS',
-}

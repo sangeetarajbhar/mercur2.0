@@ -3,9 +3,9 @@ import { NextFunction } from 'express'
 import { AuthenticatedMedusaRequest } from '@medusajs/framework'
 import {
   ContainerRegistrationKeys,
-  MedusaError,
-  MedusaResponse
+  MedusaError
 } from '@medusajs/framework/utils'
+import { MedusaResponse } from '@medusajs/framework/http'
 
 type CheckResourceOwnershipByResourceIdOptions<Body> = {
   entryPoint: string

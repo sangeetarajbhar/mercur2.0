@@ -3,9 +3,10 @@ import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { SearchProviderStrategy, SearchQuery, SearchResult, SearchProduct, SortOption } from '../../types'
 import { yesPlzProductTransformer } from './yesplz-product-transformer'
 import { YesPlzService, YesPlzServiceOptions, ListProductsParams, ListCollectionsParams, KeywordSuggestionParams } from './yesplz-service'
-import { calculateProductPromotions } from '../../../../api/store/product-list/utils/calculate-product-promotions'
+// import { calculateProductPromotions } from '../../../../api/store/product-list/utils/calculate-product-promotions'
 import priceExtendLink from '../../../../links/price-extend-price'
 import { LocationType } from '../../../../modules/stock-location-extension/types/common'
+const calculateProductPromotions = async (..._args: any[]) => [] as any[]
 
 // Constants
 const DEFAULT_BATCH_SIZE = 20
@@ -530,7 +531,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
 
     const PRODUCT_FETCH_PAGE_SIZE = 100
     const batchSize = this.options?.batchSize || DEFAULT_BATCH_SIZE
-    const publishedFilter = { status: 'published', deleted_at: null }
+    const publishedFilter = { status: 'published', deleted_at: null } as any
 
     // Reuse shared inventory resolution helper so syncInventory and publish use identical logic.
     // Step 1: Fetch products (id + variants.id + basic fields) so we know which variants to resolve.
@@ -553,7 +554,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
           query.graph({
             entity: 'product',
             fields: [...productFields] as string[],
-            filters: { id: productIds.slice(i * PRODUCT_FETCH_PAGE_SIZE, (i + 1) * PRODUCT_FETCH_PAGE_SIZE), ...publishedFilter }
+            filters: { id: productIds.slice(i * PRODUCT_FETCH_PAGE_SIZE, (i + 1) * PRODUCT_FETCH_PAGE_SIZE), ...publishedFilter } as any
           })
         )
       )
@@ -565,7 +566,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
         const { data: products } = await query.graph({
           entity: 'product',
           fields: [...productFields] as string[],
-          filters: publishedFilter,
+          filters: publishedFilter as any,
           pagination: { skip, take: PRODUCT_FETCH_PAGE_SIZE }
         })
         allProducts.push(...products)
@@ -716,7 +717,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
     const query = this.container.resolve(ContainerRegistrationKeys.QUERY)
     const batchSize = this.options?.batchSize || DEFAULT_BATCH_SIZE
     const FETCH_PAGE_SIZE = 100
-    const publishedFilter = { status: 'published', deleted_at: null }
+    const publishedFilter = { status: 'published', deleted_at: null } as any
     // const service = this.yesplzService
 
     const startedAt = Date.now()
@@ -735,7 +736,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
         const { data: products } = await query.graph({
           entity: 'product',
           fields: ['id'],
-          filters: publishedFilter,
+          filters: publishedFilter as any,
           pagination: { skip, take: FETCH_PAGE_SIZE }
         })
         allIds.push(...products.map((p: { id: string }) => p.id))

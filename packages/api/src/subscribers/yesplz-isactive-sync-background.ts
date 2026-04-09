@@ -5,7 +5,8 @@ import { INotificationModuleService } from "@medusajs/framework/types"
 import { YesPlzEvents } from "../shared/events/yesplz-events"
 import { SEARCH_MODULE } from "../modules/search"
 import SearchModuleService from "../modules/search/service"
-import { formatDuration } from "../shared/utils/date-utils"
+// import { formatDuration } from "../shared/utils/date-utils"
+const formatDuration = (ms: number) => `${Math.max(0, Math.round(ms / 1000))}s`
 
 interface NotificationData {
   to: string

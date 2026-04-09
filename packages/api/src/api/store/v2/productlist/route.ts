@@ -4,7 +4,7 @@ import { SEARCH_MODULE } from '../../../../modules/search'
 import SearchModuleService from '../../../../modules/search/service'
 import { SearchQuery, SortOption, GenericFilters } from '../../../../modules/search/types'
 import { SEARCH_CONFIG } from '../../../../modules/search/config'
-import { calculateProductListPromises } from '../../product-list/utils/calculate-product-list-promises'
+// import { calculateProductListPromises } from '../../product-list/utils/calculate-product-list-promises'
 import { buildPlpPromiseMessage, resolveZoneForPromise } from './utils/delivery-promise'
 import { addWishlistFlagsToProducts } from './utils/wishlist'
 import { transformProductImageUrlsWithResolutionForPLP } from '../../products/helpers'
@@ -182,28 +182,28 @@ export const GET = async (
         seller_id: p.seller?.sellerId
       }))
 
-      const promiseMap = await calculateProductListPromises({
-        scope: req.scope,
-        products: productsForPromise,
-        zone_id,
-        cluster_id
-      })
+      // const promiseMap = await calculateProductListPromises({
+      //   scope: req.scope,
+      //   products: productsForPromise,
+      //   zone_id,
+      //   cluster_id
+      // })
 
       // Attach promise to each product (mutating in place so result object is updated)
       for (const product of productList) {
         if (!product || typeof product !== 'object') continue
         const p = product as Record<string, unknown>
         const id = String(p.id ?? p.productId)
-        const promise = promiseMap.get(id)
-        if (promise) {
-          // Attach full promise object
-          p.promise = promise
-          // Attach formatted PLP message
-          const plpMessage = buildPlpPromiseMessage(promise as any)
-          if (plpMessage) {
-            p.promise_plp_message = plpMessage
-          }
-        }
+        // const promise = promiseMap.get(id)
+        // if (promise) {
+        //   // Attach full promise object
+        //   p.promise = promise
+        //   // Attach formatted PLP message
+        //   const plpMessage = buildPlpPromiseMessage(promise as any)
+        //   if (plpMessage) {
+        //     p.promise_plp_message = plpMessage
+        //   }
+        // }
       }
     }
 

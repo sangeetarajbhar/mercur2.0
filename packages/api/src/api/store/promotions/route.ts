@@ -33,7 +33,7 @@ export const GET = async (
   res: MedusaResponse
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
-  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+  const knex = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
   const customer_id = req.query.customer_id as string | undefined
   const cart_id = req.query.cart_id as string | undefined
 
