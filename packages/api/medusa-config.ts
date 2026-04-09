@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig } from '@medusajs/framework/utils'
+import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import { DashboardModuleOptions } from '@mercurjs/types'
 import path from 'path'
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
@@ -113,6 +113,14 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/customer-bank-account-verification",
+    },
+    {
+      resolve: "./src/modules/cache",
+      key: Modules.CACHE, // This replaces the default cache module
+      options: {
+        redisUrl: process.env.REDIS_URL,
+        ttl: 86400 // default TTL in seconds (24 hours)
+      },
     },
     {
       resolve: "./src/modules/customer-bank-detail",
