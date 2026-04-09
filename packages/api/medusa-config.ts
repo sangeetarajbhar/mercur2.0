@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig } from '@medusajs/framework/utils'
+import { loadEnv, defineConfig, ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils'
 import { DashboardModuleOptions } from '@mercurjs/types'
 import path from 'path'
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
@@ -19,7 +19,17 @@ module.exports = defineConfig({
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
   },
+  featureFlags: {
+    rbac: true,
+    seller_registration: true,
+  },
   modules: [
+    {
+      resolve: "@medusajs/medusa/rbac",
+      definition: {
+        isQueryable: true,
+      },
+    },
     {
       resolve: '@mercurjs/core-plugin/modules/admin-ui',
       options: {
@@ -172,31 +182,31 @@ module.exports = defineConfig({
     // ModuleProvider entries have no `.service` and break defineConfig (Medusa 2.13+).
     // {
     //   resolve: "@medusajs/medusa/payment",
-    //   // dependencies: [Modules.PAYMENT, ContainerRegistrationKeys.LOGGER],
+    //   dependencies: [Modules.PAYMENT, ContainerRegistrationKeys.LOGGER],
     //   options: {
     //     providers: [
-    //       {
-    //         resolve: "./src/modules/payment-razorpay",
-    //         id: "razorpay",
-    //         options: {
-    //           key_id:
-    //             process?.env?.RAZORPAY_TEST_KEY_ID ??
-    //             process?.env?.RAZORPAY_ID,
-    //           key_secret:
-    //             process?.env?.RAZORPAY_TEST_KEY_SECRET ??
-    //             process?.env?.RAZORPAY_SECRET,
-    //           razorpay_account:
-    //             process?.env?.RAZORPAY_TEST_ACCOUNT ??
-    //             process?.env?.RAZORPAY_ACCOUNT,
-    //           automatic_expiry_period: 30 /* any value between 12minuts and 30 days expressed in minutes*/,
-    //           manual_expiry_period: 20,
-    //           refund_speed: "optimum",
-    //           webhook_secret:
-    //             process?.env?.RAZORPAY_TEST_WEBHOOK_SECRET ??
-    //             process?.env?.RAZORPAY_WEBHOOK_SECRET,
-    //           auto_capture: true // Automatic payment capture enabled
-    //         }
-    //       },
+        //   {
+        //     resolve: "./src/modules/payment-razorpay",
+        //     id: "razorpay",
+        //     options: {
+        //       key_id:
+        //         process?.env?.RAZORPAY_TEST_KEY_ID ??
+        //         process?.env?.RAZORPAY_ID,
+        //       key_secret:
+        //         process?.env?.RAZORPAY_TEST_KEY_SECRET ??
+        //         process?.env?.RAZORPAY_SECRET,
+        //       razorpay_account:
+        //         process?.env?.RAZORPAY_TEST_ACCOUNT ??
+        //         process?.env?.RAZORPAY_ACCOUNT,
+        //       automatic_expiry_period: 30 /* any value between 12minuts and 30 days expressed in minutes*/,
+        //       manual_expiry_period: 20,
+        //       refund_speed: "optimum",
+        //       webhook_secret:
+        //         process?.env?.RAZORPAY_TEST_WEBHOOK_SECRET ??
+        //         process?.env?.RAZORPAY_WEBHOOK_SECRET,
+        //       auto_capture: true // Automatic payment capture enabled
+        //     }
+        //   },
     //     ],
     //   },
     // },

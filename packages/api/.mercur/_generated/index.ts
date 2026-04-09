@@ -142,7 +142,7 @@ export type Routes = {
             $id: typeof import("@medusajs/medusa/api/admin/invites/[id]/route") & {
                 resend: typeof import("@medusajs/medusa/api/admin/invites/[id]/resend/route");
             };
-            accept: typeof import("@medusajs/medusa/api/admin/invites/accept/route");
+            accept: typeof import("@mercurjs/core-plugin/api/admin/invites/accept/route");
         };
         locales: typeof import("@medusajs/medusa/api/admin/locales/route") & {
             $code: typeof import("@medusajs/medusa/api/admin/locales/[code]/route");
@@ -352,8 +352,8 @@ export type Routes = {
         shippingProfiles: typeof import("@medusajs/medusa/api/admin/shipping-profiles/route") & {
             $id: typeof import("@medusajs/medusa/api/admin/shipping-profiles/[id]/route");
         };
-        stockLocations: typeof import("@medusajs/medusa/api/admin/stock-locations/route") & {
-            $id: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/route") & {
+        stockLocations: typeof import("../../src/api/admin/stock-locations/route") & {
+            $id: typeof import("../../src/api/admin/stock-locations/[id]/route") & {
                 fulfillmentProviders: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/fulfillment-providers/route");
                 fulfillmentSets: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/fulfillment-sets/route");
                 salesChannels: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/sales-channels/route");
@@ -426,6 +426,7 @@ export type Routes = {
             $id: typeof import("@mercurjs/core-plugin/api/admin/payouts/[id]/route");
         };
         sellers: typeof import("@mercurjs/core-plugin/api/admin/sellers/route") & {
+            invite: typeof import("@mercurjs/core-plugin/api/admin/sellers/invite/route");
             $id: typeof import("@mercurjs/core-plugin/api/admin/sellers/[id]/route");
         };
         attributes: typeof import("../../src/api/admin/attributes/route") & {
@@ -470,6 +471,9 @@ export type Routes = {
                 tree: typeof import("../../src/api/admin/location-hierarchy/[id]/tree/route");
             };
         };
+        locations: typeof import("../../src/api/admin/locations/route") & {
+            $id: typeof import("../../src/api/admin/locations/[id]/route");
+        };
         partner: typeof import("../../src/api/admin/partner/route") & {
             $id: typeof import("../../src/api/admin/partner/[id]/route");
         };
@@ -486,6 +490,7 @@ export type Routes = {
             };
         };
         shopifyProductVariantImport: typeof import("../../src/api/admin/shopify-product-variant-import/route");
+        stockLocationExtension: typeof import("../../src/api/admin/stock-location-extension/route");
         zones: typeof import("../../src/api/admin/zones/route") & {
             $id: typeof import("../../src/api/admin/zones/[id]/route") & {
                 instantPromises: typeof import("../../src/api/admin/zones/[id]/instant-promises/route") & {
@@ -770,11 +775,11 @@ export type Routes = {
         shippingProfiles: typeof import("@mercurjs/core-plugin/api/vendor/shipping-profiles/route") & {
             $id: typeof import("@mercurjs/core-plugin/api/vendor/shipping-profiles/[id]/route");
         };
-        stockLocations: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/route") & {
-            $id: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/route") & {
-                fulfillmentProviders: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/fulfillment-providers/route");
-                fulfillmentSets: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/fulfillment-sets/route");
-                salesChannels: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/sales-channels/route");
+        stockLocations: typeof import("../../src/api/vendor/stock-locations/route") & {
+            $id: typeof import("../../src/api/vendor/stock-locations/[id]/route") & {
+                fulfillmentProviders: typeof import("../../src/api/vendor/stock-locations/[id]/fulfillment-providers/route");
+                fulfillmentSets: typeof import("../../src/api/vendor/stock-locations/[id]/fulfillment-sets/route");
+                salesChannels: typeof import("../../src/api/vendor/stock-locations/[id]/sales-channels/route");
             };
         };
         uploads: typeof import("@mercurjs/core-plugin/api/vendor/uploads/route");
