@@ -85,6 +85,7 @@
         "@mikro-orm/knex": "6.4.16",
         "@mikro-orm/migrations": "6.4.16",
         "axios": "^1.14.0",
+        "cors": "^2.8.6",
         "csv-parse": "^5.5.6",
         "express": "^5.2.1",
         "http-proxy-middleware": "^3.0.3",
