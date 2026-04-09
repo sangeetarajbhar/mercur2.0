@@ -157,6 +157,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/video-encoding-jobs",
     },
     {
+      resolve: "./src/modules/wishlist",
+    },
+    {
       resolve: "./src/modules/payout-transactions",
     },
     {

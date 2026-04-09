@@ -38,3 +38,5 @@ export interface VendorRequestResponse {
 export type VendorRequestListResponse = PaginatedResponse<{
   requests: RequestEntityResponse[]
 }>
+
+export * from "./wishlist"
