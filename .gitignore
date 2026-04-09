@@ -42,3 +42,5 @@ yarn-error.log*
 
 #PHPSTORM-IDE
 .idea/
+
+.vscode
