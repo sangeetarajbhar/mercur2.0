@@ -1,11 +1,10 @@
 import { NextFunction } from 'express'
 
-import { AuthenticatedMedusaRequest } from '@medusajs/framework'
 import {
   ContainerRegistrationKeys,
   MedusaError
 } from '@medusajs/framework/utils'
-import { MedusaResponse } from '@medusajs/framework/http'
+import { AuthenticatedMedusaRequest, MedusaResponse } from '@medusajs/framework'
 
 type CheckResourceOwnershipByResourceIdOptions<Body> = {
   entryPoint: string
