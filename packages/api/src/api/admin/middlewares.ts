@@ -18,6 +18,9 @@ import { zonesRoutesMiddlewares } from "./zones/middlewares"
 import { controlsRoutesMiddlewares } from "./controls/middlewares"
 import { tiersRoutesMiddlewares } from "./tiers/middlewares"
 import { videoEncodingJobsMiddlewares } from "./video-encoding-jobs/middlewares"
+import { stockLocationRoutesMiddlewares } from "./locations/middlewares"
+import { stockLocationExtensionRoutesMiddlewares } from "./stock-location-extension/middlewares"
+import { adminStockLocationRoutesMiddlewares } from "./stock-locations/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -38,4 +41,7 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...controlsRoutesMiddlewares,
   ...tiersRoutesMiddlewares,
   ...videoEncodingJobsMiddlewares,
+  ...stockLocationRoutesMiddlewares,  
+  ...stockLocationExtensionRoutesMiddlewares,
+  ...adminStockLocationRoutesMiddlewares,
 ]
