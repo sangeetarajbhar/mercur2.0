@@ -29,10 +29,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1026.0",
     "@aws-sdk/lib-storage": "^3.1026.0",
-    "@aws-sdk/client-s3": "^3.1026.0",
-    "@aws-sdk/lib-storage": "^3.1026.0",
     "@medusajs/admin-sdk": "^2.13.4",
-    "@medusajs/admin-shared": "^2.13.4",
     "@medusajs/admin-shared": "^2.13.4",
     "@medusajs/cli": "^2.13.4",
     "@medusajs/dashboard": "^2.13.4",
