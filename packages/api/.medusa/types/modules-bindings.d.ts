@@ -46,6 +46,9 @@ import type CartOrderExtraCharge from '../../src/modules/cart-order-extra-charge
 import type CustomerPaymentPreferences from '../../src/modules/customer-payment-preferences'
 import type CustomerRefundMethods from '../../src/modules/customer_refund_methods'
 import type GoogleLocation from '../../src/modules/google-location'
+import type StockLocationSection from '../../src/modules/stock-location-section'
+import type StockLocationDocument from '../../src/modules/stock-location-document'
+import type StockLocationContact from '../../src/modules/stock-location-contact'
 import type ImageConfiguration from '../../src/modules/image-configuration'
 import type LocationHierarchy from '../../src/modules/location-hierarchy'
 import type Partner from '../../src/modules/partner'
@@ -100,6 +103,9 @@ declare module '@medusajs/framework/types' {
     'customer_payment_preferences': InstanceType<(typeof CustomerPaymentPreferences)['service']>,
     'customer_refund_methods': InstanceType<(typeof CustomerRefundMethods)['service']>,
     'google_location': InstanceType<(typeof GoogleLocation)['service']>,
+    'stock_location_section': InstanceType<(typeof StockLocationSection)['service']>,
+    'stock_location_document': InstanceType<(typeof StockLocationDocument)['service']>,
+    'stock_location_contact': InstanceType<(typeof StockLocationContact)['service']>,
     'image_configuration': InstanceType<(typeof ImageConfiguration)['service']>,
     'location_hierarchy': InstanceType<(typeof LocationHierarchy)['service']>,
     'partner': InstanceType<(typeof Partner)['service']>

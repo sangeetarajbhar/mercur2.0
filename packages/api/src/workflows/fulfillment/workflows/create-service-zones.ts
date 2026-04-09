@@ -244,12 +244,13 @@ const linkSellerWithServiceZonesAndShippingOptionsStep = createStep(
     if (shippingOption?.id) {
       try {
         await remoteLink.create({
-          [SELLER_MODULE]: {
-            seller_id: seller_id
-          },
           [Modules.FULFILLMENT]: {
             shipping_option_id: shippingOption.id
+          },
+          [SELLER_MODULE]: {
+            seller_id: seller_id
           }
+          
         })
         shippingOptionLinked = true
       } catch (error: any) {

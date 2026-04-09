@@ -112,6 +112,18 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "./src/modules/stock-location-extension",
+    },
+    {
+      resolve: "./src/modules/stock-location-section",
+    },
+    {
+      resolve: "./src/modules/stock-location-document",
+    },
+    {
+      resolve: "./src/modules/stock-location-contact",
+    },
+    {
       resolve: "./src/modules/image-configuration",
     },
     {

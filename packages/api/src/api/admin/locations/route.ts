@@ -68,11 +68,11 @@ export const POST = async (
   const stock_location_id = result[0].id
 
   await remoteLink.create({
-    [SELLER_MODULE]: {
-      seller_id: additional_data?.seller_id
-    },
     [Modules.STOCK_LOCATION]: {
       stock_location_id: stock_location_id
+    },
+    [SELLER_MODULE]: {
+      seller_id: additional_data?.seller_id
     }
   })
 

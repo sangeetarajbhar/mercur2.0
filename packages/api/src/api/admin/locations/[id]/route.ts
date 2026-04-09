@@ -78,7 +78,7 @@ export const POST = async (
     .where({ id: additional_data?.seller_id })
     .first()
 
-  const sellerStockLocationLink = await knex("seller_seller_stock_location_stock_location")
+  const sellerStockLocationLink = await knex("stock_location_stock_location_seller_seller")
     .select("seller_id", "stock_location_id")
     .where({ stock_location_id: stock_location_id })
     .whereNull('deleted_at')
