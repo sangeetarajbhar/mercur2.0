@@ -5,6 +5,7 @@ import { storeBrandMiddlewares } from "./brands/middlewares"
 import { storeRefundMethodsMiddlewares } from "./refund-methods/middlewares"
 import { storeRequestsMiddlewares } from "./requests/middlewares"
 import { storeWishlistMiddlewares } from "./wishlist/middlewares"
+import { storeDeliveryPromiseMiddlewares } from "./delivery-promise/middlewares"
 
 export const storeMiddlewares: MiddlewareRoute[] = [
   ...storeRequestsMiddlewares,
@@ -12,4 +13,5 @@ export const storeMiddlewares: MiddlewareRoute[] = [
   ...storeBrandMiddlewares,
   ...storeRefundMethodsMiddlewares,
   ...storeWishlistMiddlewares,
+  ...storeDeliveryPromiseMiddlewares,
 ]

@@ -193,6 +193,12 @@ module.exports = defineConfig({
       resolve: "./src/modules/wishlist",
     },
     {
+      resolve: './src/modules/search',
+      options: {
+        enabled: true
+      }
+    },
+    {
       resolve: "./src/modules/pricing-extend",
       definition: {
         isQueryable: true,
