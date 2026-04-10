@@ -36,7 +36,7 @@ export const updateTierWorkflow = createWorkflow(
 
     // 2. Validate promotion if provided
     when({ input }, (data) => !!data.input.promo_id).then(() => {
-      return useQueryGraphStep({
+       useQueryGraphStep({
         entity: "promotion",
         fields: ["id"],
         filters: {
