@@ -67,9 +67,9 @@ module.exports = defineConfig({
       resolve: "@mercurjs/core-plugin/modules/custom-fields",
       options: {
         customFields: {
-          CartLineItem: {
-            seller_id: { type: "string", nullable: true },
-          },
+          // CartLineItem: {
+          //   seller_id: { type: "string", nullable: true },
+          // },
           ProductTag: {
             request_status: { type: "string", nullable: true },
             submitter_id: { type: "string", nullable: true },
@@ -181,13 +181,43 @@ module.exports = defineConfig({
       resolve: "./src/modules/partner",
     },
     {
+      resolve: "./src/modules/tier",
+    },
+    {
+      resolve: "./src/modules/variant-images-settings",
+    },
+    {
+      resolve: "./src/modules/video-encoding-jobs",
+    },
+    {
+      resolve: "./src/modules/wishlist",
+    },
+    {
+      resolve: "./src/modules/pricing-extend",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/payout-transactions",
     },
     {
       resolve: "./src/modules/shopify_product_variant",
     },
     {
+      resolve: "./src/modules/promotion_extension",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/return-refund-type-link",
+    },
+    {
+      resolve: "./src/modules/refund-category",
+      definition: {
+        isQueryable: true,
+      },
     },
     // Providers must be registered on the core payment/auth modules — standalone
     // ModuleProvider entries have no `.service` and break defineConfig (Medusa 2.13+).

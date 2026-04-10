@@ -16,6 +16,8 @@ import { shopifyProductVariantImportMiddlewares } from "./shopify-product-varian
 import { iconsMiddlewares } from "./icons/middlewares"
 import { zonesRoutesMiddlewares } from "./zones/middlewares"
 import { controlsRoutesMiddlewares } from "./controls/middlewares"
+import { tiersRoutesMiddlewares } from "./tiers/middlewares"
+import { videoEncodingJobsMiddlewares } from "./video-encoding-jobs/middlewares"
 import { stockLocationRoutesMiddlewares } from "./locations/middlewares"
 import { stockLocationExtensionRoutesMiddlewares } from "./stock-location-extension/middlewares"
 import { adminStockLocationRoutesMiddlewares } from "./stock-locations/middlewares"
@@ -37,6 +39,8 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...iconsMiddlewares,
   ...zonesRoutesMiddlewares,
   ...controlsRoutesMiddlewares,
+  ...tiersRoutesMiddlewares,
+  ...videoEncodingJobsMiddlewares,
   ...stockLocationRoutesMiddlewares,  
   ...stockLocationExtensionRoutesMiddlewares,
   ...adminStockLocationRoutesMiddlewares,

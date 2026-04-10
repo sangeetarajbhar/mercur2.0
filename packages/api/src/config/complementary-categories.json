@@ -1,0 +1,214 @@
+{
+  "complementary_category_mappings": [
+    {
+      "gender": "Men",
+      "category_type": "Jeans",
+      "complementing_categories": ["Shirts", "Tshirt"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Jeans",
+      "complementing_categories": ["Tops", "Tshirt"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Bra",
+      "complementing_categories": ["Panties", "Camisoles"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Panties",
+      "complementing_categories": ["Bra"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Sarees",
+      "complementing_categories": ["Earrings","Necklace Set","Pendant Chain","Necklaces"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Shirt",
+      "complementing_categories": ["Trouser", "Jeans"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Pyjama Sets",
+      "complementing_categories": ["Pyjama Sets", "Lingerie"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Dresses",
+      "complementing_categories": ["Earrings","Necklace Set","Pendant Chain","Necklaces"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Tops",
+      "complementing_categories": ["Jeans","Boob tape","Nipple cover"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Shirt",
+      "complementing_categories": ["Trouser","watches","handbags"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Trouser",
+      "complementing_categories": ["Shirt","belts"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Trouser",
+      "complementing_categories": ["Tops","Shirt","belts","handbags"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Kurtas",
+      "complementing_categories": ["Earrings","Necklace Set","Pendant Chain","Necklaces","legging","dupatta"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Kurta Sets",
+      "complementing_categories": ["Earrings", "Necklace Set", "Pendant Chain", "Necklaces"," juttis / mojaris"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Co-ords Set",
+      "complementing_categories":  ["Earrings", "Necklace Set", "Pendant Chain", "Necklaces"," juttis / mojaris"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Vest",
+      "complementing_categories": ["Breifs", "Trunks", "Boxers"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Trunks",
+      "complementing_categories": ["Vest"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Briefs",
+      "complementing_categories": ["Vest"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Tshirt",
+      "complementing_categories": ["Jeans","Cargos", "Shorts", "Trouser"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Tshirt",
+      "complementing_categories": ["Jeans", "Shorts", "Cargos"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Activewear",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Trackpants",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Polo Tshirt",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Tshirt",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Pants",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Activewear",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Trackpants",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Polo Tshirt",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Tshirt",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Pants",
+      "complementing_categories": ["Trackpants", "Polo Tshirt", "Tshirt", "Shorts", "Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Kurtas",
+      "complementing_categories": ["Dupatta","Nehru Jacket","Pyjama & Dhoti"]
+    },
+    {
+      "gender": "Girls",
+      "category_type": "Kids Dress",
+      "complementing_categories": ["Dresses"]
+    },
+    {
+      "gender": "Girls",
+      "category_type": "Dresses",
+      "complementing_categories": ["Dresses"]
+    },
+    {
+      "gender": "Girls",
+      "category_type": "Girls Top",
+      "complementing_categories": ["Jeans"]
+    },
+    {
+      "gender": "Boys",
+      "category_type": "Boys T-Shirt",
+      "complementing_categories": ["Jeans & Pants"]
+    },
+    {
+      "gender": "Men",
+      "category_type": "Men - Kurta",
+      "complementing_categories": ["Dupatta", "Coats & Pyjamas"]
+    },
+    {
+      "gender": "Girls",
+      "category_type": "Lehenga Cholis",
+      "complementing_categories": ["Earrings", "Necklace Set", "Pendant Chain", "Necklaces"]
+    },
+    {
+      "gender": "Girls",
+      "category_type": "Dresses",
+      "complementing_categories": ["Dresses"]
+    },
+    {
+      "gender": "Girls",
+      "category_type": "Kurta Sets",
+      "complementing_categories": ["Earrings", "Necklace Set", "Pendant Chain", "Necklaces"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Lehenga Choli",
+      "complementing_categories": ["Potli bags"]
+    },
+    {
+      "gender": "Women",
+      "category_type": "Co-ords Set",
+      "complementing_categories": ["Sling bags"]
+    },
+    {
+      "gender": "Unisex",
+      "category_type": "Zeel - brand",
+      "complementing_categories": ["Zeel products of M/W/K"]
+    }
+  ]
+}
