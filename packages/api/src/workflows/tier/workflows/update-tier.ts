@@ -45,7 +45,7 @@ export const updateTierWorkflow = createWorkflow(
         options: {
           throwIfKeyNotFound: true,
         },
-      })
+      }) as any
     })
 
     // 3. Update the tier

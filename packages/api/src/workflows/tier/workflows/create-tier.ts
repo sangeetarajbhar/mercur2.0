@@ -30,7 +30,7 @@ export const createTierWorkflow = createWorkflow(
         options: {
           throwIfKeyNotFound: true,
         },
-      })
+      }) as any
     })
 
     // Create the tier
