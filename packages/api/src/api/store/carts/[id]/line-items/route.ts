@@ -2,7 +2,7 @@ import { MedusaRequest } from '@medusajs/framework'
 import { MedusaResponse } from '@medusajs/framework/http'
 import { addToCartWorkflow } from "../../../../../../src/workflows/cart/workflows/add-to-cart"
 import { StoreAddCartLineItemWithMetadataType } from "../../validators"
-import { HttpTypes } from "@medusajs/types"
+import { HttpTypes } from "@medusajs/framework/types"
 import { defaultGetCartFields } from "../../query-config"
 // import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { validateCart, getCompletedCartErrorResponse } from '../../utils/validate-cart'

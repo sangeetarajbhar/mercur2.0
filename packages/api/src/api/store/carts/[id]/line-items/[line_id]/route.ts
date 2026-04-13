@@ -17,24 +17,25 @@ export const POST = async (
   req: MedusaRequest<StoreUpdateCartLineItemWithMetadataType>,
   res: MedusaResponse<HttpTypes.StoreCartResponse & { crossLinks: PdpCrossLink[] }>
 ) => {
-  // TODO: Move this to the workflow when the query to line item is fixed
+  const { remoteQueryConfig } = await prepareListQuery(
+    {},
+    {
+      defaults: [
+        "id",
+        "region_id",
+        "customer_id",
+        "sales_channel_id",
+        "currency_code",
+        "completed_at",
+        "*items",
+      ],
+    }
+  )
+
   const cart = await refetchCart(
     req.params.id,
     req.scope,
-    prepareListQuery(
-      {},
-      {
-        defaults: [
-          "id",
-          "region_id",
-          "customer_id",
-          "sales_channel_id",
-          "currency_code",
-          "completed_at",
-          "*items",
-        ],
-      }
-    ).remoteQueryConfig.fields
+    remoteQueryConfig.fields
   )
 
   // Prevent updating items in completed cart
@@ -57,7 +58,7 @@ export const POST = async (
 
   try {
     // Run updateLineItemInCartWorkflow which now includes extra charges via refreshCartItemsWorkflow
-    const { result: updatedCart } = await updateLineItemInCartWorkflow(req.scope).run({
+    const { result: updatedCart }: any = await updateLineItemInCartWorkflow(req.scope).run({
       input: {
         cart_id: req.params.id,
         item_id: item.id,

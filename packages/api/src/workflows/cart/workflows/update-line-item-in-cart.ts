@@ -132,9 +132,9 @@ export const updateLineItemInCartWorkflow = createWorkflow(
         options: { throwIfKeyNotFound: true }
       }).config({ name: 'get-cart' })
 
-    const cart = transform({ cartQuery }, ({ cartQuery }) => cartQuery.data[0])
+    const cart = transform({ cartQuery: cartQuery as any }, ({ cartQuery}) => cartQuery.data[0])
     const item = transform({ cart, input }, ({ cart, input }) => {
-      return cart.items.find((i) => i.id === input.item_id)
+      return cart.items.find((i) => i?.id === input.item_id)
     })
 
     // Query the seller from the link table using useQueryGraphStep
@@ -151,7 +151,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
       return linkData?.seller_id || null
     })
 
-    validateCartStep({ cart })
+    validateCartStep({ cart: cart as any })
 
     const validate = createHook('validate', {
       input,
@@ -159,7 +159,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
     })
 
     const variantIds = transform({ item }, ({ item }) => {
-      return [item.variant_id].filter(Boolean)
+      return [item?.variant_id].filter(Boolean)
     })
 
     const setPricingContext = createHook(
@@ -310,8 +310,8 @@ export const updateLineItemInCartWorkflow = createWorkflow(
 
     const items = transform({ input, item, sellerId }, (data) => {
       const mergedMetadata = {
-        ...(data.item.metadata || {}),
-        ...(data.input.update?.metadata || {})
+        ...(data?.item?.metadata || {}),
+        ...(data?.input?.update?.metadata || {})
       }
 
       // Validate that cluster_id is provided when updating line item
@@ -328,7 +328,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
       }
 
       const updatedItem = Object.assign({}, data.item, {
-        quantity: data.input.update.quantity ?? data.item.quantity,
+        quantity: data.input.update.quantity ?? data?.item?.quantity,
         metadata: mergedMetadata
       })
 
@@ -337,7 +337,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
 
     confirmVariantInventoryWorkflow.runAsStep({
       input: {
-        sales_channel_id: cart.sales_channel_id,
+        sales_channel_id: cart.sales_channel_id as string,
         variants: variantsWithPrices,
         items
       }
@@ -355,12 +355,12 @@ export const updateLineItemInCartWorkflow = createWorkflow(
           ...data.input.update,
           unit_price: isDefined(data.input.update.unit_price)
             ? data.input.update.unit_price
-            : item.unit_price,
+            : item?.unit_price,
           is_custom_price: isDefined(data.input.update.unit_price)
             ? true
-            : item.is_custom_price,
+            : item?.is_custom_price,
           is_tax_inclusive:
-            item.is_tax_inclusive ||
+            item?.is_tax_inclusive ||
             variant?.calculated_price?.is_calculated_price_tax_inclusive
         }
 
@@ -403,7 +403,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
         if (!isDefined(updateData.unit_price)) {
           throw new MedusaError(
             MedusaError.Types.INVALID_DATA,
-            `Line item ${item.title} has no unit price`
+            `Line item ${item?.title} has no unit price`
           )
         }
 
@@ -421,7 +421,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
       const refreshCartData = refreshCartItemsWorkflow.runAsStep({
         input: {
           cart_id: input.cart_id,
-          postal_code: cart.shipping_address?.postal_code,
+          postal_code: cart?.shipping_address?.postal_code as string,
           fields: fieldsToUse,
           include_delivery_promise: true,
           resolution: input.additional_data?.resolution as string | undefined,
@@ -431,7 +431,7 @@ export const updateLineItemInCartWorkflow = createWorkflow(
 
     emitEventStep({
       eventName: CartWorkflowEvents.UPDATED,
-      data: { id: input.cart_id }
+      data: { id: input?.cart_id }
     })
 
     return new WorkflowResponse(refreshCartData, {

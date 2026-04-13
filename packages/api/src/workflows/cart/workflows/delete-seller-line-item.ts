@@ -9,8 +9,7 @@ import {
   useQueryGraphStep
 } from '@medusajs/medusa/core-flows'
 
-import sellerShippingOptionLink from '../../../links/seller-shipping-option'
-
+import sellerShippingOptionLink from '@mercurjs/core-plugin/links/shipping-option-seller-link'
 type DeleteSellerLineItemWorkflowInput = {
   cart_id: string
   id: string
@@ -35,8 +34,10 @@ export const deleteSellerLineItemWorkflow = createWorkflow(
       options: { throwIfKeyNotFound: true }
     }).config({ name: 'cart-query' })
 
-    const optionIds = transform(carts[0], ({ shipping_methods }) => {
-      return shipping_methods.map((method) => method.shipping_option_id)
+    const optionIds = transform(carts[0] as any, ({ shipping_methods }: any) => {
+      return (shipping_methods ?? [])
+        .filter(Boolean)
+        .map((method: any) => method.shipping_option_id)
     })
 
     const { data: sellerShippingOptions } = useQueryGraphStep({
@@ -46,8 +47,8 @@ export const deleteSellerLineItemWorkflow = createWorkflow(
     }).config({ name: 'seller-shipping-option-query' })
 
     const shippingMethodsToRemove = transform(
-      { sellerShippingOptions, lineItem: lineItems[0], cart: carts[0] },
-      ({ sellerShippingOptions, lineItem, cart }) => {
+      { sellerShippingOptions, lineItem: lineItems[0], cart: carts[0] } as any,
+      ({ sellerShippingOptions, lineItem, cart }: any) => {
         // Extract seller_id from line item metadata
         const metadata = typeof lineItem.metadata === 'string' 
           ? JSON.parse(lineItem.metadata) 
