@@ -16,16 +16,17 @@ import {
   addWishlistFlagToProducts,
 } from "../../../products/helpers"
 import { HttpTypes } from "@medusajs/framework/types"
-import sellerStockLocationLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
+import stockLocationSellerLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
 import stockLocationExtensionLink from "../../../../../links/stock-location-stock-location-extension"
 import { LocationType } from '../../../../../modules/stock-location-extension/types/common'
-// import { calculateProductPromotions } from '../../../product-list/utils/calculate-product-promotions'
+import { calculateProductPromotions } from '../../../product-list/utils/calculate-product-promotions'
 import { Modules } from '@medusajs/framework/utils'
-import { formatPromotionSavingsText } from '../../../../../shared/utils/validate-promotion-restrictions'
+
 import {
   fetchPdpCrossLinks,
   PdpSectionResults,
 } from '../utils/pdp-sections'
+import { formatPromotionSavingsText } from "../../../../../shared/utils/validate-promotion-restrictions"
 // Define the type for the extension object
 interface StockLocationExtensionData {
   stock_location_extension: {
@@ -38,7 +39,6 @@ interface LocationHierarchy {
   parent_location_id: string;
   child_location_id: string;
 }
-const calculateProductPromotions = async (..._args: any[]) => [] as any[]
 
 export const GET = async (
   req: RequestWithContext<HttpTypes.StoreProductParams>,
@@ -141,7 +141,7 @@ export const GET = async (
     // then check seller_id is linked to any of the omni store locations, where omni store locations are child locations of dark store location
     // if (!checkSeller.data.length) {
       const {data : sellerLocationLinks} = await query.graph({
-        entity: sellerStockLocationLink.entryPoint,
+        entity: stockLocationSellerLink.entryPoint,
         fields: ['seller_id', 'stock_location_id'],
         filters: {
           seller_id: seller_id,
@@ -280,7 +280,7 @@ export const GET = async (
     if (selectedSellerId) {
       // Step 4: Default seller-location relationship
       const {data : defaultSellerLocationLinks} = await query.graph({
-        entity: sellerStockLocationLink.entryPoint,
+        entity: stockLocationSellerLink.entryPoint,
         fields: ['seller_id', 'stock_location_id'],
         filters: {
           seller_id: selectedSellerId,

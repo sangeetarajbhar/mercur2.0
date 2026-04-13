@@ -4,11 +4,9 @@ import { ContainerRegistrationKeys, QueryContext } from '@medusajs/framework/uti
 import { SearchProviderStrategy, SearchQuery, SearchResult, SearchProduct } from './types'
 import { createAllSearchStrategies } from './search-product-factory'
 import { wrapVariantsWithSellerPricing } from '../../api/utils/middlewares/products/variant-seller-pricing'
-// import {
-//   selectProductsAvailableLocationsBatch
-// } from '../../subscribers/utils/algolia-product'
+
 import { constructS3Url } from '../../shared/utils/common'
-const selectProductsAvailableLocationsBatch = async (_container: any, _productIds: string[]) => new Map<string, string[]>()
+import { selectProductsAvailableLocationsBatch } from '../../subscribers/utils/algolia-product'
 
 // SearchModuleOptions interface removed - no options needed
 // Strategies are initialized internally, not passed in
@@ -631,15 +629,13 @@ export default class SearchModuleService {
         price_max: this.getMaxPrice(product.variants),
         price,
         mrp,
-        // brand: product.brand?.name,
-        brand: (product as any).brand?.name,
+        brand: product.brand?.name,
         type: product.type?.value,
         collection: product.tags?.find((t: any) => t.value)?.value,
         metadata: product.metadata,
         thumbnail: product.thumbnail ? constructS3Url(product.thumbnail) : undefined,
         created_at: product.created_at,
-        // is_try_and_buy: product.product_configuration?.is_try_and_buy ?? true,
-        is_try_and_buy: (product as any).product_configuration?.is_try_and_buy ?? true,
+        is_try_and_buy: product.product_configuration?.is_try_and_buy ?? true,
         seller: {
           sellerId: sellerId
         }

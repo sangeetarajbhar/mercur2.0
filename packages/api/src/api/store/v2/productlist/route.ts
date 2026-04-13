@@ -4,12 +4,13 @@ import { SEARCH_MODULE } from '../../../../modules/search'
 import SearchModuleService from '../../../../modules/search/service'
 import { SearchQuery, SortOption, GenericFilters } from '../../../../modules/search/types'
 import { SEARCH_CONFIG } from '../../../../modules/search/config'
-// import { calculateProductListPromises } from '../../product-list/utils/calculate-product-list-promises'
+import { calculateProductListPromises } from '../../product-list/utils/calculate-product-list-promises'
 import { buildPlpPromiseMessage, resolveZoneForPromise } from './utils/delivery-promise'
 import { addWishlistFlagsToProducts } from './utils/wishlist'
 import { transformProductImageUrlsWithResolutionForPLP } from '../../products/helpers'
 import { transformSingleProductImageUrlsForPLP } from '../../../utils/middlewares/products/transform-image-urls'
 import { enrichProductsWithCouponData } from '../../../../shared/utils/enrich-products-with-coupon-data'
+
 
 /**
  * Parse sort option
@@ -177,33 +178,33 @@ export const GET = async (
         variants:
           p.variants ??
           (p.inventoryInfo || [])
-            .filter((i: any) => i.available && i.location?.length > 0)
+            .filter((i: any) => i.available && i.location?.length > 0 && i.location?.includes(cluster_id))
             .map((i: any) => ({ id: i.skuId })),
         seller_id: p.seller?.sellerId
       }))
 
-      // const promiseMap = await calculateProductListPromises({
-      //   scope: req.scope,
-      //   products: productsForPromise,
-      //   zone_id,
-      //   cluster_id
-      // })
+      const promiseMap = await calculateProductListPromises({
+        scope: req.scope,
+        products: productsForPromise,
+        zone_id,
+        cluster_id
+      })
 
       // Attach promise to each product (mutating in place so result object is updated)
       for (const product of productList) {
         if (!product || typeof product !== 'object') continue
         const p = product as Record<string, unknown>
         const id = String(p.id ?? p.productId)
-        // const promise = promiseMap.get(id)
-        // if (promise) {
-        //   // Attach full promise object
-        //   p.promise = promise
-        //   // Attach formatted PLP message
-        //   const plpMessage = buildPlpPromiseMessage(promise as any)
-        //   if (plpMessage) {
-        //     p.promise_plp_message = plpMessage
-        //   }
-        // }
+        const promise = promiseMap.get(id)
+        if (promise) {
+          // Attach full promise object
+          p.promise = promise
+          // Attach formatted PLP message
+          const plpMessage = buildPlpPromiseMessage(promise as any)
+          if (plpMessage) {
+            p.promise_plp_message = plpMessage
+          }
+        }
       }
     }
 

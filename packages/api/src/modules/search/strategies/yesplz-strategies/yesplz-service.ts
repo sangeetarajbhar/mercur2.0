@@ -420,8 +420,10 @@ export class YesPlzService {
 
 
   /**
-   * Send product inventory update via product.patched event type.
-   * Only sends productId + inventoryInfo (variant-level inventory data).
+   * Send product inventory update via product.updated (partial payload).
+   * Sends productId, isInStock, and inventoryInfo.
+   * Product-level isInStock is always true for partial sync (YesPlz / listing visibility); per-variant
+   * availability stays in inventoryInfo[].available.
    */
   async sendProductInventoryUpdate(
     productId: string,
@@ -433,8 +435,10 @@ export class YesPlzService {
       location: string[]
     }>
   ): Promise<WebhookResult> {
+    const isInStock = true
     const payload = this.buildPayload('product.updated', {
       productId,
+      isInStock,
       inventoryInfo
     })
     return this.sendWebhookEvent(payload)

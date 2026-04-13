@@ -1,9 +1,7 @@
-// import {
-//   calculateProductPromotions,
-//   listingSellerIdFromProductPayload,
-// } from "../../api/store/product-list/utils/calculate-product-promotions"
-const calculateProductPromotions = async (..._args: any[]) => [] as any[]
-const listingSellerIdFromProductPayload = (_product: any) => null
+import {
+  calculateProductPromotions,
+  listingSellerIdFromProductPayload,
+} from "../../api/store/product-list/utils/calculate-product-promotions"
 
 const DEFAULT_BEST_PRICE_TEXT = "Best Price"
 

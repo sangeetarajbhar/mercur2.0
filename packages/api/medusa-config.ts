@@ -172,6 +172,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/stock-location-contact",
     },
     {
+      resolve: "./src/modules/product-configuration",
+    },
+    {
       resolve: "./src/modules/image-configuration",
     },
     {

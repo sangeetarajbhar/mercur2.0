@@ -1,9 +1,7 @@
 import { MedusaContainer } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import {
-  fetchZoneByPincode,
-  fetchZoneIdByLocationId
-} from '../../../../../workflows/delivery-promise/steps/cart-promise/fetch-zone-by-pincode'
+import { fetchZoneByPincode, fetchZoneIdByLocationId } from '../../../../../workflows/delivery-promise/steps/cart-promise/fetch-zone-by-pincode'
+
 
 /**
  * Build PLP-specific promise message without affecting other apis
