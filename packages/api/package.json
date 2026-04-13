@@ -6,7 +6,7 @@
   "license": "MIT",
   "exports": {
     "./_generated": {
-      "types": "./.mercur/_generated/index.ts"
+      "types": "./types/generated-routes-frontend.ts"
     }
   },
   "keywords": [
@@ -18,6 +18,7 @@
     "medusa"
   ],
   "scripts": {
+    "generate:frontend-routes": "node ./scripts/generate-frontend-routes.mjs",
     "build": "medusa build",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "start": "medusa start",
