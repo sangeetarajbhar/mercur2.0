@@ -142,7 +142,7 @@ export type Routes = {
             $id: typeof import("@medusajs/medusa/api/admin/invites/[id]/route") & {
                 resend: typeof import("@medusajs/medusa/api/admin/invites/[id]/resend/route");
             };
-            accept: typeof import("@mercurjs/core-plugin/api/admin/invites/accept/route");
+            accept: typeof import("@medusajs/medusa/api/admin/invites/accept/route");
         };
         locales: typeof import("@medusajs/medusa/api/admin/locales/route") & {
             $code: typeof import("@medusajs/medusa/api/admin/locales/[code]/route");
@@ -268,7 +268,7 @@ export type Routes = {
             };
         };
         promotions: typeof import("@medusajs/medusa/api/admin/promotions/route") & {
-            $id: typeof import("@medusajs/medusa/api/admin/promotions/[id]/route") & {
+            $id: typeof import("../../src/api/admin/promotions/[id]/route") & {
                 $ruleType: typeof import("@medusajs/medusa/api/admin/promotions/[id]/[rule_type]/route");
                 buyRules: {
                     batch: typeof import("@medusajs/medusa/api/admin/promotions/[id]/buy-rules/batch/route");
@@ -279,6 +279,7 @@ export type Routes = {
                 targetRules: {
                     batch: typeof import("@medusajs/medusa/api/admin/promotions/[id]/target-rules/batch/route");
                 };
+                invalidateCache: typeof import("../../src/api/admin/promotions/[id]/invalidate-cache/route");
             };
             ruleAttributeOptions: {
                 $ruleType: typeof import("@medusajs/medusa/api/admin/promotions/rule-attribute-options/[rule_type]/route");
@@ -352,8 +353,8 @@ export type Routes = {
         shippingProfiles: typeof import("@medusajs/medusa/api/admin/shipping-profiles/route") & {
             $id: typeof import("@medusajs/medusa/api/admin/shipping-profiles/[id]/route");
         };
-        stockLocations: typeof import("@medusajs/medusa/api/admin/stock-locations/route") & {
-            $id: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/route") & {
+        stockLocations: typeof import("../../src/api/admin/stock-locations/route") & {
+            $id: typeof import("../../src/api/admin/stock-locations/[id]/route") & {
                 fulfillmentProviders: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/fulfillment-providers/route");
                 fulfillmentSets: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/fulfillment-sets/route");
                 salesChannels: typeof import("@medusajs/medusa/api/admin/stock-locations/[id]/sales-channels/route");
@@ -426,10 +427,60 @@ export type Routes = {
             $id: typeof import("@mercurjs/core-plugin/api/admin/payouts/[id]/route");
         };
         sellers: typeof import("@mercurjs/core-plugin/api/admin/sellers/route") & {
-            invite: typeof import("@mercurjs/core-plugin/api/admin/sellers/invite/route");
             $id: typeof import("@mercurjs/core-plugin/api/admin/sellers/[id]/route");
         };
+        attributes: typeof import("../../src/api/admin/attributes/route") & {
+            $id: typeof import("../../src/api/admin/attributes/[id]/route");
+        };
+        brands: typeof import("../../src/api/admin/brands/route") & {
+            $id: typeof import("../../src/api/admin/brands/[id]/route");
+        };
+        controls: typeof import("../../src/api/admin/controls/route") & {
+            $id: typeof import("../../src/api/admin/controls/[id]/route");
+        };
         custom: typeof import("../../src/api/admin/custom/route");
+        customerBankAccountVerification: typeof import("../../src/api/admin/customer-bank-account-verification/route");
+        customerBankDetail: typeof import("../../src/api/admin/customer-bank-detail/route") & {
+            $id: typeof import("../../src/api/admin/customer-bank-detail/[id]/route") & {
+                mappedCustomers: typeof import("../../src/api/admin/customer-bank-detail/[id]/mapped-customers/route");
+            };
+        };
+        customerUpiDetail: typeof import("../../src/api/admin/customer-upi-detail/route") & {
+            $id: typeof import("../../src/api/admin/customer-upi-detail/[id]/route") & {
+                mappedCustomers: typeof import("../../src/api/admin/customer-upi-detail/[id]/mapped-customers/route");
+            };
+        };
+        extraChargeRules: typeof import("../../src/api/admin/extra-charge-rules/route") & {
+            $id: typeof import("../../src/api/admin/extra-charge-rules/[id]/route");
+        };
+        extraCharge: typeof import("../../src/api/admin/extra-charge/route") & {
+            $id: typeof import("../../src/api/admin/extra-charge/[id]/route");
+        };
+        icons: typeof import("../../src/api/admin/icons/route");
+        imageConfiguration: {
+            imageSizes: typeof import("../../src/api/admin/image-configuration/image-sizes/route") & {
+                $id: typeof import("../../src/api/admin/image-configuration/image-sizes/[id]/route");
+            };
+            resizeConfigs: typeof import("../../src/api/admin/image-configuration/resize-configs/route") & {
+                $id: typeof import("../../src/api/admin/image-configuration/resize-configs/[id]/route");
+                $uniqueName: typeof import("../../src/api/admin/image-configuration/resize-configs/[unique_name]/route");
+            };
+        };
+        locationHierarchy: typeof import("../../src/api/admin/location-hierarchy/route") & {
+            $id: typeof import("../../src/api/admin/location-hierarchy/[id]/route") & {
+                tree: typeof import("../../src/api/admin/location-hierarchy/[id]/tree/route");
+            };
+        };
+        locations: typeof import("../../src/api/admin/locations/route") & {
+            $id: typeof import("../../src/api/admin/locations/[id]/route");
+        };
+        partner: typeof import("../../src/api/admin/partner/route") & {
+            $id: typeof import("../../src/api/admin/partner/[id]/route");
+        };
+        payoutTransactions: typeof import("../../src/api/admin/payout-transactions/route");
+        refundMethods: typeof import("../../src/api/admin/refund-methods/route") & {
+            $id: typeof import("../../src/api/admin/refund-methods/[id]/route");
+        };
         requests: {
             $type: typeof import("../../src/api/admin/requests/[type]/route") & {
                 $id: typeof import("../../src/api/admin/requests/[type]/[id]/route") & {
@@ -437,6 +488,28 @@ export type Routes = {
                     reject: typeof import("../../src/api/admin/requests/[type]/[id]/reject/route");
                 };
             };
+        };
+        shopifyProductVariantImport: typeof import("../../src/api/admin/shopify-product-variant-import/route");
+        stockLocationExtension: typeof import("../../src/api/admin/stock-location-extension/route");
+        tiers: typeof import("../../src/api/admin/tiers/route") & {
+            $id: typeof import("../../src/api/admin/tiers/[id]/route") & {
+                customers: typeof import("../../src/api/admin/tiers/[id]/customers/route");
+            };
+        };
+        videoEncodingJobs: typeof import("../../src/api/admin/video-encoding-jobs/route") & {
+            encodingJobId: {
+                $id: typeof import("../../src/api/admin/video-encoding-jobs/encoding-job-id/[id]/route");
+            };
+            presignedUrl: typeof import("../../src/api/admin/video-encoding-jobs/presigned-url/route");
+        };
+        yesplzTagMapping: {
+            upload: typeof import("../../src/api/admin/yesplz-tag-mapping/upload/route");
+        };
+        yesplz: {
+            inventory: typeof import("../../src/api/admin/yesplz/inventory/route");
+            isactive: typeof import("../../src/api/admin/yesplz/isactive/route");
+            prices: typeof import("../../src/api/admin/yesplz/prices/route");
+            productScores: typeof import("../../src/api/admin/yesplz/product-scores/route");
         };
         zones: typeof import("../../src/api/admin/zones/route") & {
             $id: typeof import("../../src/api/admin/zones/[id]/route") & {
@@ -465,10 +538,15 @@ export type Routes = {
         token: {
             refresh: typeof import("@medusajs/medusa/api/auth/token/refresh/route");
         };
+        customer: {
+            phoneAuth: typeof import("../../src/api/auth/customer/phone-auth/route") & {
+                callback: typeof import("../../src/api/auth/customer/phone-auth/callback/route");
+            };
+        };
     };
     store: {
-        carts: typeof import("@medusajs/medusa/api/store/carts/route") & {
-            $id: typeof import("@medusajs/medusa/api/store/carts/[id]/route") & {
+        carts: typeof import("../../src/api/store/carts/route") & {
+            $id: typeof import("../../src/api/store/carts/[id]/route") & {
                 complete: typeof import("@mercurjs/core-plugin/api/store/carts/[id]/complete/route");
                 customer: typeof import("@medusajs/medusa/api/store/carts/[id]/customer/route");
                 lineItems: typeof import("@medusajs/medusa/api/store/carts/[id]/line-items/route") & {
@@ -477,6 +555,9 @@ export type Routes = {
                 promotions: typeof import("@mercurjs/core-plugin/api/store/carts/[id]/promotions/route");
                 shippingMethods: typeof import("@mercurjs/core-plugin/api/store/carts/[id]/shipping-methods/route");
                 taxes: typeof import("@medusajs/medusa/api/store/carts/[id]/taxes/route");
+                deliveryPromise: {
+                    $pincode: typeof import("../../src/api/store/carts/[id]/delivery-promise/[pincode]/route");
+                };
             };
         };
         collections: typeof import("@medusajs/medusa/api/store/collections/route") & {
@@ -491,6 +572,8 @@ export type Routes = {
                     $addressId: typeof import("@medusajs/medusa/api/store/customers/me/addresses/[address_id]/route");
                 };
             };
+            autocomplete: typeof import("../../src/api/store/customers/autocomplete/route");
+            location: typeof import("../../src/api/store/customers/location/route");
         };
         locales: typeof import("@medusajs/medusa/api/store/locales/route");
         orders: typeof import("@medusajs/medusa/api/store/orders/route") & {
@@ -521,8 +604,14 @@ export type Routes = {
         productVariants: typeof import("@medusajs/medusa/api/store/product-variants/route") & {
             $id: typeof import("@medusajs/medusa/api/store/product-variants/[id]/route");
         };
-        products: typeof import("@medusajs/medusa/api/store/products/route") & {
-            $id: typeof import("@medusajs/medusa/api/store/products/[id]/route");
+        products: typeof import("../../src/api/store/products/route") & {
+            $id: typeof import("../../src/api/store/products/[id]/route");
+            variants: {
+                $id: {
+                    deliveryPromise: typeof import("../../src/api/store/products/variants/[id]/delivery-promise/route");
+                    seller: typeof import("../../src/api/store/products/variants/[id]/seller/route");
+                };
+            };
         };
         regions: typeof import("@medusajs/medusa/api/store/regions/route") & {
             $id: typeof import("@medusajs/medusa/api/store/regions/[id]/route");
@@ -542,7 +631,42 @@ export type Routes = {
         sellers: typeof import("@mercurjs/core-plugin/api/store/sellers/route") & {
             $id: typeof import("@mercurjs/core-plugin/api/store/sellers/[id]/route");
         };
+        attributes: typeof import("../../src/api/store/attributes/route");
+        brands: typeof import("../../src/api/store/brands/route");
         custom: typeof import("../../src/api/store/custom/route");
+        promotions: typeof import("../../src/api/store/promotions/route") & {
+            $promoCode: {
+                eligibility: typeof import("../../src/api/store/promotions/[promo_code]/eligibility/route");
+            };
+        };
+        refundMethods: typeof import("../../src/api/store/refund-methods/route") & {
+            $id: typeof import("../../src/api/store/refund-methods/[id]/route") & {
+                setDefault: typeof import("../../src/api/store/refund-methods/[id]/set-default/route");
+            };
+        };
+        v2: {
+            productlist: typeof import("../../src/api/store/v2/productlist/route") & {
+                collections: typeof import("../../src/api/store/v2/productlist/collections/route");
+                keywordsuggestion: typeof import("../../src/api/store/v2/productlist/keywordsuggestion/route");
+                popular: typeof import("../../src/api/store/v2/productlist/popular/route");
+            };
+            products: {
+                $id: typeof import("../../src/api/store/v2/products/[id]/route");
+                handle: {
+                    $handle: typeof import("../../src/api/store/v2/products/handle/[handle]/route");
+                };
+            };
+        };
+        wishlist: typeof import("../../src/api/store/wishlist/route") & {
+            $id: {
+                product: {
+                    $referenceId: typeof import("../../src/api/store/wishlist/[id]/product/[reference_id]/route");
+                };
+            };
+            product: {
+                $referenceId: typeof import("../../src/api/store/wishlist/product/[reference_id]/route");
+            };
+        };
     };
     vendor: {
         campaigns: typeof import("@mercurjs/core-plugin/api/vendor/campaigns/route") & {
@@ -708,19 +832,34 @@ export type Routes = {
         shippingProfiles: typeof import("@mercurjs/core-plugin/api/vendor/shipping-profiles/route") & {
             $id: typeof import("@mercurjs/core-plugin/api/vendor/shipping-profiles/[id]/route");
         };
-        stockLocations: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/route") & {
-            $id: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/route") & {
-                fulfillmentProviders: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/fulfillment-providers/route");
-                fulfillmentSets: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/fulfillment-sets/route");
-                salesChannels: typeof import("@mercurjs/core-plugin/api/vendor/stock-locations/[id]/sales-channels/route");
+        stockLocations: typeof import("../../src/api/vendor/stock-locations/route") & {
+            $id: typeof import("../../src/api/vendor/stock-locations/[id]/route") & {
+                fulfillmentProviders: typeof import("../../src/api/vendor/stock-locations/[id]/fulfillment-providers/route");
+                fulfillmentSets: typeof import("../../src/api/vendor/stock-locations/[id]/fulfillment-sets/route");
+                salesChannels: typeof import("../../src/api/vendor/stock-locations/[id]/sales-channels/route");
             };
         };
         uploads: typeof import("@mercurjs/core-plugin/api/vendor/uploads/route");
+        attributes: typeof import("../../src/api/vendor/attributes/route") & {
+            $id: typeof import("../../src/api/vendor/attributes/[id]/route");
+        };
+        brands: typeof import("../../src/api/vendor/brands/route");
+        partner: typeof import("../../src/api/vendor/partner/route");
         requests: {
             productCategories: typeof import("../../src/api/vendor/requests/product-categories/route");
             productCollections: typeof import("../../src/api/vendor/requests/product-collections/route");
             productTags: typeof import("../../src/api/vendor/requests/product-tags/route");
             productTypes: typeof import("../../src/api/vendor/requests/product-types/route");
+        };
+    };
+    hooks: {
+        videoEncodingJobs: {
+            encodingJobId: {
+                $id: typeof import("../../src/api/hooks/video-encoding-jobs/encoding-job-id/[id]/route");
+            };
+        };
+        yesplz: {
+            tags: typeof import("../../src/api/hooks/yesplz/tags/route");
         };
     };
 };

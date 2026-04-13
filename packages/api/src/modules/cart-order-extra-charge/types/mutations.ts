@@ -1,0 +1,36 @@
+export type CreateCartOrderExtraChargeDTO = {
+  extra_charge_id: string,
+  extra_charge_rule_id: string | null,
+  cart_id: string,
+  order_set_id: string | null,
+  customer_id: string | null,
+  name: string | null,
+  original_amount: number,
+  fee_amount: number,
+  tax_total: number,
+  shipping_total: number,
+  discount_total: number,
+  total_amount: number,
+  description: string | null,
+  metadata: Record<string, unknown> | null,
+  status: number,
+}
+
+export interface UpdateCartOrderExtraChargeDTO {
+  // id: string
+  // extra_charge_id: string,
+  // extra_charge_rule_id: string | null,
+  cart_id: string,
+  order_set_id: string,
+  // customer_id: string,
+  // name: string | null,
+  // original_amount: number,
+  // fee_amount: number,
+  // tax_total: number,
+  // shipping_total: number,
+  // discount_total: number,
+  // total_amount: number,
+  // description: string | null,
+  // metadata: Record<string, unknown> | null,
+  // status: number,
+}
