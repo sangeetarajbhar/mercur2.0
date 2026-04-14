@@ -528,6 +528,8 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
 
     const logger = this.resolveLogger()
     const query = this.container.resolve(ContainerRegistrationKeys.QUERY)
+    const shouldLogInventoryPayload =
+      process.env.YESPLZ_LOG_INVENTORY_PAYLOAD === 'true'
 
     const PRODUCT_FETCH_PAGE_SIZE = 100
     const batchSize = this.options?.batchSize || DEFAULT_BATCH_SIZE
@@ -578,6 +580,9 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
     if (allProducts.length === 0) {
       return { updatedCount: 0, failedCount: 0, failedItems: [] }
     }
+    logger.info(
+      `${ERROR_PREFIX} syncInventory prepared ${allProducts.length} products for sync (detailed_payload_logs=${shouldLogInventoryPayload ? 'enabled' : 'disabled'})`
+    )
 
     // ---------- Shared inventory resolution: compute DS locations + availability per variant ----------
     const { variantToDsLocations, variantHasStock } = await this.resolveVariantInventory(
@@ -620,6 +625,15 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
           })
 
           inventoryInfoByProductId.set(product.id, inventoryInfo)
+          if (shouldLogInventoryPayload) {
+            logger.info(
+              `${ERROR_PREFIX} [syncInventory][payload] ${JSON.stringify({
+                product_id: product.id,
+                variants_count: variants.length,
+                inventoryInfo
+              })}`
+            )
+          }
           await this.updateProductInventory(product.id, inventoryInfo)
         })
       )

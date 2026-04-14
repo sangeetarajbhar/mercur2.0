@@ -8,8 +8,5 @@ export default defineLink(
     linkable: ProductModule.linkable.product,
     isList: true,
   },
-  {
-    linkable: BrandModule.linkable.brand,
-    isList: true,
-  }
+  BrandModule.linkable.brand
 )
