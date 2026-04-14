@@ -47,7 +47,7 @@ export const discoverEligibleAutomaticPromotionsStep = createStep(
       }
 
       // Use Medusa's calculated subtotal (includes all item calculations, adjustments, etc.)
-      const cartSubtotal = cart.subtotal || 0
+      const cartSubtotal = (cart as any).subtotal || 0
 
       // Get list of rejected auto promo codes from cart metadata
       let rejectedAutoPromoCodes: string[] = []
@@ -60,7 +60,7 @@ export const discoverEligibleAutomaticPromotionsStep = createStep(
             metadata = {}
           }
         }
-        rejectedAutoPromoCodes = metadata.rejected_auto_promo_codes || []
+        rejectedAutoPromoCodes = (metadata as any).rejected_auto_promo_codes || []
       }
 
       // Find all active automatic promotions that aren't already applied

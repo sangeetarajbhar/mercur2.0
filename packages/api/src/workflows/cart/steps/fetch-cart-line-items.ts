@@ -1,5 +1,5 @@
-import {  StepResponse, createStep } from "@medusajs/workflows-sdk"
-import { CartLineItemDTO } from "@medusajs/types"
+import {  StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
+import { CartLineItemDTO } from "@medusajs/framework/types"
 // import { Knex } from "knex"
 import {
   ContainerRegistrationKeys

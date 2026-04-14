@@ -5,8 +5,8 @@ import {
 } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
-import sellerProductLink from '../../../links/seller-product'
-import sellerShippingOptionLink from '../../../links/seller-shipping-option'
+import sellerProductLink from '@mercurjs/core-plugin/links/product-seller-link'
+import sellerShippingOptionLink from '@mercurjs/core-plugin/links/shipping-option-seller-link'
 
 type ValidateCartShippingOptionsInput = {
   cart_id: string
@@ -39,7 +39,7 @@ export const validateCartShippingOptionsStep = createStep(
           entity: sellerProductLink.entryPoint,
           fields: ['seller_id', 'product_id'],
           filters: {
-            product_id: cart.items.map((item) => item.product_id)
+            product_id: cart.items.map((item) => item?.product_id)
           }
         }),
         query.graph({

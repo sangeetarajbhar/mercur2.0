@@ -1,4 +1,4 @@
-import { Knex } from 'knex'
+import knex  from 'knex'
 import { container } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
@@ -35,7 +35,7 @@ async function mapCartItemsAndVariantsToSeller(
   cartId: string,
   variantIds: string[],
   cart: any,
-  knex: Knex
+  knex
 ): Promise<{
   cartItemToSellerMapping: Record<string, string>
   variantToSellerMapping: Record<string, string>

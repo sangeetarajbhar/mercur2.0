@@ -312,7 +312,7 @@ export const mapCartItemsToLocationStep = createStep(
     const shipping_address = cart.shipping_address
     const postal_code = shipping_address.postal_code
 
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
     const zone = await fetchZoneByPincode(postal_code, knex)
 
     if (!zone) {

@@ -1,5 +1,6 @@
 import { createStep, StepResponse } from '@medusajs/framework/workflows-sdk'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
+import { Knex } from 'knex'
 
 export interface UpdateLineItemCartIdInput {
   line_item_ids: string[]
@@ -20,7 +21,7 @@ export const updateLineItemCartIdStep = createStep(
       return new StepResponse({ updated: 0 })
     }
 
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as import('knex').Knex
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
 
     // Update cart_id for all source cart line items
     const updatedCount = await knex('cart_line_item')

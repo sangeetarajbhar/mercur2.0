@@ -85,7 +85,7 @@ export const confirmInventoryStep = createStep(
       Modules.INVENTORY
     )
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
 
     const promises = data.items.map(async (item) => {
       if (item.allow_backorder) {

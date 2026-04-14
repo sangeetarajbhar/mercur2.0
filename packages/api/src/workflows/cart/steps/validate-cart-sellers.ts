@@ -7,7 +7,7 @@ import { createStep } from '@medusajs/framework/workflows-sdk'
 
 import { StoreStatus } from '@mercurjs/framework'
 
-import sellerProduct from '../../../links/seller-product'
+import sellerProduct from '@mercurjs/core-plugin/links/product-seller-link'
 
 type LineItemWithProductId = Pick<CartLineItemDTO, 'product_id'>
 

@@ -10,7 +10,7 @@ export type FetchZoneByPincodeStepInput = {
 export const fetchZoneByPincodeStep = createStep(
   'fetch-zone-by-pincode',
   async (input: FetchZoneByPincodeStepInput, { container }): Promise<StepResponse<ZoneData | null>> => {
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
     const zone = await fetchZoneByPincode(input.postal_code, knex)
     return new StepResponse(zone)
   }

@@ -1,5 +1,5 @@
 import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
-import { createStep, StepResponse } from '@medusajs/workflows-sdk'
+import { createStep, StepResponse } from '@medusajs/framework/workflows-sdk'
 import { Knex } from 'knex'
 import { fetchZoneByPincode } from '../../../workflows/delivery-promise/steps/cart-promise/fetch-zone-by-pincode'
 import { upsertCartDeliveryDetail } from './helpers/upsert-cart-delivery-detail'
@@ -56,7 +56,7 @@ export const updateStandardDeliveryDetailStep = createStep(
     const { cart_id, postal_code, delivery_type } = input
     
     try {
-      const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+      const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
 
       // Step 1: Get zone by pincode
       const zone = await fetchZoneByPincode(postal_code, knex)

@@ -1,5 +1,5 @@
 import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
-import { createStep, StepResponse } from '@medusajs/workflows-sdk'
+import { createStep, StepResponse } from '@medusajs/framework/workflows-sdk'
 import { MedusaContainer } from '@medusajs/framework'
 import { validateExistingDeliveryData, validatePayloadDeliveryData, getCartAddressPincode } from './helpers/validate-delivery-data'
 import { CART_DELIVERY_DETAIL_MODULE } from '../../../modules/cart-delivery-detail'

@@ -1,5 +1,5 @@
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import { StepResponse, createStep } from '@medusajs/workflows-sdk'
+import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
 /**
  * Step to remove/soft-delete cart_promotion entries for specified promotion codes

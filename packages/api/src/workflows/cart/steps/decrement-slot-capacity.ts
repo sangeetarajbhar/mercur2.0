@@ -1,5 +1,5 @@
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import { createStep, StepResponse } from '@medusajs/workflows-sdk'
+import { createStep, StepResponse } from '@medusajs/framework/workflows-sdk'
 import { SLOT_OVERRIDES_MODULE } from '../../../modules/slot-overrides'
 import SlotOverrideModuleService from '../../../modules/slot-overrides/service'
 
