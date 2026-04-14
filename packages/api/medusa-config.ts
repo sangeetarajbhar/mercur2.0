@@ -47,7 +47,7 @@ module.exports = defineConfig({
             resolve: "@medusajs/medusa/notification-local",
             id: "local",
             options: {
-              channels: ["email"],
+              channels: ["email", "feed", "seller_feed"],
             },
           },
           {
@@ -227,6 +227,12 @@ module.exports = defineConfig({
       definition: {
         isQueryable: true,
       },
+    },
+    {
+      resolve: './src/modules/search',
+      options: {
+        enabled: true
+      }
     },
     // Providers must be registered on the core payment/auth modules — standalone
     // ModuleProvider entries have no `.service` and break defineConfig (Medusa 2.13+).
