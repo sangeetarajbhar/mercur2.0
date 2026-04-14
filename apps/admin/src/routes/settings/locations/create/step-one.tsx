@@ -1,5 +1,6 @@
 import { Heading, Input, Select, Text } from "@medusajs/ui";
 import { Controller, UseFormReturn } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { CreateLocationSchemaType, StatusTypeMap } from "./schema";
 import { countries } from "../../../../lib/data/countries";
 
@@ -11,21 +12,29 @@ const FieldError = ({ message }: { message?: string }) =>
   message ? <p className="text-ui-fg-error text-xs">{message}</p> : null;
 
 export const StepOne = ({ form }: Props) => {
+  const { t } = useTranslation();
   const errors = form.formState.errors;
 
   return (
     <div className="flex flex-1 flex-col items-center overflow-y-auto">
       <div className="flex w-full max-w-[720px] flex-col gap-y-8 px-2 py-16">
         <div>
-          <Heading className="capitalize">Create Stock Location</Heading>
+          <Heading className="capitalize">
+            {t("stockLocations.create.header", "Create Stock Location")}
+          </Heading>
           <Text size="small" className="text-ui-fg-subtle">
-            A stock location is a physical site where products are stored and shipped from.
+            {t(
+              "stockLocations.create.hint",
+              "A stock location is a physical site where products are stored and shipped from."
+            )}
           </Text>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="txt-compact-small-plus mb-1 block">Name</label>
+          <div>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.name", "Name")}
+            </label>
             <Input size="small" {...form.register("name")} />
             <FieldError message={errors.name?.message} />
           </div>
@@ -33,28 +42,36 @@ export const StepOne = ({ form }: Props) => {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Address</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.address", "Address")}
+            </label>
             <Input size="small" maxLength={100} {...form.register("address.address_1")} />
             <FieldError message={errors.address?.address_1?.message} />
           </div>
           <div>
             <label className="txt-compact-small-plus mb-1 block">
-              Apartment, suite, etc. (Optional)
+              {t("fields.address2", "Apartment, suite, etc.")} ({t("fields.optional", "Optional")})
             </label>
             <Input size="small" {...form.register("address.address_2")} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Postal Code</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.postalCode", "Postal Code")}
+            </label>
             <Input size="small" maxLength={6} inputMode="numeric" {...form.register("address.postal_code")} />
             <FieldError message={errors.address?.postal_code?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">City</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.city", "City")}
+            </label>
             <Input size="small" {...form.register("address.city")} />
             <FieldError message={errors.address?.city?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Country</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.country", "Country")}
+            </label>
             <Controller
               control={form.control}
               name="address.country_code"
@@ -80,31 +97,43 @@ export const StepOne = ({ form }: Props) => {
             <FieldError message={errors.address?.country_code?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">State</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.state", "State")}
+            </label>
             <Input size="small" {...form.register("address.province")} />
             <FieldError message={errors.address?.province?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Company (Optional)</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.company", "Company")} ({t("fields.optional", "Optional")})
+            </label>
             <Input size="small" {...form.register("address.company")} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">First Name</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.firstName", "First Name")}
+            </label>
             <Input size="small" {...form.register("first_name")} />
             <FieldError message={errors.first_name?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Last Name</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.lastName", "Last Name")}
+            </label>
             <Input size="small" {...form.register("last_name")} />
             <FieldError message={errors.last_name?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Email</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.email", "Email")}
+            </label>
             <Input size="small" {...form.register("email")} />
             <FieldError message={errors.email?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Phone</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.phone", "Phone")}
+            </label>
             <Input size="small" maxLength={10} inputMode="tel" {...form.register("address.phone")} />
             <FieldError message={errors.address?.phone?.message} />
           </div>
@@ -119,7 +148,9 @@ export const StepOne = ({ form }: Props) => {
             <FieldError message={errors.longitude?.message} />
           </div>
           <div>
-            <label className="txt-compact-small-plus mb-1 block">Status</label>
+            <label className="txt-compact-small-plus mb-1 block">
+              {t("fields.status", "Status")}
+            </label>
             <Controller
               control={form.control}
               name="status"

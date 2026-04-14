@@ -80,8 +80,45 @@ const Page = () => {
     });
   };
 
+  const stepOneFieldPaths = [
+    "name",
+    "address.address_1",
+    "address.address_2",
+    "address.city",
+    "address.company",
+    "address.country_code",
+    "address.phone",
+    "address.postal_code",
+    "address.province",
+    "latitude",
+    "longitude",
+    "status",
+    "first_name",
+    "last_name",
+    "email",
+  ] as const;
+
+  const stepTwoFieldPaths = [
+    "seller_id",
+    "return_location_id",
+    "servisibility_status",
+    "start_time",
+    "end_time",
+    "partner_id",
+    "location_type",
+    "address_type",
+    "partner_wh_code",
+    "lead_time",
+    "managed_by",
+    "is_delay",
+    "delay_value",
+    "delay_message",
+  ] as const;
+
   const validateStepTwoCustom = (values: CreateLocationSchemaType) => {
     let failed = false;
+    form.clearErrors(["partner_wh_code", "lead_time", "managed_by", "delay_value", "delay_message"]);
+
     if (Number(values.address_type) === AddressType.SHIPPING) {
       if (!values.partner_wh_code) {
         form.setError("partner_wh_code", { message: "Partner WH Code is required" });
@@ -105,6 +142,7 @@ const Page = () => {
 
   const onTabChange = (tab: Tab) => {
     if (tab === Tab.STEP_TWO) {
+      form.clearErrors(stepOneFieldPaths);
       const result = CreateLocationDetailsSchema.safeParse(form.getValues());
       if (!result.success) {
         setZodErrors(result.error.errors);
@@ -115,6 +153,7 @@ const Page = () => {
     }
 
     if (tab === Tab.STEP_THREE) {
+      form.clearErrors(stepTwoFieldPaths);
       const values = form.getValues();
       const result = StepTwoConditionalSchema.safeParse(values);
       const hasCustomErrors = validateStepTwoCustom(values);
