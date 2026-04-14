@@ -110,21 +110,21 @@ export const POST = async (
     if (sellerStockLocationLink) {
       // first remove the link and assign the new one
       await remoteLink.dismiss({
+        [Modules.STOCK_LOCATION]: {
+          stock_location_id: stock_location_id
+        },
         [SELLER_MODULE]: {
           seller_id: sellerStockLocationLink.seller_id
         },
-        [Modules.STOCK_LOCATION]: {
-          stock_location_id: stock_location_id
-        }
       })
 
       await remoteLink.create({
+        [Modules.STOCK_LOCATION]: {
+          stock_location_id: stock_location_id
+        },
         [SELLER_MODULE]: {
           seller_id: additional_data?.seller_id
         },
-        [Modules.STOCK_LOCATION]: {
-          stock_location_id: stock_location_id
-        }
       })
     }
   }

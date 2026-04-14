@@ -121,7 +121,7 @@ const SlotOverrideModal = ({
     slot_key: slot.slot_key,
     start_time: normalizeTimeFormat(slot.start_time),
     end_time: normalizeTimeFormat(slot.end_time),
-    cut_off_time: slot.cut_off_time ? normalizeTimeFormat(slot.cut_off_time) : null,
+    cut_off_time: slot.cut_off_time ? normalizeTimeFormat(slot.cut_off_time) : "",
     total_capacity: slot.default_capacity,
     remaining_capacity: slot.default_capacity,
     is_active: slot.is_active,
@@ -149,7 +149,7 @@ const SlotOverrideModal = ({
       slot_key: slotKey,
       start_time: normalizedStartTime,
       end_time: normalizedEndTime,
-      cut_off_time: override.cut_off_time ? normalizeTimeFormat(override.cut_off_time) : null,
+      cut_off_time: override.cut_off_time ? normalizeTimeFormat(override.cut_off_time) : "",
       total_capacity: override.total_capacity,
       remaining_capacity: override.remaining_capacity,
       is_active: override.is_active
@@ -186,7 +186,7 @@ const SlotOverrideModal = ({
         slot_key: "",
         start_time: "",
         end_time: "",
-        cut_off_time: null,
+        cut_off_time: "",
         total_capacity: 1,
         remaining_capacity: 1,
         is_active: true
@@ -207,7 +207,7 @@ const SlotOverrideModal = ({
         slot_key: "",
         start_time: "",
         end_time: "",
-        cut_off_time: null,
+        cut_off_time: "",
         total_capacity: 1,
         remaining_capacity: 1,
         is_active: true
@@ -407,7 +407,7 @@ const SlotOverrideModal = ({
                 slot_key: "",
                 start_time: "",
                 end_time: "",
-                cut_off_time: null,
+                cut_off_time: "",
                 total_capacity: 1,
                 remaining_capacity: 1,
                 is_active: true,
@@ -520,7 +520,7 @@ const SlotOverrideModal = ({
                         // Convert HH:MM:SS to HH:MM format if needed
                         const timeValue = e.target.value
                         const normalizedTime = timeValue.length > 5 ? timeValue.substring(0, 5) : timeValue
-                        form.setValue(`${fieldNamePrefix}.${index}.cut_off_time`, normalizedTime || null)
+                        form.setValue(`${fieldNamePrefix}.${index}.cut_off_time`, normalizedTime || "")
                         setEditedTabs(prev => new Set(prev).add(tabName))
                       }}
                     />
