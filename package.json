@@ -52,5 +52,8 @@
   "workspaces": [
     "packages/*",
     "apps/*"
-  ]
+  ],
+  "patchedDependencies": {
+    "@mercurjs/core-plugin@2.0.0": "patches/@mercurjs%2Fcore-plugin@2.0.0.patch"
+  }
 }
