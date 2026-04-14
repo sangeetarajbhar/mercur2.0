@@ -1,7 +1,7 @@
 import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { ORDER_DELIVERY_DETAIL_MODULE } from '../../../modules/order-delivery-detail'
 import OrderDeliveryDetailService from '../../../modules/order-delivery-detail/service'
-import { createStep, StepResponse } from '@medusajs/workflows-sdk'
+import { createStep, StepResponse } from '@medusajs/framework/workflows-sdk'
 import { RemoteQueryFunction } from '@medusajs/framework/types'
 import { validateDateIsTodayOrTomorrow, combineDateAndTime, validateDateTimeIsInFuture } from './helpers/delivery-validation-utils'
 

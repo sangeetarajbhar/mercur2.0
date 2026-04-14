@@ -372,7 +372,7 @@ export const prepareAdjustmentsFromPromotionActionsStep = createStep(
     data: PrepareAdjustmentsFromPromotionActionsStepInput,
     { container }
   ) => {
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
     const { actions = [] } = data
 
     if (!actions.length) {

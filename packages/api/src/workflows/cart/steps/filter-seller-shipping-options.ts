@@ -6,7 +6,7 @@ import {
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
 import sellerProduct from '../../../links/seller-product'
-import sellerShippingOption from '../../../links/seller-shipping-option'
+import sellerShippingOption from '@mercurjs/links/shipping-option-seller-link'
 
 export const filterSellerShippingOptionsStep = createStep(
   'filter-seller-shipping-options',

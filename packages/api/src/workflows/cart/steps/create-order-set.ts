@@ -2,14 +2,14 @@ import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/util
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 import { Knex } from 'knex'
 
-import { CreateOrderSetDTO } from '@mercurjs/framework'
+import { CreateOrderGroupDTO } from '@mercurjs/types'
 import { MARKETPLACE_MODULE } from '@mercurjs/marketplace'
 import { MarketplaceModuleService } from '@mercurjs/marketplace'
 import { generateOrderId } from '../../../shared/utils'
 import { COD_PAYMENT_PROVIDER } from '../../../utils/constants/payments'
 import { OrderLineItemStatus } from '../../../utils/constants/order-statuses'
 
-type CreateOrderSetStepInput = CreateOrderSetDTO & {
+type CreateOrderSetStepInput = CreateOrderGroupDTO & {
   payment_provider_id?: string
 }
 
@@ -17,7 +17,7 @@ export const createOrderSetStep = createStep(
   'create-order-set',
   async (input: CreateOrderSetStepInput, { container }) => {
     const service = container.resolve<MarketplaceModuleService>(MARKETPLACE_MODULE)
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
     // Determine if COD payment
