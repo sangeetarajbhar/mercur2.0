@@ -297,3 +297,4 @@ export function toPostgresFormat(date: Date): string {
     .replace('T', ' ')           // Replace T with space
     .replace('Z', '000 +00:00'); // Add microseconds and space before timezone
 }
+
