@@ -1,4 +1,5 @@
 import {
+  FulfillmentStatus,
   OrderDTO,
   OrderDetailDTO,
   OrderStatus,
@@ -7,92 +8,90 @@ import {
 import { BigNumber, MathBN } from '@medusajs/framework/utils'
 
 import {
-  FormattedOrderSetDTO,
-  OrderSetDTO,
-  OrderSetWithOrdersDTO
-} from '@mercurjs/framework'
+  FormattedOrderGroupDTO,
+  OrderGroupDTO,
+  OrderGroupWithOrdersDTO
+} from '../../../modules/order-group/types/common'
 
 import { getLastFulfillmentStatus } from '../../order/utils/aggregate-status'
 
 export const formatOrderSets = (
-  orderSetsWithOrders: OrderSetWithOrdersDTO[]
-): FormattedOrderSetDTO[] => {
+  orderGroupsWithOrders: OrderGroupWithOrdersDTO[]
+): FormattedOrderGroupDTO[] => {
   // console.log('[formatOrderSets] Input order sets:', JSON.stringify(orderSetsWithOrders.map(os => ({
   //   id: os.id,
   //   status: (os as any).status,
   //   hasStatus: 'status' in os
   // })), null, 2))
 
-  return orderSetsWithOrders.map((orderSet) => {
-    const taxTotal = orderSet.orders.reduce(
+  return  orderGroupsWithOrders.map((orderGroup: OrderGroupWithOrdersDTO): FormattedOrderGroupDTO => {
+    const taxTotal = orderGroup.orders.reduce(
       (acc, item) => MathBN.add(acc, item.tax_total),
       MathBN.convert(0)
     )
 
-    const shippingTaxTotal = orderSet.orders.reduce(
+    const shippingTaxTotal = orderGroup.orders.reduce(
       (acc, order) => MathBN.add(acc, order.shipping_tax_total!),
       MathBN.convert(0)
     )
 
-    const shippingTotal = orderSet.orders.reduce(
+    const shippingTotal = orderGroup.orders.reduce(
       (acc, order) => MathBN.add(acc, order.shipping_total!),
       MathBN.convert(0)
     )
 
-    // Sum all order totals (without extra charges, as they're at order set level)
-    const ordersTotal = orderSet.orders.reduce(
+    // Sum all order totals (without extra charges, as they're at order Group level)
+    const ordersTotal = orderGroup.orders.reduce(
       (acc, order) => MathBN.add(acc, order.total),
       MathBN.convert(0)
     )
 
-    // Add extra charges to the order set total (extra charges apply to entire order set)
+    // Add extra charges to the order Group total (extra charges apply to entire order Group)
     // extra_charge_total is added by enhanceOrderSetsWithExtraChargesStep
-    const extraChargeTotal = (orderSet as any).extra_charge_total || 0
+    const extraChargeTotal = (orderGroup as any).extra_charge_total || 0
     const total = MathBN.add(ordersTotal, extraChargeTotal)
 
     const subtotal = MathBN.sub(total, taxTotal)
 
     // Only call getPaymentStatus if payment_collection exists
     // This prevents errors when payment_collection is not loaded or doesn't exist
-    const payment_status = orderSet.payment_collection
-      ? getPaymentStatus(orderSet)
+    const payment_status = orderGroup.payment_collection
+      ? getPaymentStatus(orderGroup)
       : ('not_paid' as PaymentCollectionStatus)
 
     // Preserve the database status if it exists, otherwise calculate from orders
-    const databaseStatus = (orderSet as any).status
-    // const calculatedStatus = getStatus(orderSet.orders as unknown as OrderDTO[])
+    const databaseStatus = (orderGroup as any).status
+    // const calculatedStatus = getStatus(orderGroup.orders as unknown as OrderDTO[])
 
-    // console.log('[formatOrderSets] Order set statuses:', {
-    //   id: orderSet.id,
+    // console.log('[formatOrderSets] Order Group statuses:', {
+    //   id: orderGroup.id,
     //   databaseStatus,
     //   calculatedStatus,
     //   willUse: databaseStatus || calculatedStatus
     // })
 
     // Explicitly preserve metadata and rider_assigned_at fields
-    const metadata = (orderSet as any).metadata
-    const rider_assigned_at = (orderSet as any).rider_assigned_at
+    const metadata = (orderGroup as any).metadata
+    const rider_assigned_at = (orderGroup as any).rider_assigned_at
 
     return {
-      ...orderSet,
-      ui_order_set_id: (orderSet as any).ui_order_set_id, // Fetched from database
-      orders: orderSet.orders.map((order) => ({
+      ...orderGroup,
+      ui_order_set_id: (orderGroup as any).ui_order_set_id as string, // Fetched from database
+      orders: orderGroup.orders.map((order) => ({
         ...order,
-        fulfillment_status: getLastFulfillmentStatus(order as OrderDetailDTO),
-        payment_status
+        fulfillment_status: getLastFulfillmentStatus(order as OrderDetailDTO) as FulfillmentStatus
       })),
-      // status: databaseStatus || calculatedStatus,  // Use database status if available
-      status: databaseStatus,
+      status: (databaseStatus || getStatus(orderGroup.orders as unknown as OrderDTO[])) as OrderStatus,
       payment_status,
-      fulfillment_status: getFulfillmentStatus(orderSet.orders as OrderDetailDTO[]),
+      fulfillment_status: getFulfillmentStatus(orderGroup.orders as OrderDetailDTO[]),
       tax_total: new BigNumber(taxTotal),
       shipping_tax_total: new BigNumber(shippingTaxTotal),
       shipping_total: new BigNumber(shippingTotal),
       total: new BigNumber(total),
       subtotal: new BigNumber(subtotal),
       // Explicitly preserve metadata and rider_assigned_at
-      metadata: metadata,
-      rider_assigned_at: rider_assigned_at
+      metadata: metadata as Record<string, unknown> | null | undefined,
+      rider_assigned_at: rider_assigned_at as Date | null | undefined
     }
   })
 }
@@ -115,12 +114,12 @@ const getStatus = (orders: OrderDTO[]): OrderStatus => {
   return 'pending'
 }
 
-const getPaymentStatus = (orderSet: OrderSetDTO): PaymentCollectionStatus => {
-  if (!orderSet.payment_collection) {
+const getPaymentStatus = (orderGroup: OrderGroupDTO): PaymentCollectionStatus => {
+  if (!orderGroup.payment_collection) {
     // Fallback to a default status if payment_collection is not available
     return 'not_paid' as PaymentCollectionStatus
   }
-  return orderSet.payment_collection.status
+  return orderGroup.payment_collection.status
 }
 
 export const getFulfillmentStatus = (orders: OrderDetailDTO[]) => {
