@@ -1,8 +1,8 @@
 import {
+  ContainerRegistrationKeys,
   MedusaError
 } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
-import { VariantSellerService } from '@mercurjs/seller'
 
 type GetVariantSellersInput = {
   variant_ids: string[]
@@ -18,12 +18,34 @@ export const getVariantSellersStep = createStep(
     }
 
     try {
-      // Create a new instance of the service with the container
-      const variantSellerService = new VariantSellerService(container)
+      const query = container.resolve(ContainerRegistrationKeys.QUERY) as {
+        graph: (args: {
+          entity: string
+          fields: string[]
+          filters?: Record<string, unknown>
+        }) => Promise<{ data: Array<Record<string, unknown>> }>
+      }
 
-      const variantSellerMap = await variantSellerService.retrieveSellersByVariantIds(
-        input.variant_ids
-      )
+      const { data } = await query.graph({
+        entity: 'product_variant',
+        fields: ['id', 'seller.id'],
+        filters: { id: input.variant_ids }
+      })
+
+      const variantSellerMap = new Map<string, string>()
+      data.forEach((variant) => {
+        const variantId = String(variant.id || '')
+        const sellerField = variant.seller as unknown
+        const seller =
+          Array.isArray(sellerField) && sellerField.length
+            ? (sellerField[0] as Record<string, unknown>)
+            : (sellerField as Record<string, unknown> | undefined)
+
+        const sellerId = seller?.id ? String(seller.id) : ''
+        if (variantId && sellerId) {
+          variantSellerMap.set(variantId, sellerId)
+        }
+      })
 
       return new StepResponse({
         variantSellerMap

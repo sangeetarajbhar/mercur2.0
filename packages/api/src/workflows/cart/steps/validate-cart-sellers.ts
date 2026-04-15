@@ -4,10 +4,9 @@ import {
   MedusaError
 } from '@medusajs/framework/utils'
 import { createStep } from '@medusajs/framework/workflows-sdk'
-
-import { StoreStatus } from '@mercurjs/framework'
-
 import sellerProduct from '@mercurjs/core-plugin/links/product-seller-link'
+
+const ACTIVE_STORE_STATUS = 'ACTIVE'
 
 type LineItemWithProductId = Pick<CartLineItemDTO, 'product_id'>
 
@@ -31,7 +30,7 @@ export const validateCartSellersStep = createStep(
     })
 
     const hasInactiveSellers = sellerProducts.some(
-      (sp) => sp.seller.store_status !== StoreStatus.ACTIVE
+      (sp) => sp.seller.store_status !== ACTIVE_STORE_STATUS
     )
 
     if (hasInactiveSellers) {

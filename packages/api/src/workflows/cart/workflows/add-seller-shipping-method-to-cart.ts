@@ -18,7 +18,7 @@ type AddSellerShippingMethodToCartWorkflowInput = {
 }
 
 export const addSellerShippingMethodToCartWorkflow = createWorkflow(
-  'add-seller-shipping-method-to-cart',
+  'add-seller-shipping-method-to-cart-v2',
   function (input: AddSellerShippingMethodToCartWorkflowInput) {
     const { data: carts } = useQueryGraphStep({
       entity: 'cart',
