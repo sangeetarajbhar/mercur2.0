@@ -2,21 +2,25 @@ import { ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/util
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 import { Knex } from 'knex'
 
-import { CreateOrderGroupDTO } from '@mercurjs/types'
-import { MARKETPLACE_MODULE } from '@mercurjs/marketplace'
-import { MarketplaceModuleService } from '@mercurjs/marketplace'
-import { generateOrderId } from '../../../shared/utils'
+import { CreateOrderGroupDTO, MercurModules } from '@mercurjs/types'
+import { generateOrderId } from '../../../shared/utils/id-generator'
 import { COD_PAYMENT_PROVIDER } from '../../../utils/constants/payments'
 import { OrderLineItemStatus } from '../../../utils/constants/order-statuses'
 
 type CreateOrderSetStepInput = CreateOrderGroupDTO & {
   payment_provider_id?: string
+  payment_collection_id?: string
+}
+
+type SellerOrderGroupService = {
+  createOrderGroups: (input: CreateOrderGroupDTO) => Promise<{ id: string }>
+  softDeleteOrderGroups: (id: string) => Promise<void>
 }
 
 export const createOrderSetStep = createStep(
   'create-order-set',
   async (input: CreateOrderSetStepInput, { container }) => {
-    const service = container.resolve<MarketplaceModuleService>(MARKETPLACE_MODULE)
+    const service = container.resolve<SellerOrderGroupService>(MercurModules.SELLER)
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
@@ -40,16 +44,16 @@ export const createOrderSetStep = createStep(
     const status = isCodPayment ? OrderLineItemStatus.NEW : OrderLineItemStatus.PAYMENT_PENDING
 
     const uiOrderSetId = generateOrderId()
-    const orderSet = await service.createOrderSets(input)
+    const orderGroup = await service.createOrderGroups(input)
 
-    await knex('order_set')
-      .where({ id: orderSet.id })
-      .update({ 
+    await knex('order_group')
+      .where({ id: orderGroup.id })
+      .update({
         ui_order_set_id: uiOrderSetId,
         status: status
       })
 
-    return new StepResponse(orderSet, orderSet.id)
+    return new StepResponse(orderGroup, orderGroup.id)
   },
   async (orderSetId: string, { container }) => {
     if (!orderSetId) {
@@ -59,7 +63,7 @@ export const createOrderSetStep = createStep(
       )
     }
 
-    const service = container.resolve<MarketplaceModuleService>(MARKETPLACE_MODULE)
-    await service.softDeleteOrderSets(orderSetId)
+    const service = container.resolve<SellerOrderGroupService>(MercurModules.SELLER)
+    await service.softDeleteOrderGroups(orderSetId)
   }
 )

@@ -5,8 +5,8 @@ import {
 } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
-import sellerProduct from '../../../links/seller-product'
-import sellerShippingOption from '@mercurjs/links/shipping-option-seller-link'
+import sellerProduct from '@mercurjs/core-plugin/links/product-seller-link'
+import sellerShippingOption from '@mercurjs/core-plugin/links/shipping-option-seller-link'
 
 export const filterSellerShippingOptionsStep = createStep(
   'filter-seller-shipping-options',
@@ -30,12 +30,12 @@ export const filterSellerShippingOptionsStep = createStep(
       entity: sellerProduct.entryPoint,
       fields: ['seller_id'],
       filters: {
-        product_id: cart.items.map((i) => i.product_id)
+        product_id: cart.items.map((i) => i?.product_id)
       }
     })
 
     const existingShippingOptions = cart.shipping_methods.map(
-      (sm) => sm.shipping_option_id
+      (sm) => sm?.shipping_option_id
     )
 
     const { data: sellersAlreadyCovered } = await query.graph({
