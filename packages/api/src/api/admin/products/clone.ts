@@ -1,0 +1,125 @@
+import { Request, Response } from "express";
+
+// Using type-only imports to avoid dependency issues
+type EntityManager = any;
+type ProductService = any;
+
+/**
+ * @schema AdminProductCloneReq
+ * type: object
+ * required:
+ *   - source_seller_id
+ *   - target_seller_id
+ *   - product_ids
+ * properties:
+ *   source_seller_id:
+ *     type: string
+ *     description: The ID of the source seller
+ *   target_seller_id:
+ *     type: string
+ *     description: The ID of the target seller
+ *   product_ids:
+ *     type: array
+ *     items:
+ *       type: string
+ *     description: Array of product IDs to clone
+ */
+export default async (req: Request, res: Response) => {
+  const { source_seller_id, target_seller_id, product_ids } = req.body;
+
+  const productService = req.scope.resolve("productService") as ProductService;
+  const manager: EntityManager = req.scope.resolve("manager");
+
+  if (!source_seller_id || !target_seller_id || !product_ids?.length) {
+    return res.status(400).json({
+      message: "source_seller_id, target_seller_id, and product_ids are required",
+      success: false,
+    });
+  }
+
+  try {
+    await manager.transaction(async (transactionManager) => {
+      // For each product ID, clone the product to the target seller
+      for (const productId of product_ids) {
+        // Get the product with all its related data
+        const product = await productService.retrieve(productId, {
+          relations: [
+            "variants",
+            "variants.prices",
+            "variants.options",
+            "options",
+            "tags",
+            "type",
+            "collection",
+            "categories",
+            "images",
+          ],
+        });
+
+        // Check if product belongs to source seller
+        if (product.seller_id !== source_seller_id) {
+          throw new Error(`Product ${productId} does not belong to the source seller`);
+        }
+
+        // Check if product with same SKU already exists for target seller
+        const existingProducts = await productService.list(
+          {
+            sku: product.variants?.[0]?.sku,
+            seller_id: target_seller_id,
+          },
+          { take: 1 }
+        );
+
+        if (existingProducts.length > 0) {
+          // Skip this product as it already exists for the target seller
+          continue;
+        }
+
+        // Create a new product for the target seller
+        const newProductData = {
+          ...product,
+          id: undefined, // Let the database generate a new ID
+          seller_id: target_seller_id,
+          variants: product.variants?.map((variant) => ({
+            ...variant,
+            id: undefined, // Let the database generate a new ID
+            product_id: undefined, // Will be set by the product service
+            prices: variant.prices?.map((price) => ({
+              ...price,
+              id: undefined, // Let the database generate a new ID
+              variant_id: undefined, // Will be set by the variant service
+            })),
+            options: variant.options?.map((option) => ({
+              ...option,
+              id: undefined, // Let the database generate a new ID
+              variant_id: undefined, // Will be set by the variant service
+            })),
+          })),
+          options: product.options?.map((option) => ({
+            ...option,
+            id: undefined, // Let the database generate a new ID
+            product_id: undefined, // Will be set by the product service
+          })),
+          images: product.images?.map((image) => ({
+            ...image,
+            id: undefined, // Let the database generate a new ID
+          })),
+        };
+
+        // Create the new product
+        await productService.create(newProductData);
+      }
+    });
+
+    return res.status(200).json({
+      message: `Successfully cloned ${product_ids.length} products to the target seller`,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error cloning products:", error);
+    return res.status(500).json({
+      message: `Error cloning products: ${error.message}`,
+      success: false,
+    });
+  }
+};

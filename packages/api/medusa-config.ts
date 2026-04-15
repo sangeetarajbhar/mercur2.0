@@ -156,7 +156,7 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/google-location",
       options: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+        apiKey: process.env.GOOGLE_API_KEY,
       },
     },
     {
@@ -182,6 +182,9 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/partner",
+    },
+    {
+      resolve: './src/modules/enhanced-product-import'
     },
     {
       resolve: "./src/modules/tier",
@@ -233,6 +236,12 @@ module.exports = defineConfig({
       options: {
         enabled: true
       }
+    },
+    {
+      resolve: "./src/modules/order-reason-code",
+    },
+    {
+      resolve: "./src/modules/customer",
     },
     // Providers must be registered on the core payment/auth modules — standalone
     // ModuleProvider entries have no `.service` and break defineConfig (Medusa 2.13+).
