@@ -184,6 +184,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/partner",
     },
     {
+      resolve: './src/modules/enhanced-product-import'
+    },
+    {
       resolve: "./src/modules/tier",
     },
     {
