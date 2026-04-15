@@ -6,10 +6,7 @@ import BrandModule from "../modules/brand"
 export default defineLink(
   {
     linkable: ProductModule.linkable.product,
-    isList: true,
+    isList: true
   },
-  {
-    linkable: BrandModule.linkable.brand,
-    isList: true,
-  }
+  BrandModule.linkable.brand
 )

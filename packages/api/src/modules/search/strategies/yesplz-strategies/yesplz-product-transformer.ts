@@ -54,18 +54,15 @@ function buildYesPlzFacetFilters(filters: Record<string, string[]>): Record<stri
   return out
 }
 
-/** YesPlz `productName` = Medusa `subtitle` only (not `title`). */
-function yesPlzProductNameFromMedusa(product: SearchProduct): string {
-  return typeof product.subtitle === 'string' ? product.subtitle.trim() : ''
-}
-
 /**
  * YesPlz product output format
  */
 export interface YesPlzProduct {
   productId: string
-  /** Display name for YesPlz: Medusa `subtitle` only (same field name `productName` on the API). */
+  /** Display name for YesPlz: Medusa `title` only (same field name `productName` on the API). */
   productName: string
+  /** Medusa product subtitle (kept as-is for downstream sync/debug). */
+  subtitle: string
   description: string
   images: Array<{ view: string; src: string }>
   inventoryInfo: Array<{
@@ -114,6 +111,8 @@ export interface YesPlzProduct {
    * fields already sent as first-class properties (gender, category, brand, color, size, etc.).
    */
   filters: Record<string, string[]>
+  /** YesPlz expects this field; we always send an explicit empty list until style tags are wired. */
+  styleTags: string[]
 }
 
 /**
@@ -127,11 +126,13 @@ export class YesPlzProductTransformer implements IProductTransformer<SearchProdu
    * and transforms it to YesPlz webhook payload format
    */
   transform(product: SearchProduct): YesPlzProduct | null {
-    // Early validation - need id, variants, non-empty subtitle (YesPlz productName), and pricing
+    // Early validation - need id, variants, non-empty title (YesPlz productName), and pricing
     if (!product?.id || !Array.isArray(product.variants) || product.variants.length === 0) {
       return null
     }
-    if (!yesPlzProductNameFromMedusa(product)) {
+
+    const productName = typeof product.title === 'string' ? product.title.trim() : ''
+    if (!productName) {
       return null
     }
 
@@ -283,7 +284,8 @@ export class YesPlzProductTransformer implements IProductTransformer<SearchProdu
     // Build YesPlz product payload
     return {
       productId,
-      productName: yesPlzProductNameFromMedusa(product),
+      productName,
+      subtitle: typeof product.subtitle === 'string' ? product.subtitle : '',
       description: product.description || product.subtitle || '',
       images,
       inventoryInfo,
@@ -311,7 +313,8 @@ export class YesPlzProductTransformer implements IProductTransformer<SearchProdu
       seller: {
         sellerId: product.seller?.sellerId || ''
       },
-      filters: yesPlzFilters
+      filters: yesPlzFilters,
+      styleTags: []
     }
   }
 

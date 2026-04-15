@@ -689,7 +689,6 @@ export const transformOrderThumbnails = (order: any, resolution?: string): void 
       }
 
       const checkCODReturnRazorpayPayoutEnabled = process.env.ENABLE_RETURN_RAZORPAY_PAYOUT_REFUND ? JSON.parse(process.env.ENABLE_RETURN_RAZORPAY_PAYOUT_REFUND) : false
-      console.log('checkCODReturnRazorpayPayoutEnabled in transform thumbnail: ', checkCODReturnRazorpayPayoutEnabled)
 
       item.check_cod_return_razorpay_payout_enabled = checkCODReturnRazorpayPayoutEnabled
     })

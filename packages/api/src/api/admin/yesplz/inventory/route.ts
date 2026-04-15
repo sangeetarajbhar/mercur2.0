@@ -11,6 +11,18 @@ export const PATCH = async (
     const user_id =
       req.auth_context?.actor_id || process.env.FEED_NOTIFY_USER_ID || "admin"
     const transaction_id = randomUUID()
+    console.info(
+      `[YesPlz][Inventory] Sync requested: transaction_id=${transaction_id} user_id=${user_id} scope=${
+        bodyIds?.length ? `ids(${bodyIds.length})` : "all_published"
+      }`
+    )
+    if (bodyIds?.length) {
+      console.info(
+        `[YesPlz][Inventory] Product IDs sample: ${JSON.stringify(
+          bodyIds.slice(0, 20)
+        )}`
+      )
+    }
 
     const { result } = await syncYesPlzInventoryBackgroundWorkflow.run({
       container: req.scope,

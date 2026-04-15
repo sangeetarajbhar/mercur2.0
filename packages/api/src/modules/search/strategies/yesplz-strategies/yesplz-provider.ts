@@ -3,10 +3,10 @@ import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { SearchProviderStrategy, SearchQuery, SearchResult, SearchProduct, SortOption } from '../../types'
 import { yesPlzProductTransformer } from './yesplz-product-transformer'
 import { YesPlzService, YesPlzServiceOptions, ListProductsParams, ListCollectionsParams, KeywordSuggestionParams } from './yesplz-service'
-// import { calculateProductPromotions } from '../../../../api/store/product-list/utils/calculate-product-promotions'
+import { calculateProductPromotions } from '../../../../api/store/product-list/utils/calculate-product-promotions'
 import priceExtendLink from '../../../../links/price-extend-price'
 import { LocationType } from '../../../../modules/stock-location-extension/types/common'
-const calculateProductPromotions = async (..._args: any[]) => [] as any[]
+import { RemoteQueryFilters } from '@mercurjs/types'
 
 // Constants
 const DEFAULT_BATCH_SIZE = 20
@@ -528,10 +528,12 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
 
     const logger = this.resolveLogger()
     const query = this.container.resolve(ContainerRegistrationKeys.QUERY)
+    const shouldLogInventoryPayload =
+      process.env.YESPLZ_LOG_INVENTORY_PAYLOAD === 'true'
 
     const PRODUCT_FETCH_PAGE_SIZE = 100
     const batchSize = this.options?.batchSize || DEFAULT_BATCH_SIZE
-    const publishedFilter = { status: 'published', deleted_at: null } as any
+    const publishedFilter = { status: 'published', deleted_at: null }
 
     // Reuse shared inventory resolution helper so syncInventory and publish use identical logic.
     // Step 1: Fetch products (id + variants.id + basic fields) so we know which variants to resolve.
@@ -554,7 +556,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
           query.graph({
             entity: 'product',
             fields: [...productFields] as string[],
-            filters: { id: productIds.slice(i * PRODUCT_FETCH_PAGE_SIZE, (i + 1) * PRODUCT_FETCH_PAGE_SIZE), ...publishedFilter } as any
+            filters: { id: productIds.slice(i * PRODUCT_FETCH_PAGE_SIZE, (i + 1) * PRODUCT_FETCH_PAGE_SIZE), ...publishedFilter } as RemoteQueryFilters<"product">
           })
         )
       )
@@ -566,7 +568,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
         const { data: products } = await query.graph({
           entity: 'product',
           fields: [...productFields] as string[],
-          filters: publishedFilter as any,
+          filters: publishedFilter as RemoteQueryFilters<"product">,
           pagination: { skip, take: PRODUCT_FETCH_PAGE_SIZE }
         })
         allProducts.push(...products)
@@ -578,6 +580,9 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
     if (allProducts.length === 0) {
       return { updatedCount: 0, failedCount: 0, failedItems: [] }
     }
+    logger.info(
+      `${ERROR_PREFIX} syncInventory prepared ${allProducts.length} products for sync (detailed_payload_logs=${shouldLogInventoryPayload ? 'enabled' : 'disabled'})`
+    )
 
     // ---------- Shared inventory resolution: compute DS locations + availability per variant ----------
     const { variantToDsLocations, variantHasStock } = await this.resolveVariantInventory(
@@ -620,6 +625,15 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
           })
 
           inventoryInfoByProductId.set(product.id, inventoryInfo)
+          if (shouldLogInventoryPayload) {
+            logger.info(
+              `${ERROR_PREFIX} [syncInventory][payload] ${JSON.stringify({
+                product_id: product.id,
+                variants_count: variants.length,
+                inventoryInfo
+              })}`
+            )
+          }
           await this.updateProductInventory(product.id, inventoryInfo)
         })
       )
@@ -717,7 +731,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
     const query = this.container.resolve(ContainerRegistrationKeys.QUERY)
     const batchSize = this.options?.batchSize || DEFAULT_BATCH_SIZE
     const FETCH_PAGE_SIZE = 100
-    const publishedFilter = { status: 'published', deleted_at: null } as any
+    const publishedFilter = { status: 'published', deleted_at: null }
     // const service = this.yesplzService
 
     const startedAt = Date.now()
@@ -736,7 +750,7 @@ export class YesPlzSearchProvider implements SearchProviderStrategy {
         const { data: products } = await query.graph({
           entity: 'product',
           fields: ['id'],
-          filters: publishedFilter as any,
+          filters: publishedFilter as RemoteQueryFilters<"product">,
           pagination: { skip, take: FETCH_PAGE_SIZE }
         })
         allIds.push(...products.map((p: { id: string }) => p.id))

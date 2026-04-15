@@ -1,6 +1,5 @@
-import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
+import { createStep, createWorkflow, StepResponse, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
 import { Modules } from "@medusajs/framework/utils"
-import { WorkflowResponse, createWorkflow } from "@medusajs/framework/workflows-sdk"
 import { YesPlzEvents } from "../../../shared/events/yesplz-events"
 
 export interface YesPlzMarkInactiveBackgroundInput {
@@ -47,4 +46,3 @@ export const syncYesPlzMarkInactiveBackgroundWorkflow = createWorkflow(
     return new WorkflowResponse(result)
   }
 )
-

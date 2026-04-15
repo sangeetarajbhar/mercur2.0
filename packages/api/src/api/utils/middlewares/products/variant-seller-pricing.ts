@@ -1,18 +1,19 @@
 // src/api/utils/middlewares/products/variant-seller-pricing.ts
 import {
   ContainerRegistrationKeys,
+  deduplicate,
+  groupBy,
+  isPresent,
+  MathBN,
   MedusaError,
   Modules,
   PriceListType
 } from "@medusajs/framework/utils"
-import sellerPriceList from '@mercurjs/core-plugin/links/price-list-seller-link'
-import sellerProduct from '@mercurjs/core-plugin/links/product-seller-link'
+import pricingListSellerLink from "@mercurjs/core-plugin/links/price-list-seller-link"
+import productSellerLink from "@mercurjs/core-plugin/links/product-seller-link"
 import { Context, MedusaContainer } from "@medusajs/framework/types"
-import { groupBy, deduplicate } from "@medusajs/framework/utils"
-import { isPresent } from "@medusajs/framework/utils"
-import { MathBN } from "@medusajs/framework/utils"
 import priceExtendLink from "../../../../links/price-extend-price"
-import sellerStockLocation from '@mercurjs/core-plugin/links/stock-location-seller-link'
+import stockLocationSellerLink from '@mercurjs/core-plugin/links/stock-location-seller-link'
 
 /**
  * Get sellers that are mapped to both the specified locations AND products (intersection)
@@ -34,7 +35,7 @@ async function getValidSellersForLocationAndProducts(
     // Get all sellers mapped to the specified locations
     if (locationIds?.length) {
       const { data: sellerLocationMappings } = await query.graph({
-        entity: sellerStockLocation.entryPoint,
+        entity: stockLocationSellerLink.entryPoint,
         fields: ['seller_id', 'stock_location_id'],
         filters: {
           stock_location_id: { $in: locationIds }
@@ -46,7 +47,7 @@ async function getValidSellersForLocationAndProducts(
     // Get all sellers mapped to the specified products
     if (productIds?.length && locationMappedSellers.length > 0) {
       const { data: sellerProductMappings } = await query.graph({
-          entity: sellerProduct.entryPoint,
+          entity: productSellerLink.entryPoint,
           fields: ['seller_id', 'product_id'],
           filters: {
             product_id: { $in: productIds },
@@ -136,7 +137,7 @@ async function validatePriceListSkuMapping(
       try {
         // Check if the seller is mapped to any of the specified locations (cluster + child locations)
         const { data: sellerLocationMappings } = await query.graph({
-          entity: sellerStockLocation.entryPoint,
+          entity: stockLocationSellerLink.entryPoint,
           fields: ['seller_id', 'stock_location_id'],
           filters: {
             seller_id: sellerId,
@@ -159,7 +160,7 @@ async function validatePriceListSkuMapping(
     if (contextProductIds && contextProductIds.length > 0) {
       // Check if the seller is mapped to the specific products in context
       const { data: sellerProductMappings } = await query.graph({
-        entity: sellerProduct.entryPoint,
+        entity: productSellerLink.entryPoint,
         fields: ['product_id'],
         filters: {
           seller_id: sellerId,
@@ -179,7 +180,7 @@ async function validatePriceListSkuMapping(
 
     // Step 3: Fallback - Check if seller has any product mappings at all
     const { data: allSellerProductMappings } = await query.graph({
-      entity: sellerProduct.entryPoint,
+        entity: productSellerLink.entryPoint,
       fields: ['product_id'],
       filters: {
         seller_id: sellerId
@@ -274,7 +275,7 @@ async function calculatePrices(
 
 
     const sellerPriceListLinks = await query.graph({
-      entity: sellerPriceList.entryPoint,
+      entity: pricingListSellerLink.entryPoint,
       fields: [
         'seller_id',
         'price_list_id',
@@ -789,7 +790,7 @@ async function getSellersForProducts(
   try {
     // Query seller-product links directly
     const sellerProductLinks = await query.graph({
-      entity: sellerProduct.entryPoint,
+      entity: productSellerLink.entryPoint,
       fields: [
         'seller_id',
         'product_id',

@@ -36,7 +36,7 @@ export const updateTierWorkflow = createWorkflow(
 
     // 2. Validate promotion if provided
     when({ input }, (data) => !!data.input.promo_id).then(() => {
-      return useQueryGraphStep({
+       useQueryGraphStep({
         entity: "promotion",
         fields: ["id"],
         filters: {
@@ -45,7 +45,7 @@ export const updateTierWorkflow = createWorkflow(
         options: {
           throwIfKeyNotFound: true,
         },
-      })
+      }) as any
     })
 
     // 3. Update the tier

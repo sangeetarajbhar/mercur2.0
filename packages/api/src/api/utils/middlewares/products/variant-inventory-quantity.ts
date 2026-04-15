@@ -6,7 +6,7 @@ import {
 } from "@medusajs/framework/utils"
 import { MedusaRequest, MedusaStoreRequest } from "@medusajs/framework/http"
 import { transformAndValidateSalesChannelIds } from "./filter-by-valid-sales-channels"
-import sellerStockLocation from '@mercurjs/core-plugin/links/stock-location-seller-link'
+import stockLocationSellerLink from '@mercurjs/core-plugin/links/stock-location-seller-link'
 
 export const wrapVariantsWithTotalInventoryQuantity = async (
   req: MedusaRequest,
@@ -175,7 +175,7 @@ const getVariantAvailabilityForSeller = async (query: Query, options: GetVariant
     }
 
     const sellerLocationResult = await query.graph({
-      entity: sellerStockLocation.entryPoint,
+      entity: stockLocationSellerLink.entryPoint,
       fields: ['seller_id', 'stock_location_id'],
       filters: sellerLocationFilters
     })
@@ -358,7 +358,7 @@ export const wrapVariantsWithSellerLocationStockStatus = async (
           if (allLocationIds.length > 0) {
             // Step 4: Check if the min price seller is mapped to ANY of the provided locations (parent OR child)
             const sellerLocationResult = await query.graph({
-              entity: sellerStockLocation.entryPoint,
+              entity: stockLocationSellerLink.entryPoint,
               fields: ['seller_id', 'stock_location_id'],
               filters: {
                 seller_id: minPriceSellerId,
@@ -484,7 +484,7 @@ export const wrapVariantsWithSellerInventory = async (
           if (allLocationIds.length > 0) {
             // Step 3: Get all sellers mapped to ALL locations (parent + child)
             const sellerLocationResult = await query.graph({
-              entity: sellerStockLocation.entryPoint,
+              entity: stockLocationSellerLink.entryPoint,
               fields: ['seller_id', 'stock_location_id'],
               filters: {
                 stock_location_id: allLocationIds
@@ -610,7 +610,7 @@ export const filterSellersByLocationAvailability = async (
 
     // Get all sellers mapped to the specified locations
     const sellerLocationResult = await query.graph({
-      entity: sellerStockLocation.entryPoint,
+      entity: stockLocationSellerLink.entryPoint,
       fields: ['seller_id', 'stock_location_id'],
       filters: {
         stock_location_id: location_ids
