@@ -139,22 +139,27 @@ export const CreateLocationDetailsSchema = LocationNameFieldSchema.merge(
 
 export const StepTwoConditionalSchema = z
   .object({
-    seller_id: z.string().min(1),
-    return_location_id: z.string().min(1),
-    servisibility_status: z.number().min(1),
-    start_time: z.string().min(1),
-    end_time: z.string().min(1),
-    partner_id: z.string().min(1),
-    location_type: z.number().min(1),
-    address_type: z.number().min(1),
-    is_delay: z.number().min(1),
+    seller_id: z.string().min(1, "Seller is required"),
+    return_location_id: z.string().min(1, "Return Location is required"),
+    servisibility_status: z.number().min(1, "Servisibility Status is required"),
+    start_time: z.string().min(1, "Start Time is required"),
+    end_time: z.string().min(1, "End Time is required"),
+    partner_id: z.string().min(1, "Partner is required"),
+    location_type: z.number().min(1, "Location Type is required"),
+    address_type: z.number().min(1, "Address Type is required"),
+    partner_wh_code: z.string().optional(),
+    lead_time: z.string().optional(),
+    managed_by: z.string().optional(),
+    is_delay: z.number().min(1, "Is Delay is required"),
+    delay_value: z.string().optional(),
+    delay_message: z.string().optional(),
   })
   .refine(
     (data) => {
       if (!data.start_time || !data.end_time) return true;
       return data.start_time <= data.end_time;
     },
-    { message: "End time must be greater than start time", path: ["end_time"] }
+    { message: "End Time must be greater than Start Time", path: ["end_time"] }
   );
 
 export type CreateLocationSchemaType = z.infer<typeof CreateLocationSchema>;

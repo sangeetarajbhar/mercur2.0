@@ -1,1 +1,5 @@
-export { default } from "../routes/settings/locations/[id]/edit/page";
+import StockLocationEditRoute from "../routes/settings/locations/[location_id]/edit/page";
+
+// Mercur lazy routes import chunks expecting a named `Component` export.
+export const Component = StockLocationEditRoute;
+export default StockLocationEditRoute;

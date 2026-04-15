@@ -140,72 +140,108 @@ export const POST = async (
         }
       })
       if (stockLocationSection.result?.id) {
+        const extractProvidedPdfUrl = (file: any): string | undefined => {
+          const raw =
+            file?.url ??
+            file?.pdf_url ??
+            file?.pdfUrl ??
+            file?.file_url ??
+            file?.fileUrl ??
+            file?.path
+
+          if (typeof raw !== "string" || !raw.trim()) {
+            return undefined
+          }
+
+          if (raw.startsWith("blob:")) {
+            return undefined
+          }
+
+          return raw
+        }
+
         const documentTypes = [
           {
             condition:
-              additional_data.pan_number &&
+              additional_data.pan_number !== undefined ||
               (additional_data.pan_pdf as any[])?.length > 0,
             type: DocumentType.PAN,
             number: additional_data.pan_number,
-            file: (additional_data.pan_pdf as any[])[0] // Full file object with base64Content
+            file: (additional_data.pan_pdf as any[])[0], // Full file object with base64Content
           },
           {
             condition:
-              additional_data.gst_number &&
+              additional_data.gst_number !== undefined ||
               (additional_data.gst_pdf as any[])?.length > 0,
             type: DocumentType.GST,
             number: additional_data.gst_number,
-            file: (additional_data.gst_pdf as any[])[0] // Full file object with base64Content
+            file: (additional_data.gst_pdf as any[])[0], // Full file object with base64Content
           },
           {
             condition:
-              additional_data.fssai_number &&
+              additional_data.fssai_number !== undefined ||
               (additional_data.fssai_pdf as any[])?.length > 0,
             type: DocumentType.FSSAI,
             number: additional_data.fssai_number,
-            file: (additional_data.fssai_pdf as any[])[0] // Full file object with base64Content
-          }
+            file: (additional_data.fssai_pdf as any[])[0], // Full file object with base64Content
+          },
         ]
 
         for (const doc of documentTypes) {
-          if (doc.condition && doc.file?.base64Content) {
-            try {
+          if (!doc.condition) {
+            continue
+          }
+
+          try {
+            let pdfUrlToPersist = extractProvidedPdfUrl(doc.file)
+
+            if (
+              typeof doc.file === "object" &&
+              doc.file !== null &&
+              "base64Content" in doc.file &&
+              doc.file.base64Content
+            ) {
               // Convert base64 to binary format for Medusa upload
-              const base64Data = doc.file.base64Content.split(',')[1] // Remove data:application/pdf;base64, prefix
-              const fileBuffer = Buffer.from(base64Data, 'base64') // Convert to Buffer instead of binary string
+              const base64Data = doc.file.base64Content.split(",")[1] // Remove data:application/pdf;base64, prefix
+              const fileBuffer = Buffer.from(base64Data, "base64")
 
               // Generate organized filename with seller info and date
               const now = new Date()
-              const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` // yyyy-mm
-              const fullDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}` // yyyy-mm-dd
+              const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}` // yyyy-mm
+              const fullDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}` // yyyy-mm-dd
               const documentTypeName = DocumentType[doc.type].toLowerCase() // pan, gst, fssai
-              const sellerName = seller.name.replace(/\s+/g, '')
+              const sellerName = (seller?.name || "seller").replace(/\s+/g, "")
+              const sellerId = seller?.id || additional_data?.seller_id || "unknown"
 
-              const fileNameWithPath = `documents/${yearMonth}/${seller.id}/${documentTypeName}/${sellerName}_${documentTypeName}_${stock_location_id}_${fullDate}.pdf`
+              const fileNameWithPath = `documents/${yearMonth}/${sellerId}/${documentTypeName}/${sellerName}_${documentTypeName}_${stock_location_id}_${fullDate}.pdf`
               // Upload file to S3 using custom uploadToS3WithPath function
               const fileUrl = await uploadToS3WithPath(
                 fileNameWithPath,
                 fileBuffer,
-                doc.file.file?.type || 'application/pdf'
-              );
-              if (fileUrl) {
-                // Create document record with permanent S3 URL
-                await assignStockLocationSectionToStockLocationDocument.run({
-                  container: req.scope,
-                  input: {
-                    stock_location_section_id: stockLocationSection.result?.id,
-                    document_type: doc.type,
-                    document_number: doc.number,
-                    pdf_url: fileNameWithPath // only store file path, s3 URL can be changed in future
-                  }
-                })
-              }
-            } catch (error) {
-              console.error(
-                `Admin - Failed to upload ${DocumentType[doc.type]} document to S3:`,
-                error
+                doc.file.file?.type || "application/pdf"
               )
+
+              pdfUrlToPersist = fileUrl
+                ? fileNameWithPath // only store file path, s3 URL can be changed in future
+                : (doc.file.base64Content as string | undefined)
             }
+
+            if (pdfUrlToPersist) {
+              await assignStockLocationSectionToStockLocationDocument.run({
+                container: req.scope,
+                input: {
+                  stock_location_section_id: stockLocationSection.result?.id,
+                  document_type: doc.type,
+                  document_number: doc.number || "",
+                  pdf_url: pdfUrlToPersist,
+                },
+              })
+            }
+          } catch (error) {
+            console.error(
+              `Admin - Failed to upload ${DocumentType[doc.type]} document to S3:`,
+              error
+            )
           }
         }
 

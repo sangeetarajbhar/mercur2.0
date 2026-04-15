@@ -33,7 +33,9 @@ export const GET = async (
       stockLocation.stock_location_section.stock_location_documents.map((doc) => ({
         ...doc,
         pdf_url: doc.pdf_url
-          ? `${S3_BASE_URL}/${doc.pdf_url.replace(/^\/+/, '')}`
+          ? /^(https?:\/\/|data:)/i.test(doc.pdf_url)
+            ? doc.pdf_url
+            : `${S3_BASE_URL}/${doc.pdf_url.replace(/^\/+/, '')}`
           : doc.pdf_url,
       }))
   }

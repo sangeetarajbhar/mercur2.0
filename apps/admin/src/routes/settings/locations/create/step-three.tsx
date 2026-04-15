@@ -163,7 +163,9 @@ export const StepThree = ({ form }: Props) => {
                   {errors.pan_pdf?.message ? (
                     <p className="text-ui-fg-error mt-1 text-xs">{String(errors.pan_pdf.message)}</p>
                   ) : null}
-                  {panPdf && panPdf.length > 0 ? <PDFFileDisplay file={panPdf[0]} /> : null}
+                  {panPdf && panPdf.length > 0 ? (
+                    <PDFFileDisplay file={panPdf[0] as FileType} />
+                  ) : null}
                 </div>
               </ProgressAccordion.Content>
             </ProgressAccordion.Item>
@@ -192,7 +194,9 @@ export const StepThree = ({ form }: Props) => {
                   {errors.gst_pdf?.message ? (
                     <p className="text-ui-fg-error mt-1 text-xs">{String(errors.gst_pdf.message)}</p>
                   ) : null}
-                  {gstPdf && gstPdf.length > 0 ? <PDFFileDisplay file={gstPdf[0]} /> : null}
+                  {gstPdf && gstPdf.length > 0 ? (
+                    <PDFFileDisplay file={gstPdf[0] as FileType} />
+                  ) : null}
                 </div>
               </ProgressAccordion.Content>
             </ProgressAccordion.Item>
@@ -223,7 +227,9 @@ export const StepThree = ({ form }: Props) => {
                   {errors.fssai_pdf?.message ? (
                     <p className="text-ui-fg-error mt-1 text-xs">{String(errors.fssai_pdf.message)}</p>
                   ) : null}
-                  {fssaiPdf && fssaiPdf.length > 0 ? <PDFFileDisplay file={fssaiPdf[0]} /> : null}
+                  {fssaiPdf && fssaiPdf.length > 0 ? (
+                    <PDFFileDisplay file={fssaiPdf[0] as FileType} />
+                  ) : null}
                 </div>
               </ProgressAccordion.Content>
             </ProgressAccordion.Item>
