@@ -20,7 +20,7 @@ export const storeActiveGuard = async (
   const seller = await fetchSellerByAuthActorId(
     req.auth_context.actor_id,
     req.scope,
-    ['e2`']
+    // ['e2`']
   )
 
   const isActiveStore = seller?.status === SellerStatus.ACTIVE

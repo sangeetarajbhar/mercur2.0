@@ -6,7 +6,7 @@ import { SellerDTO } from '@mercurjs/types'
 export const fetchSellerByAuthActorId = async (
   authActorId: string,
   scope: MedusaContainer,
-  fields: string[] = ['id', 'name']
+  fields: string[] = ['id', 'name', 'status']
 ): Promise<SellerDTO> => {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
 
