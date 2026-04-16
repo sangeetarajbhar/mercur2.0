@@ -4,7 +4,7 @@ import {
 } from "@medusajs/framework/types"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
-import { SELLER_MODULE } from '@mercurjs/seller'
+import { SELLER_MODULE } from '../../../modules/seller'
 
 /**
  * The details of the line items to create.

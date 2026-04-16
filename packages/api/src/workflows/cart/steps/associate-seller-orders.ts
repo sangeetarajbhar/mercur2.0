@@ -1,6 +1,6 @@
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 import { ContainerRegistrationKeys, MedusaError, Modules } from '@medusajs/framework/utils'
-import { SELLER_MODULE } from '@mercurjs/seller'
+import { SELLER_MODULE } from '../../../modules/seller'
 
 /**
  * Associates orders with sellers by inserting records into the seller_seller_order_order junction table.
