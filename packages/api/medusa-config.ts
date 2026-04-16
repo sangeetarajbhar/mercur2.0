@@ -40,6 +40,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/moengage_alert",
     },
     {
+      resolve: "./src/modules/seller",
+    },
+    {
       resolve: "@medusajs/medusa/notification",
       options: {
         providers: [
