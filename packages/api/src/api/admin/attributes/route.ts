@@ -12,6 +12,8 @@ export const GET = async (
   res: MedusaResponse
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+
+  
   const { data: attributes = [], metadata } = await query.graph({
     entity: "attribute",
     fields: req.queryConfig?.fields,

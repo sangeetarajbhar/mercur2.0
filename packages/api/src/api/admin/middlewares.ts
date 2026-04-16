@@ -22,6 +22,7 @@ import { stockLocationRoutesMiddlewares } from "./locations/middlewares"
 import { stockLocationExtensionRoutesMiddlewares } from "./stock-location-extension/middlewares"
 import { adminStockLocationRoutesMiddlewares } from "./stock-locations/middlewares"
 import { adminProductsMiddlewares } from "./products/middlewares"
+import { sellerMiddlewares } from "./sellers/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -45,5 +46,6 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...stockLocationRoutesMiddlewares,  
   ...stockLocationExtensionRoutesMiddlewares,
   ...adminStockLocationRoutesMiddlewares,
-  ...adminProductsMiddlewares
+  ...adminProductsMiddlewares,
+  ...sellerMiddlewares
 ]

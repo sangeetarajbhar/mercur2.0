@@ -40,6 +40,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/moengage_alert",
     },
     {
+      resolve: "./src/modules/seller",
+    },
+    {
       resolve: "@medusajs/medusa/notification",
       options: {
         providers: [
@@ -185,6 +188,33 @@ module.exports = defineConfig({
     },
     {
       resolve: './src/modules/enhanced-product-import'
+    },
+    {
+      resolve: '@medusajs/medusa/file',
+      options: {
+        providers: [
+          {
+            resolve: './src/modules/file-s3-no-acl',
+            id: 's3-no-acl',
+            options: {
+              file_url: process.env.S3_FILE_URL,
+              access_key_id: process.env.S3_ACCESS_KEY_ID,
+              secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
+              region: process.env.S3_REGION,
+              bucket: process.env.S3_BUCKET,
+              endpoint: process.env.S3_ENDPOINT,
+            }
+          }
+          // {
+          //   resolve: "@medusajs/medusa/file-local",
+          //   id: "local",
+          //   options: {
+          //     upload_dir: "static",
+          //     backend_url: "http://localhost:9000/static"
+          //   },
+          // },
+        ]
+      }
     },
     {
       resolve: "./src/modules/tier",
