@@ -1,4 +1,9 @@
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import { queryKeysFactory } from "@mercurjs/dashboard-shared";
 
 type StockLocation = {
@@ -108,4 +113,74 @@ export const useStockLocation = (
     ...result,
     stock_location: result.data?.stock_location || null,
   };
+};
+
+export type LocationCreateOrUpdatePayload = {
+  name: string;
+  address: {
+    address_1: string;
+    address_2?: string;
+    city: string;
+    company?: string;
+    country_code: string;
+    phone: string;
+    postal_code: string;
+    province: string;
+  };
+  additional_data?: Record<string, unknown>;
+};
+
+export const useCreateStockLocation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: LocationCreateOrUpdatePayload) => {
+      const response = await fetch("/admin/locations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to create location");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: stockLocationsQueryKeys.lists() });
+    },
+  });
+};
+
+export const useUpdateStockLocation = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: LocationCreateOrUpdatePayload) => {
+      const response = await fetch(`/admin/locations/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to update location");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: stockLocationsQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: stockLocationsQueryKeys.detail(id) });
+    },
+  });
 };
