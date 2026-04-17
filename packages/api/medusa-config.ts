@@ -299,6 +299,7 @@ module.exports = defineConfig({
         ]
       }
     },
+    { resolve: './src/modules/marketplace' }
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",
