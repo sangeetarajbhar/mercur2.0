@@ -8,6 +8,10 @@ export type AdminSellerParamsType = z.infer<typeof AdminSellerParams>
 export const AdminSellerParams = createFindParams({
   offset: 0,
   limit: 50
+}).extend({
+  // Allowed so clients/SDKs do not fail query validation when `store_status` is sent
+  // on the URL (e.g. POST /admin/sellers/:id validates query before body).
+  store_status: z.nativeEnum(StoreStatus).optional()
 })
 
 export type AdminGetSellerProductsParamsType = z.infer<

@@ -1,13 +1,13 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import SellerBrandLink from '../../../../links/seller-brand'
-import { constructS3Url } from '../../../../shared/utils/common'
+import SellerBrandLink from '../../../../../links/seller-brand'
+import { constructS3Url } from '../../../../../shared/utils/common'
 
-import { updateSellerWorkflow } from '../../../../workflows/seller/workflows'
-import { AdminUpdateSellerType } from '../validators'
+import { updateSellerWorkflow } from '../../../../../workflows/seller/workflows'
+import { AdminUpdateSellerType } from '../../validators'
 
 /**
- * @oas [get] /admin/sellers/{id}
+ * @oas [get] /admin/sellers/v2/{id}
  * operationId: "AdminGetSeller"
  * summary: "Get Seller"
  * description: "Retrieves a specific seller by its ID."
@@ -130,7 +130,7 @@ export async function GET(
 }
 
 /**
- * @oas [post] /admin/sellers/{id}
+ * @oas [post] /admin/sellers/v2/{id}
  * operationId: "AdminUpdateSeller"
  * summary: "Update Seller"
  * description: "Updates an existing seller with the specified properties."

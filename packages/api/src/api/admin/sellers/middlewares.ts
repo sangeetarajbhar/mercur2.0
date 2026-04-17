@@ -50,7 +50,7 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
   },
   {
     method: ['POST'],
-    matcher: '/admin/sellers/:id',
+    matcher: '/admin/sellers/v2/:id',
     middlewares: [
       unlessPath(
         /.*\/sellers\/invite/,

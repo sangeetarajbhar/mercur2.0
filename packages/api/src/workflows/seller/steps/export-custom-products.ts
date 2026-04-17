@@ -1,7 +1,7 @@
 // import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 // import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
-// import productSellerLink from '@mercurjs/core-plugin/links/product-seller-link'
+// import sellerProductLink from '@mercurjs/core-plugin/links/product-seller-link'
 
 // // Extended fields for comprehensive product export including all related data
 // export const customExportProductFields = [
@@ -247,7 +247,7 @@
 //     // Fetch products in pages to manage memory
 //     while (hasMore) {
 //       const result = await query.graph({
-//         entity: productSellerLink.entryPoint,
+//         entity: sellerProductLink.entryPoint,
 //         fields: [
 //           "id",
 //           "name",
