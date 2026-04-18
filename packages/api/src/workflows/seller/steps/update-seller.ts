@@ -1,51 +1,31 @@
-import { toHandle } from '@medusajs/framework/utils'
-import { Modules } from '@medusajs/framework/utils'
-import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
+import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
+import { MercurModules, SellerDTO, UpdateSellerDTO } from "@mercurjs/types"
 
-import { SellerDTO, SellerEvents, UpdateSellerDTO } from '../../../types/seller'
-import { SELLER_MODULE, SellerModuleService } from '../../../modules/seller'
+import SellerModuleService from "../../../modules/seller/service"
 
-export const updateSellerStep = createStep(
-  'update-seller',
-  async (input: UpdateSellerDTO, { container }) => {
-    const service = container.resolve<SellerModuleService>(SELLER_MODULE)
-    const eventBus = container.resolve(Modules.EVENT_BUS)
+type UpdateSellersStepInput = {
+  selector: Record<string, unknown>
+  update: UpdateSellerDTO
+}
 
-    const [previousData] = await service.listSellers({
-      id: input.id
-    })
+export const updateSellersStep = createStep(
+  "update-sellers",
+  async ({ selector, update }: UpdateSellersStepInput, { container }) => {
+    const service = container.resolve<SellerModuleService>(MercurModules.SELLER)
+    const prevSellers = await service.listSellers(selector)
 
-    const newHandle = input.name ? toHandle(input.name) : undefined
+    const sellers = await service.updateSellers(
+      prevSellers.map((s) => ({ id: s.id, ...update }))
+    )
 
-    const updatedSellers: SellerDTO = await service.updateSellers({
-      ...input,
-      ...(newHandle ? { handle: newHandle } : {})
-    })
-
-    // Emit seller updated event for Algolia sync
-    await eventBus.emit({
-      name: SellerEvents.SELLER_UPDATED,
-      data: {
-        id: input.id,
-        seller: updatedSellers
-      }
-    })
-
-    if (input.store_status) {
-      await eventBus.emit({
-        name: SellerEvents.STORE_STATUS_CHANGED,
-        data: {
-          id: input.id,
-          store_status: input.store_status
-        }
-      })
+    return new StepResponse(sellers, prevSellers)
+  },
+  async (prevSellers: SellerDTO[], { container }) => {
+    if (!prevSellers) {
+      return
     }
 
-    return new StepResponse(updatedSellers, previousData as UpdateSellerDTO)
-  },
-  async (previousData: UpdateSellerDTO, { container }) => {
-    const service = container.resolve<SellerModuleService>(SELLER_MODULE)
-
-    await service.updateSellers(previousData)
+    const service = container.resolve<SellerModuleService>(MercurModules.SELLER)
+    await service.updateSellers(prevSellers)
   }
 )

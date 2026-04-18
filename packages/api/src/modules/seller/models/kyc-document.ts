@@ -1,5 +1,5 @@
 import { model } from '@medusajs/framework/utils'
-import { Seller } from './seller'
+import  Seller from './seller'
 
 export const KycDocument = model.define('kyc_document', {
   id: model.id({ prefix: 'kyc' }).primaryKey(),

@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
+import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys, HasMany } from '@medusajs/framework/utils'
 import { DashboardModuleOptions } from '@mercurjs/types'
 import path from 'path'
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
@@ -21,6 +21,17 @@ module.exports = defineConfig({
   },
   modules: [
     {
+      resolve: "@mercurjs/core-plugin/modules/custom-fields",
+      options: {
+        customFields: {
+          Seller: {
+            company_spocs: { type: "string",  },
+          },
+         
+        },
+      },
+    },
+    {
       resolve: '@mercurjs/core-plugin/modules/admin-ui',
       options: {
         appDir: path.join(__dirname, '../../apps/admin'),
@@ -35,6 +46,12 @@ module.exports = defineConfig({
         path: '/seller',
         disable: true
       } as DashboardModuleOptions
+    },
+    {
+      resolve: '@medusajs/medusa/rbac',
+      definition: {
+        isQueryable: true,
+      },
     },
     {
       resolve: "./src/modules/moengage_alert",

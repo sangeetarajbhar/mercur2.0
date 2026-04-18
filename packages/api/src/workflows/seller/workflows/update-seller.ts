@@ -1,19 +1,42 @@
-import { WorkflowResponse, createWorkflow, createHook } from '@medusajs/framework/workflows-sdk'
+import {
+  createHook,
+  createWorkflow,
+  transform,
+  WorkflowResponse,
+} from "@medusajs/framework/workflows-sdk"
+import { emitEventStep } from "@medusajs/medusa/core-flows"
+import { UpdateSellerDTO } from "@mercurjs/types"
+import { AdditionalData } from "@medusajs/framework/types"
 
-import { UpdateSellerDTO } from '../../../types/seller'
+import { updateSellersStep } from "../steps"
+import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
 
-import { updateSellerStep } from '../steps'
+export const updateSellersWorkflowId = "update-sellers"
 
-export const updateSellerWorkflow = createWorkflow(
-  'update-seller-v2',
-  function (input: UpdateSellerDTO) {
-    const seller = updateSellerStep(input)
-    
-    const sellerUpdatedHook = createHook('sellerUpdated', {
-      sellerId: seller.id,
-      seller: seller
+type UpdateSellersWorkflowInput = {
+  selector: Record<string, unknown>
+  update: UpdateSellerDTO
+} & AdditionalData
+
+export const updateSellersWorkflow: ReturnType<typeof createWorkflow> = createWorkflow(
+  updateSellersWorkflowId,
+  function (input: UpdateSellersWorkflowInput) {
+    const sellers = updateSellersStep(input)
+
+    const sellersUpdated = createHook("sellersUpdated", {
+      sellers,
+      additional_data: input.additional_data,
     })
-    
-    return new WorkflowResponse(seller, { hooks: [sellerUpdatedHook] })
+
+    const eventData = transform({ sellers }, ({ sellers }) =>
+      sellers.map((s) => ({ id: s.id }))
+    )
+
+    emitEventStep({
+      eventName: SellerWorkflowEvents.UPDATED,
+      data: eventData,
+    })
+
+    return new WorkflowResponse(sellers, { hooks: [sellersUpdated] })
   }
 )

@@ -1,5 +1,13 @@
 import { ulid } from 'ulid'
-import { SellerModuleService } from '../../../modules/seller'
+
+/**
+ * Structural type for the seller module service where the full class type
+ * is not imported (e.g. from `@mercurjs/core-plugin`). Only methods used in
+ * this module are declared.
+ */
+export type SellerModuleService = {
+  listSellers: (filters: { barcode: string }) => Promise<readonly unknown[]>
+}
 
 export function generatePassword(name: string, phone: string): string {
     const digitsOnly = phone.replace(/\D/g, "")

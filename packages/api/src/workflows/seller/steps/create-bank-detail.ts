@@ -1,7 +1,6 @@
 import { MedusaError } from "@medusajs/framework/utils"
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { SellerModuleService } from "../../../modules/seller"
-import { SELLER_MODULE } from "../../../modules/seller"
+import { MercurModules } from "@mercurjs/types"
 
 type CreateBankDetailInput = {
   sellerId: string
@@ -11,7 +10,7 @@ type CreateBankDetailInput = {
 export const createBankDetailStep = createStep(
   "create-bank-detail",
   async (input: CreateBankDetailInput, { container }) => {
-    const sellerModuleService = container.resolve<SellerModuleService>(SELLER_MODULE)
+    const sellerModuleService = container.resolve(MercurModules.SELLER)
     
     // Handle empty or undefined bank_detail
     if (!input.bank_detail || !input.bank_detail.account_number) {
@@ -62,7 +61,7 @@ export const createBankDetailStep = createStep(
       )
     }
     
-    const sellerModuleService = container.resolve<SellerModuleService>(SELLER_MODULE)
+    const sellerModuleService = container.resolve(MercurModules.SELLER)
     await sellerModuleService.softDeleteBankDetails([bankDetailId])
   }
 )

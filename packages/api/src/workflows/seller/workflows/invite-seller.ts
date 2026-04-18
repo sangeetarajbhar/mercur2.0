@@ -1,12 +1,17 @@
-// import { WorkflowResponse, createWorkflow } from '@medusajs/framework/workflows-sdk'
+import { createWorkflow, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
 
-// import { CreateSellerInvitationDTO } from '../../../types/seller'
+import { sendSellerInvitationEmailStep } from "../steps/send-invitation-email"
 
-// import { sendSellerInvitationEmailStep } from '../steps/send-invitation-email'
+type InviteSellerInput = {
+  email: string
+  registration_url?: string
+}
 
-// export const inviteSellerWorkflow = createWorkflow(
-//   'invite-seller',
-//   function (input: CreateSellerInvitationDTO) {
-//     return new WorkflowResponse(sendSellerInvitationEmailStep(input))
-//   }
-// )
+export const inviteSellerWorkflow = createWorkflow(
+  "invite-seller",
+  (input: InviteSellerInput) => {
+    const result = sendSellerInvitationEmailStep(input)
+
+    return new WorkflowResponse(result)
+  }
+)

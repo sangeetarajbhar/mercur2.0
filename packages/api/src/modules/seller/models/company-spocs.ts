@@ -1,5 +1,5 @@
 import { model } from '@medusajs/framework/utils'
-import { Seller } from './seller'
+import  Seller  from './seller'
 
 export const CompanySpoc = model.define('company_spoc', {
   id: model.id({ prefix: 'spoc' }).primaryKey(),
