@@ -211,6 +211,12 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "./src/modules/price-list-import-request",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/payout-transactions",
     },
     {
