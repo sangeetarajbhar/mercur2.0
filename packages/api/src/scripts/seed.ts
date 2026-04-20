@@ -1080,6 +1080,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
     seller = await sellerModule.createSellers({
       name: "Test Seller",
       email: sellerEmail,
+      currency_code: "inr",
     });
 
     const authResult = await authModule.register("emailpass", {

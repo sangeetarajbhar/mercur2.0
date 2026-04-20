@@ -20,6 +20,7 @@ export class Migration20260324104737 extends Migration {
     this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_order_group_deleted_at" ON "order_group" ("deleted_at") WHERE deleted_at IS NULL;`);
 
     this.addSql(`create table if not exists "seller" ("id" text not null, "name" text not null, "handle" text not null, "email" text not null, "description" text null, "logo" text null, "banner" text null, "website_url" text null, "external_id" text null, "currency_code" text not null, "status" text check ("status" in ('open', 'pending_approval', 'suspended', 'terminated')) not null default 'pending_approval', "status_reason" text null, "is_premium" boolean not null default false, "closed_from" timestamptz null, "closed_to" timestamptz null, "metadata" jsonb null, "created_at" timestamptz not null default now(), "updated_at" timestamptz not null default now(), "deleted_at" timestamptz null, constraint "seller_pkey" primary key ("id"));`);
+    this.addSql(`alter table if exists "seller" add column if not exists "external_id" text null;`);
     this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_seller_deleted_at" ON "seller" ("deleted_at") WHERE deleted_at IS NULL;`);
     this.addSql(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_seller_email_unique" ON "seller" ("email") WHERE deleted_at IS NULL;`);
     this.addSql(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_seller_name_unique" ON "seller" ("name") WHERE deleted_at IS NULL;`);
