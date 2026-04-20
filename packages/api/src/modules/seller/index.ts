@@ -1,11 +1,9 @@
-import { Module } from "@medusajs/framework/utils";
+import { Module } from "@medusajs/framework/utils"
+import { MercurModules } from "@mercurjs/types"
 
-import SellerModuleService from "./service";
-import VariantSellerService from "./variant-seller-service";
-import { MercurModules } from "@mercurjs/types";
+import SellerModuleService from "./service"
 
-export const SELLER_MODULE = MercurModules.SELLER;
-export { SellerModuleService, VariantSellerService };
-export * from "./utils";
-
-export default Module(MercurModules.SELLER, { service: SellerModuleService });
+export default Module(MercurModules.SELLER, {
+  service: SellerModuleService,
+  // loaders: [registerFeatureFlagsLoader],
+})

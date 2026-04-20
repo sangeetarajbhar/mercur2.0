@@ -1,7 +1,8 @@
-export * from './seller'
-export * from './member'
-export * from './invite'
-export * from './onboarding'
-export * from './company-spocs'
-export * from './kyc-document'
-export * from './bank-details'
+export { default as Seller } from "./seller"
+export { default as ProfessionalDetails } from "./professional-details"
+export { default as SellerAddress } from "./address"
+export { default as PaymentDetails } from "./payment-details"
+export { default as Member } from "./member"
+export { default as SellerMember } from "./seller-member"
+export { default as MemberInvite } from "./member-invite"
+export { default as OrderGroup } from "./order-group"

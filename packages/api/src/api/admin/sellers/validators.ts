@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 import { createFindParams } from '@medusajs/medusa/api/utils/validators'
+import { SellerStatus } from '@mercurjs/types'
 
-import { StoreStatus } from '../../../types/seller'
 
 export type AdminSellerParamsType = z.infer<typeof AdminSellerParams>
 export const AdminSellerParams = createFindParams({
@@ -50,7 +50,7 @@ export const AdminUpdateSeller = z
     postal_code: z.string().optional(),
     country_code: z.string().optional(),
     tax_id: z.string().optional(),
-    store_status: z.nativeEnum(StoreStatus).optional()
+    status: z.nativeEnum(SellerStatus).optional()
   })
   .strict()
 
@@ -63,6 +63,7 @@ export const AdminInviteSeller = z.object({
 export const createSellerOnboardingSchema = z.object({
   name: z.string(),
   display_name: z.string().optional(),
+  currency_code: z.string(),
   barcode: z.string().optional(),
   entity_type: z.enum(["PRIVATE_LIMITED", "PROPRIETORSHIP", "PARTNERSHIP"]).nullable().optional(),
   msme: z.preprocess(

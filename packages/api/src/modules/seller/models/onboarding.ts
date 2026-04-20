@@ -1,6 +1,6 @@
 import { model } from '@medusajs/framework/utils'
+import Seller from './seller'
 
-import { Seller } from './seller'
 
 export const SellerOnboarding = model.define('seller_onboarding', {
   id: model.id({ prefix: 'sel_onb' }).primaryKey(),

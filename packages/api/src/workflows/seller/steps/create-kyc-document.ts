@@ -1,6 +1,6 @@
 import { MedusaError } from "@medusajs/framework/utils"
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { SellerModuleService, SELLER_MODULE } from "../../../modules/seller"
+import { MercurModules } from "@mercurjs/types"
 
 type CreateKycDocumentsInput = {
   sellerId: string
@@ -10,7 +10,7 @@ type CreateKycDocumentsInput = {
 export const createKycDocumentsStep = createStep(
   "create-kyc-documents",
   async (input: CreateKycDocumentsInput, { container }) => {
-    const sellerModuleService = container.resolve<SellerModuleService>(SELLER_MODULE)
+    const sellerModuleService = container.resolve(MercurModules.SELLER)
     
     // Handle empty or undefined kyc_documents
     const documentsToProcess = input.kyc_documents || []
@@ -71,7 +71,7 @@ export const createKycDocumentsStep = createStep(
       )
     }
     
-    const sellerModuleService = container.resolve<SellerModuleService>(SELLER_MODULE)
+    const sellerModuleService = container.resolve(MercurModules.SELLER)
     await sellerModuleService.softDeleteKycDocuments(docIds)
   }
 )

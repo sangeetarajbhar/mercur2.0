@@ -1,6 +1,6 @@
 import { MedusaError } from "@medusajs/framework/utils"
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { SELLER_MODULE, SellerModuleService } from "../../../modules/seller"
+import { MercurModules } from "@mercurjs/types"
 
 type CreateCompanySpocsInput = {
   sellerId: string
@@ -10,7 +10,7 @@ type CreateCompanySpocsInput = {
 export const createCompanySpocsStep = createStep(
   "create-company-spocs",
   async (input: CreateCompanySpocsInput, { container }) => {
-    const sellerModuleService = container.resolve<SellerModuleService>(SELLER_MODULE)
+    const sellerModuleService = container.resolve(MercurModules.SELLER)
     
     // Handle empty or undefined company_spocs
     const spocsToProcess = input.company_spocs || []
@@ -73,7 +73,7 @@ export const createCompanySpocsStep = createStep(
       )
     }
     
-    const sellerModuleService = container.resolve<SellerModuleService>(SELLER_MODULE)
+    const sellerModuleService = container.resolve(MercurModules.SELLER)
     await sellerModuleService.softDeleteCompanySpocs(spocIds)
   }
 )

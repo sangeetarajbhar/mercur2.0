@@ -22,7 +22,6 @@ import {
   updateSellerOnboardingSchema
 } from './validators'
 import multer from "multer"
-import { sellerUploadMiddlewares } from './uploads/middlewares'
 
 const upload = multer({ storage: multer.memoryStorage() })
 
@@ -141,5 +140,5 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
         validateAndTransformBody(updateSellerBrandAssociationsSchema)
       ]
     },
-    ...sellerUploadMiddlewares,
+    // ...sellerUploadMiddlewares,
 ]

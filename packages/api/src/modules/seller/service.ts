@@ -1,147 +1,342 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
-
-import { ConfigModule } from "@medusajs/framework";
-import { Context, CreateInviteDTO } from "@medusajs/framework/types";
+import { configManager } from "@medusajs/framework/config"
+import { Context, DAL, FindConfig, InternalModuleDeclaration } from "@medusajs/framework/types"
 import {
-  InjectTransactionManager,
+  generateJwtToken,
+  InjectManager,
+  isValidHandle,
   MedusaContext,
   MedusaError,
   MedusaService,
-} from "@medusajs/framework/utils";
+  toHandle,
+  InjectTransactionManager,
+} from "@medusajs/framework/utils"
+import jwt, { JwtPayload } from "jsonwebtoken"
+import crypto from "node:crypto"
+import {
+  Seller,
+  ProfessionalDetails,
+  SellerAddress,
+  PaymentDetails,
+  Member,
+  SellerMember,
+  MemberInvite,
+  OrderGroup,
+} from "./models"
+import { OrderGroupRepository } from "./repositories"
+import { MemberDTO, MemberInviteDTO, OrderGroupDTO, SellerDTO, SellerModuleOptions } from "@mercurjs/types"
+import { SellerOnboarding } from "./models/onboarding"
+import { BankDetail } from "./models/bank-details"
+import { CompanySpoc } from "./models/company-spocs"
+import { KycDocument } from "./models/kyc-document"
 
-import { SELLER_MODULE } from ".";
-import { Member, MemberInvite, Seller, SellerOnboarding, BankDetail, CompanySpoc, KycDocument } from "./models";
-import { MemberInviteDTO } from "../../types/seller";
-import OrderGroup from "./models/order-group";
+const DEFAULT_INVITE_VALID_DURATION_SECONDS = 60 * 60 * 24 * 7 // 7 days
 
 type InjectedDependencies = {
-  configModule: ConfigModule;
-};
-
-type SellerModuleConfig = {
-  validInviteDuration: number;
-};
-
-// 7 days in ms
-const DEFAULT_VALID_INVITE_DURATION = 1000 * 60 * 60 * 24 * 7;
+  orderGroupRepository: OrderGroupRepository
+  baseRepository: DAL.RepositoryService
+}
 
 class SellerModuleService extends MedusaService({
-  MemberInvite,
-  Member,
   Seller,
+  ProfessionalDetails,
+  SellerAddress,
+  PaymentDetails,
+  Member,
+  SellerMember,
+  MemberInvite,
+  OrderGroup,
   SellerOnboarding,
   BankDetail,
   CompanySpoc,
   KycDocument,
-  OrderGroup,
 }) {
-  private readonly config_: SellerModuleConfig;
-  private readonly httpConfig_: ConfigModule["projectConfig"]["http"];
+  protected readonly orderGroupRepository_: OrderGroupRepository
+  protected readonly baseRepository_: DAL.RepositoryService
+  protected readonly options_: SellerModuleOptions
 
-  constructor({ configModule }: InjectedDependencies) {
-    super(...arguments);
+  constructor(
+    { orderGroupRepository, baseRepository }: InjectedDependencies,
+    protected readonly moduleDeclaration?: InternalModuleDeclaration,
+  ) {
+    // @ts-ignore
+    // eslint-disable-next-line prefer-rest-params
+    super(...arguments)
+    this.orderGroupRepository_ = orderGroupRepository
+    this.baseRepository_ = baseRepository
 
-    this.httpConfig_ = configModule.projectConfig.http;
-
-    const moduleDef = configModule.modules?.[SELLER_MODULE];
-
-    const options =
-      typeof moduleDef !== "boolean"
-        ? (moduleDef?.options as SellerModuleConfig)
-        : null;
-
-    this.config_ = {
-      validInviteDuration:
-        options?.validInviteDuration ?? DEFAULT_VALID_INVITE_DURATION,
-    };
-  }
-
-  async validateInviteToken(token: string) {
-    const jwtSecret = this.httpConfig_.jwtSecret as string;
-    const decoded: JwtPayload = jwt.verify(token, jwtSecret, {
-      complete: true,
-    });
-
-    const invite = await this.retrieveMemberInvite(decoded.payload.id, {});
-
-    if (invite.accepted) {
-      throw new MedusaError(
-        MedusaError.Types.INVALID_DATA,
-        "The invite has already been accepted"
-      );
+    const opts = (moduleDeclaration?.options as SellerModuleOptions) ?? {}
+    this.options_ = {
+      ...opts,
+      jwt_secret:
+        opts.jwt_secret ??
+        (configManager.config.projectConfig.http.jwtSecret as string),
     }
-
-    if (invite.expires_at < new Date()) {
-      throw new MedusaError(
-        MedusaError.Types.INVALID_DATA,
-        "The invite has expired"
-      );
-    }
-
-    return invite;
   }
 
   @InjectTransactionManager()
-  // @ts-expect-error: createInvites method already exists
-  async createMemberInvites(
-    input: CreateInviteDTO | CreateInviteDTO[],
-    @MedusaContext() sharedContext: Context = {}
-  ): Promise<MemberInviteDTO[]> {
-    const data = Array.isArray(input) ? input : [input];
+  // @ts-ignore
+  async createSellers<T extends any | any[]>(
+    data: T,
+    sharedContext?: Context,
+  ): Promise<T extends any[] ? SellerDTO[] : SellerDTO> {
+    const input = (Array.isArray(data) ? data : [data]).map((seller) => {
+      this.validateSellerData_(seller)
 
-    const expires_at = new Date();
-    expires_at.setMilliseconds(
-      new Date().getMilliseconds() + DEFAULT_VALID_INVITE_DURATION
-    );
-    const toCreate = data.map((invite) => {
-      return {
-        ...invite,
-        expires_at: new Date(),
-        token: "placeholder",
-      };
-    });
+      if (!seller.handle && seller.name) {
+        seller.handle = toHandle(seller.name)
+      }
 
-    const created = await super.createMemberInvites(toCreate, sharedContext);
-    const toUpdate = Array.isArray(created) ? created : [created];
+      return seller
+    })
 
-    const updates = toUpdate.map((invite) => {
-      return {
-        ...invite,
-        id: invite.id,
-        expires_at,
-        token: this.generateToken({ id: invite.id }),
-      };
-    });
+    const result = await super.createSellers(input, sharedContext)
+    return (Array.isArray(data) ? result : result[0]) as any
+  }
+
+  @InjectTransactionManager()
+  // @ts-ignore
+  async updateSellers<T extends any | any[]>(
+    data: T,
+    sharedContext?: Context,
+  ): Promise<T extends any[] ? SellerDTO[] : SellerDTO> {
+    const input = (Array.isArray(data) ? data : [data]).map((seller) => {
+      this.validateSellerData_(seller)
+
+      if (!seller.handle && seller.name) {
+        seller.handle = toHandle(seller.name)
+      }
+
+      return seller
+    })
 
     // @ts-ignore
-    await this.updateMemberInvites(updates, sharedContext);
-
-    return updates;
+    return super.updateSellers(input, sharedContext) as any
   }
 
-  private generateToken(data: { id: string }): string {
-    const jwtSecret = this.httpConfig_.jwtSecret as string;
-    return jwt.sign(data, jwtSecret, {
-      expiresIn: this.config_.validInviteDuration / 1000,
-    });
+  @InjectTransactionManager()
+  async upsertMembers(
+    data: { email: string }[],
+    sharedContext?: Context,
+  ): Promise<MemberDTO[]> {
+    const emails = data.map((d) => d.email)
+    const existing = await this.listMembers(
+      { email: emails },
+      {},
+      sharedContext,
+    )
+
+    const existingMap = new Map(existing.map((m) => [m.email, m]))
+
+    const toCreate = data.filter((d) => !existingMap.has(d.email))
+
+    const created = toCreate.length
+      ? await this.createMembers(toCreate, sharedContext)
+      : []
+
+    const createdMap = new Map(
+      (Array.isArray(created) ? created : [created]).map((m) => [m.email, m])
+    )
+
+    return data.map(
+      (d) => existingMap.get(d.email) ?? createdMap.get(d.email)!
+    )
   }
 
-  async isOnboardingCompleted(seller_id: string): Promise<boolean> {
-    const { onboarding } = await this.retrieveSeller(seller_id, {
-      relations: ["onboarding"],
-    });
+  @InjectTransactionManager()
+  // @ts-ignore
+  async createMemberInvites<T extends any | any[]>(
+    data: T,
+    sharedContext?: Context,
+  ): Promise<T extends any[] ? MemberInviteDTO[] : MemberInviteDTO> {
+    const validDuration = this.options_.invite_valid_duration ?? DEFAULT_INVITE_VALID_DURATION_SECONDS
 
-    if (!onboarding) {
-      return false;
+    const inviteList = Array.isArray(data) ? data : [data]
+
+    const sellerIds = [...new Set(inviteList.map((i) => i.seller_id))]
+    const sellers = await this.listSellers(
+      { id: sellerIds },
+      { select: ["id", "name"] },
+      sharedContext,
+    )
+    const sellerMap = new Map(sellers.map((s) => [s.id, s.name]))
+
+    const emails = inviteList.map((i) => i.email)
+    const existingMembers = await this.listMembers(
+      { email: emails },
+      { select: ["id", "email"] },
+      sharedContext,
+    )
+    const existingEmailSet = new Set(existingMembers.map((m) => m.email))
+
+    // Check if any invited emails already belong to the seller
+    if (existingMembers.length > 0) {
+      const memberIds = existingMembers.map((m) => m.id)
+      const existingSellerMembers = await this.listSellerMembers(
+        { seller_id: sellerIds, member_id: memberIds },
+        { select: ["seller_id", "member_id"] },
+        sharedContext,
+      )
+
+      if (existingSellerMembers.length > 0) {
+        const memberIdToEmail = new Map(existingMembers.map((m) => [m.id, m.email]))
+        const alreadyInSeller = new Set(
+          existingSellerMembers.map((sm) => `${sm.seller_id}:${memberIdToEmail.get(sm.member_id)}`)
+        )
+
+        const duplicates = inviteList.filter((i) =>
+          alreadyInSeller.has(`${i.seller_id}:${i.email}`)
+        )
+
+        if (duplicates.length > 0) {
+          const emails = duplicates.map((d) => d.email).join(", ")
+          throw new MedusaError(
+            MedusaError.Types.INVALID_DATA,
+            `The following emails are already members of the seller: ${emails}`
+          )
+        }
+      }
     }
 
-    return (
-      onboarding.locations_shipping &&
-      onboarding.products &&
-      onboarding.store_information &&
-      onboarding.stripe_connection
-    );
+    const input = inviteList.map((invite) => {
+      const id = invite.id ?? `meminv_${crypto.randomUUID()}`
+      return {
+        ...invite,
+        id,
+        token: this.generateInviteToken_(
+          {
+            id,
+            email: invite.email,
+            seller_name: sellerMap.get(invite.seller_id) ?? "",
+            existing_member: existingEmailSet.has(invite.email),
+          },
+          validDuration,
+        ),
+        accepted: invite.accepted ?? false,
+        expires_at: invite.expires_at ?? new Date(Date.now() + validDuration * 1000),
+      }
+    })
+
+    const result = await super.createMemberInvites(input, sharedContext)
+    return (Array.isArray(data) ? result : result[0]) as any
+  }
+
+  @InjectManager()
+  async validateMemberInviteToken(
+    token: string,
+    @MedusaContext() sharedContext: Context = {},
+  ): Promise<MemberInviteDTO> {
+    let decoded: JwtPayload
+    try {
+      decoded = jwt.verify(token, this.options_.jwt_secret as string, {
+        complete: true,
+      }) as JwtPayload
+    } catch {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Invalid invite token"
+      )
+    }
+
+    const invite = await this.retrieveMemberInvite(
+      decoded.payload.id,
+      {},
+      sharedContext,
+    ) as MemberInviteDTO
+
+    if (invite.accepted) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "Invite has already been accepted"
+      )
+    }
+
+    if (new Date() > new Date(invite.expires_at)) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "Invite token has expired"
+      )
+    }
+
+    return invite
+  }
+
+  private generateInviteToken_(
+    data: { id: string; email: string; seller_name: string; existing_member: boolean },
+    expiresIn: number,
+  ): string {
+    return generateJwtToken(data, {
+      secret: this.options_.jwt_secret,
+      expiresIn,
+      jwtOptions: {
+        jwtid: crypto.randomUUID(),
+      },
+    })
+  }
+
+  private validateSellerData_(data: any) {
+    if (data.handle && !isValidHandle(data.handle)) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        `Invalid seller handle '${data.handle}'. It must contain URL safe characters`
+      )
+    }
+  }
+
+  @InjectManager()
+  // @ts-ignore
+  async listOrderGroups(
+    filters: any = {},
+    config: FindConfig<any> = {},
+    @MedusaContext() sharedContext: Context = {}
+  ) {
+    const [orderGroups] = await this.orderGroupRepository_.findAndCount(
+      {
+        where: filters,
+        options: config,
+      },
+      sharedContext
+    )
+
+    return await this.baseRepository_.serialize<OrderGroupDTO[]>(orderGroups)
+  }
+
+  @InjectManager()
+  // @ts-ignore
+  async listAndCountOrderGroups(
+    filters: any = {},
+    config: FindConfig<any> = {},
+    @MedusaContext() sharedContext: Context = {}
+  ) {
+    const [orderGroups, count] = await this.orderGroupRepository_.findAndCount(
+      {
+        where: filters,
+        options: config,
+      },
+      sharedContext
+    )
+    return [
+      await this.baseRepository_.serialize<OrderGroupDTO[]>(orderGroups),
+      count,
+    ]
+  }
+
+  @InjectManager()
+  // @ts-ignore
+  async retrieveOrderGroup(
+    id: string,
+    config: FindConfig<any> = {},
+    @MedusaContext() sharedContext: Context = {}
+  ) {
+    const [orderGroups] = await this.orderGroupRepository_.findAndCount(
+      {
+        where: { id },
+        options: config,
+      },
+      sharedContext
+    )
+
+    return await this.baseRepository_.serialize<OrderGroupDTO>(orderGroups[0])
   }
 }
 
-export default SellerModuleService;
+export default SellerModuleService
