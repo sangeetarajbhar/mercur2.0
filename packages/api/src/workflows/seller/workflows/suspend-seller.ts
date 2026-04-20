@@ -27,9 +27,11 @@ export const suspendSellerWorkflow = createWorkflow(
       options: { throwIfKeyNotFound: true },
     }).config({ name: "get-seller" })
 
-    const sellerData = transform({ seller }, ({ seller }) => seller[0])
-
-    validateSuspendSellerStep({ seller: sellerData })
+    const sellerStatus = transform(
+      { seller: seller as any },
+      (data) => data.seller?.[0]?.status as SellerStatus
+    )
+    validateSuspendSellerStep({ seller: { status: sellerStatus } })
 
     const updateInput = transform({ input }, ({ input }) => ({
       selector: { id: input.seller_id },

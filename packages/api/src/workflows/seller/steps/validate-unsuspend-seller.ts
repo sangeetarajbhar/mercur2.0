@@ -4,7 +4,7 @@ import { SellerDTO, SellerStatus } from "@mercurjs/types"
 
 export const validateUnsuspendSellerStep = createStep(
   "validate-unsuspend-seller",
-  async ({ seller }: { seller: SellerDTO }) => {
+  async ({ seller }: { seller: {status: SellerStatus} }) => {
     if (seller.status !== SellerStatus.SUSPENDED) {
       throw new MedusaError(
         MedusaError.Types.NOT_ALLOWED,

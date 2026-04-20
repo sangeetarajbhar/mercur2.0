@@ -26,9 +26,12 @@ export const unterminateSellerWorkflow = createWorkflow(
       options: { throwIfKeyNotFound: true },
     }).config({ name: "get-seller" })
 
-    const sellerData = transform({ seller }, ({ seller }) => seller[0])
+    const sellerStatus = transform(
+      { seller: seller as any },
+      (data) => data.seller?.[0]?.status as SellerStatus
+    )
 
-    validateUnterminateSellerStep({ seller: sellerData })
+    validateUnterminateSellerStep({ seller: { status: sellerStatus } })
 
     const updateInput = transform({ input }, ({ input }) => ({
       selector: { id: input.seller_id },

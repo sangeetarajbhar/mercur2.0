@@ -4,7 +4,7 @@ import { SellerDTO, SellerStatus } from "@mercurjs/types"
 
 export const validateUnterminateSellerStep = createStep(
   "validate-unterminate-seller",
-  async ({ seller }: { seller: SellerDTO }) => {
+  async ({ seller }: { seller: {status: SellerStatus} }) => {
     if (seller.status !== SellerStatus.TERMINATED) {
       throw new MedusaError(
         MedusaError.Types.NOT_ALLOWED,
