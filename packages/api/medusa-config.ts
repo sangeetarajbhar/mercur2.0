@@ -168,6 +168,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/cart-order-extra-charge",
     },
     {
+      resolve: "./src/modules/cart-delivery-detail",
+    },
+    {
       resolve: "./src/modules/customer-payment-preferences",
     },
     {
