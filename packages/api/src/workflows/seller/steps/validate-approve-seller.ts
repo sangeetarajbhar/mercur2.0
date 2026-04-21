@@ -4,7 +4,7 @@ import { SellerDTO, SellerStatus } from "@mercurjs/types"
 
 export const validateApproveSellerStep = createStep(
   "validate-approve-seller",
-  async ({ seller }: { seller: SellerDTO }) => {
+  async ({ seller }: { seller: {status: SellerStatus} }) => {
     if (seller.status !== SellerStatus.PENDING_APPROVAL) {
       throw new MedusaError(
         MedusaError.Types.NOT_ALLOWED,
