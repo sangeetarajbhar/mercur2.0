@@ -31,7 +31,10 @@ import {
 } from "@medusajs/medusa/core-flows";
 import { ApiKey } from "../../.medusa/types/query-entry-points";
 import { MercurModules } from "@mercurjs/types";
-import createMoengageAlertStaging from "./monengage-seed";
+import { MOENGAGE_ALERT_MODULE } from "../modules/moengage_alert";
+import MoengageAlertModuleService from "../modules/moengage_alert/service";
+import { SYSTEM_CONFIG_SECTION_MODULE } from "../modules/system-config";
+import SystemConfigModuleService from "../modules/system-config/service";
 
 const updateStoreCurrencies = createWorkflow(
   "update-store-currencies",
@@ -69,23 +72,22 @@ export default async function seedDemoData({ container }: ExecArgs) {
   const salesChannelModuleService = container.resolve(Modules.SALES_CHANNEL);
   const storeModuleService = container.resolve(Modules.STORE);
 
-  const countries = ["gb", "de", "dk", "se", "fr", "es", "it"];
+  const countries = ["in"];
 
   logger.info("Seeding store data...");
   const [store] = await storeModuleService.listStores();
   let defaultSalesChannel = await salesChannelModuleService.listSalesChannels({
-    name: "Default Sales Channel",
+    name: "Zilo Sales Channel",
   });
 
   if (!defaultSalesChannel.length) {
-    // create the default sales channel
     const { result: salesChannelResult } = await createSalesChannelsWorkflow(
       container
     ).run({
       input: {
         salesChannelsData: [
           {
-            name: "Default Sales Channel",
+            name: "Zilo Sales Channel",
           },
         ],
       },
@@ -98,11 +100,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
       store_id: store.id,
       supported_currencies: [
         {
-          currency_code: "eur",
+          currency_code: "inr",
           is_default: true,
-        },
-        {
-          currency_code: "usd",
         },
       ],
     },
@@ -116,10 +115,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     },
   });
+
   logger.info("Seeding region data...");
   const regionModuleService = container.resolve(Modules.REGION);
 
-  // Check if any of the countries are already assigned to a region
   const existingRegions = await regionModuleService.listRegions({}, {
     relations: ["countries"],
   });
@@ -135,20 +134,18 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   let region;
   if (unassignedCountries.length === 0) {
-    // All countries already assigned - find the region that has most of our countries
     region = existingRegions.find(r =>
       r.countries?.some(c => countries.includes(c.iso_2))
     ) || existingRegions[0];
     logger.info("Countries already assigned to a region, skipping region creation.");
   } else if (unassignedCountries.length < countries.length) {
-    // Some countries assigned, some not - only create with unassigned ones
     logger.info(`Some countries already assigned, creating region with: ${unassignedCountries.join(", ")}`);
     const { result: regionResult } = await createRegionsWorkflow(container).run({
       input: {
         regions: [
           {
-            name: "Europe",
-            currency_code: "eur",
+            name: "India",
+            currency_code: "inr",
             countries: unassignedCountries,
             payment_providers: ["pp_system_default"],
           },
@@ -157,13 +154,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
     });
     region = regionResult[0];
   } else {
-    // No countries assigned - create full region
     const { result: regionResult } = await createRegionsWorkflow(container).run({
       input: {
         regions: [
           {
-            name: "Europe",
-            currency_code: "eur",
+            name: "India",
+            currency_code: "inr",
             countries,
             payment_providers: ["pp_system_default"],
           },
@@ -195,13 +191,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
   logger.info("Seeding stock location data...");
   const stockLocationModule = container.resolve(Modules.STOCK_LOCATION);
   const existingStockLocations = await stockLocationModule.listStockLocations({
-    name: "European Warehouse",
+    name: "India Warehouse",
   });
 
   let stockLocation;
   if (existingStockLocations.length) {
     stockLocation = existingStockLocations[0];
-    logger.info("Stock location 'European Warehouse' already exists, skipping.");
+    logger.info("Stock location 'India Warehouse' already exists, skipping.");
   } else {
     const { result: stockLocationResult } = await createStockLocationsWorkflow(
       container
@@ -209,10 +205,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
       input: {
         locations: [
           {
-            name: "European Warehouse",
+            name: "India Warehouse",
             address: {
-              city: "Copenhagen",
-              country_code: "DK",
+              city: "Mumbai",
+              country_code: "IN",
               address_1: "",
             },
           },
@@ -231,7 +227,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
 
-  // Link stock location to fulfillment provider (idempotent)
   try {
     await link.create({
       [Modules.STOCK_LOCATION]: {
@@ -242,7 +237,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     });
   } catch (error: unknown) {
-    // Ignore if link already exists
     if (!(error instanceof Error && error.message.includes("already exists"))) {
       throw error;
     }
@@ -271,47 +265,23 @@ export default async function seedDemoData({ container }: ExecArgs) {
   }
 
   const existingFulfillmentSets = await fulfillmentModuleService.listFulfillmentSets({
-    name: "European Warehouse delivery",
+    name: "India Warehouse delivery",
   });
 
   let fulfillmentSet;
   if (existingFulfillmentSets.length) {
     fulfillmentSet = existingFulfillmentSets[0];
-    logger.info("Fulfillment set 'European Warehouse delivery' already exists, skipping.");
+    logger.info("Fulfillment set 'India Warehouse delivery' already exists, skipping.");
   } else {
     fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-      name: "European Warehouse delivery",
+      name: "India Warehouse delivery",
       type: "shipping",
       service_zones: [
         {
-          name: "Europe",
+          name: "India",
           geo_zones: [
             {
-              country_code: "gb",
-              type: "country",
-            },
-            {
-              country_code: "de",
-              type: "country",
-            },
-            {
-              country_code: "dk",
-              type: "country",
-            },
-            {
-              country_code: "se",
-              type: "country",
-            },
-            {
-              country_code: "fr",
-              type: "country",
-            },
-            {
-              country_code: "es",
-              type: "country",
-            },
-            {
-              country_code: "it",
+              country_code: "in",
               type: "country",
             },
           ],
@@ -349,16 +319,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
           },
           prices: [
             {
-              currency_code: "usd",
-              amount: 10,
-            },
-            {
-              currency_code: "eur",
-              amount: 10,
+              currency_code: "inr",
+              amount: 99,
             },
             {
               region_id: region.id,
-              amount: 10,
+              amount: 99,
             },
           ],
           rules: [
@@ -387,16 +353,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
           },
           prices: [
             {
-              currency_code: "usd",
-              amount: 10,
-            },
-            {
-              currency_code: "eur",
-              amount: 10,
+              currency_code: "inr",
+              amount: 199,
             },
             {
               region_id: region.id,
-              amount: 10,
+              amount: 199,
             },
           ],
           rules: [
@@ -417,7 +379,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
   }
   logger.info("Finished seeding fulfillment data.");
 
-  // Link sales channel to stock location (idempotent - workflow handles duplicates)
   try {
     await linkSalesChannelsToStockLocationWorkflow(container).run({
       input: {
@@ -426,7 +387,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     });
   } catch (error: unknown) {
-    // Ignore if link already exists
     if (!(error instanceof Error && error.message.includes("already"))) {
       throw error;
     }
@@ -464,7 +424,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
     publishableApiKey = publishableApiKeyResult as ApiKey;
   }
 
-  // Link sales channel to API key (idempotent)
   try {
     await linkSalesChannelsToApiKeyWorkflow(container).run({
       input: {
@@ -473,7 +432,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     });
   } catch (error: unknown) {
-    // Ignore if link already exists
     if (!(error instanceof Error && error.message.includes("already"))) {
       throw error;
     }
@@ -560,153 +518,53 @@ export default async function seedDemoData({ container }: ExecArgs) {
               {
                 title: "S / Black",
                 sku: "SHIRT-S-BLACK",
-                options: {
-                  Size: "S",
-                  Color: "Black",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "S", Color: "Black" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "S / White",
                 sku: "SHIRT-S-WHITE",
-                options: {
-                  Size: "S",
-                  Color: "White",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "S", Color: "White" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "M / Black",
                 sku: "SHIRT-M-BLACK",
-                options: {
-                  Size: "M",
-                  Color: "Black",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "M", Color: "Black" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "M / White",
                 sku: "SHIRT-M-WHITE",
-                options: {
-                  Size: "M",
-                  Color: "White",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "M", Color: "White" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "L / Black",
                 sku: "SHIRT-L-BLACK",
-                options: {
-                  Size: "L",
-                  Color: "Black",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "L", Color: "Black" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "L / White",
                 sku: "SHIRT-L-WHITE",
-                options: {
-                  Size: "L",
-                  Color: "White",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "L", Color: "White" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "XL / Black",
                 sku: "SHIRT-XL-BLACK",
-                options: {
-                  Size: "XL",
-                  Color: "Black",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "XL", Color: "Black" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
               {
                 title: "XL / White",
                 sku: "SHIRT-XL-WHITE",
-                options: {
-                  Size: "XL",
-                  Color: "White",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "XL", Color: "White" },
+                prices: [{ amount: 799, currency_code: "inr" }],
               },
             ],
-            sales_channels: [
-              {
-                id: defaultSalesChannel[0].id,
-              },
-            ],
+            sales_channels: [{ id: defaultSalesChannel[0].id }],
           },
           {
             title: "Medusa Sweatshirt",
@@ -737,77 +595,29 @@ export default async function seedDemoData({ container }: ExecArgs) {
               {
                 title: "S",
                 sku: "SWEATSHIRT-S",
-                options: {
-                  Size: "S",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "S" },
+                prices: [{ amount: 1499, currency_code: "inr" }],
               },
               {
                 title: "M",
                 sku: "SWEATSHIRT-M",
-                options: {
-                  Size: "M",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "M" },
+                prices: [{ amount: 1499, currency_code: "inr" }],
               },
               {
                 title: "L",
                 sku: "SWEATSHIRT-L",
-                options: {
-                  Size: "L",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "L" },
+                prices: [{ amount: 1499, currency_code: "inr" }],
               },
               {
                 title: "XL",
                 sku: "SWEATSHIRT-XL",
-                options: {
-                  Size: "XL",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "XL" },
+                prices: [{ amount: 1499, currency_code: "inr" }],
               },
             ],
-            sales_channels: [
-              {
-                id: defaultSalesChannel[0].id,
-              },
-            ],
+            sales_channels: [{ id: defaultSalesChannel[0].id }],
           },
           {
             title: "Medusa Sweatpants",
@@ -838,77 +648,29 @@ export default async function seedDemoData({ container }: ExecArgs) {
               {
                 title: "S",
                 sku: "SWEATPANTS-S",
-                options: {
-                  Size: "S",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "S" },
+                prices: [{ amount: 1299, currency_code: "inr" }],
               },
               {
                 title: "M",
                 sku: "SWEATPANTS-M",
-                options: {
-                  Size: "M",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "M" },
+                prices: [{ amount: 1299, currency_code: "inr" }],
               },
               {
                 title: "L",
                 sku: "SWEATPANTS-L",
-                options: {
-                  Size: "L",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "L" },
+                prices: [{ amount: 1299, currency_code: "inr" }],
               },
               {
                 title: "XL",
                 sku: "SWEATPANTS-XL",
-                options: {
-                  Size: "XL",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "XL" },
+                prices: [{ amount: 1299, currency_code: "inr" }],
               },
             ],
-            sales_channels: [
-              {
-                id: defaultSalesChannel[0].id,
-              },
-            ],
+            sales_channels: [{ id: defaultSalesChannel[0].id }],
           },
           {
             title: "Medusa Shorts",
@@ -939,77 +701,29 @@ export default async function seedDemoData({ container }: ExecArgs) {
               {
                 title: "S",
                 sku: "SHORTS-S",
-                options: {
-                  Size: "S",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "S" },
+                prices: [{ amount: 999, currency_code: "inr" }],
               },
               {
                 title: "M",
                 sku: "SHORTS-M",
-                options: {
-                  Size: "M",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "M" },
+                prices: [{ amount: 999, currency_code: "inr" }],
               },
               {
                 title: "L",
                 sku: "SHORTS-L",
-                options: {
-                  Size: "L",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "L" },
+                prices: [{ amount: 999, currency_code: "inr" }],
               },
               {
                 title: "XL",
                 sku: "SHORTS-XL",
-                options: {
-                  Size: "XL",
-                },
-                prices: [
-                  {
-                    amount: 10,
-                    currency_code: "eur",
-                  },
-                  {
-                    amount: 15,
-                    currency_code: "usd",
-                  },
-                ],
+                options: { Size: "XL" },
+                prices: [{ amount: 999, currency_code: "inr" }],
               },
             ],
-            sales_channels: [
-              {
-                id: defaultSalesChannel[0].id,
-              },
-            ],
+            sales_channels: [{ id: defaultSalesChannel[0].id }],
           },
         ],
       },
@@ -1041,13 +755,11 @@ export default async function seedDemoData({ container }: ExecArgs) {
   const inventoryLevels: CreateInventoryLevelInput[] = [];
   for (const inventoryItem of inventoryItems) {
     if (!existingItemIds.has(inventoryItem.id)) {
-      const inventoryLevel = {
-        location_id: stockLocation.
-          id,
+      inventoryLevels.push({
+        location_id: stockLocation.id,
         stocked_quantity: 1000000,
         inventory_item_id: inventoryItem.id,
-      };
-      inventoryLevels.push(inventoryLevel);
+      });
     }
   }
 
@@ -1060,7 +772,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
   } else {
     logger.info("Inventory levels already exist, skipping.");
   }
-
   logger.info("Finished seeding inventory levels data.");
 
   logger.info("Seeding seller data...");
@@ -1103,17 +814,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
     logger.info("Seller created with email: seller@medusa-test.com / password: supersecret");
   }
 
-  // Link entities to seller (idempotent — runs every time)
   logger.info("Linking products to seller...");
   for (const product of seededProducts) {
     try {
       await link.create({
-        [Modules.PRODUCT]: {
-          product_id: product.id,
-        },
-        [MercurModules.SELLER]: {
-          seller_id: seller.id,
-        },
+        [Modules.PRODUCT]: { product_id: product.id },
+        [MercurModules.SELLER]: { seller_id: seller.id },
       });
     } catch (error: unknown) {
       if (!(error instanceof Error && error.message.includes("already exists"))) {
@@ -1125,12 +831,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
   logger.info("Linking stock location to seller...");
   try {
     await link.create({
-      [Modules.STOCK_LOCATION]: {
-        stock_location_id: stockLocation.id,
-      },
-      [MercurModules.SELLER]: {
-        seller_id: seller.id,
-      },
+      [Modules.STOCK_LOCATION]: { stock_location_id: stockLocation.id },
+      [MercurModules.SELLER]: { seller_id: seller.id },
     });
   } catch (error: unknown) {
     if (!(error instanceof Error && error.message.includes("already exists"))) {
@@ -1141,12 +843,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
   logger.info("Linking fulfillment set to seller...");
   try {
     await link.create({
-      [MercurModules.SELLER]: {
-        seller_id: seller.id,
-      },
-      [Modules.FULFILLMENT]: {
-        fulfillment_set_id: fulfillmentSet.id,
-      },
+      [MercurModules.SELLER]: { seller_id: seller.id },
+      [Modules.FULFILLMENT]: { fulfillment_set_id: fulfillmentSet.id },
     });
   } catch (error: unknown) {
     if (!(error instanceof Error && error.message.includes("already exists"))) {
@@ -1162,12 +860,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
   for (const zone of fulfillmentSetWithZones.service_zones) {
     try {
       await link.create({
-        [MercurModules.SELLER]: {
-          seller_id: seller.id,
-        },
-        [Modules.FULFILLMENT]: {
-          service_zone_id: zone.id,
-        },
+        [MercurModules.SELLER]: { seller_id: seller.id },
+        [Modules.FULFILLMENT]: { service_zone_id: zone.id },
       });
     } catch (error: unknown) {
       if (!(error instanceof Error && error.message.includes("already exists"))) {
@@ -1179,12 +873,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
   logger.info("Linking shipping profile to seller...");
   try {
     await link.create({
-      [Modules.FULFILLMENT]: {
-        shipping_profile_id: shippingProfile.id,
-      },
-      [MercurModules.SELLER]: {
-        seller_id: seller.id,
-      },
+      [Modules.FULFILLMENT]: { shipping_profile_id: shippingProfile.id },
+      [MercurModules.SELLER]: { seller_id: seller.id },
     });
   } catch (error: unknown) {
     if (!(error instanceof Error && error.message.includes("already exists"))) {
@@ -1199,12 +889,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
   for (const option of shippingOptions) {
     try {
       await link.create({
-        [Modules.FULFILLMENT]: {
-          shipping_option_id: option.id,
-        },
-        [MercurModules.SELLER]: {
-          seller_id: seller.id,
-        },
+        [Modules.FULFILLMENT]: { shipping_option_id: option.id },
+        [MercurModules.SELLER]: { seller_id: seller.id },
       });
     } catch (error: unknown) {
       if (!(error instanceof Error && error.message.includes("already exists"))) {
@@ -1212,11 +898,152 @@ export default async function seedDemoData({ container }: ExecArgs) {
       }
     }
   }
-
   logger.info("Finished seeding seller data.");
 
-  logger.info('Creating Moengage Alert...')
+  // ── Moengage alerts (idempotent — checks by alert_id before inserting) ──
+  logger.info("Seeding Moengage alerts...");
+  const moengageService = container.resolve<MoengageAlertModuleService>(MOENGAGE_ALERT_MODULE);
 
-  logger.info('Creating Moengage Alert...')
-  await createMoengageAlertStaging(container)
+  const moengageAlertData = [
+    {
+      alert_id: "689c6981dc90f5a2000762dc",
+      alert_name: "login_otp",
+      is_sms: true,
+      sms_attributes: JSON.stringify({ var: "OTP_CODE_HERE" }),
+      is_whatsapp: false,
+      is_email: false,
+      is_push: false,
+      status: "1",
+    },
+    {
+      alert_id: "690dc34c6cbe55f13819baec",
+      alert_name: "login_otp_with_hash_code",
+      is_sms: true,
+      is_whatsapp: false,
+      is_email: false,
+      is_push: false,
+      status: "1",
+    },
+    {
+      alert_id: "690dad020d89a3debbd940fe",
+      alert_name: "account_created",
+      is_sms: true,
+      is_whatsapp: false,
+      is_email: false,
+      is_push: false,
+      status: "1",
+    },
+    {
+      alert_id: "68dce6dcfe88e1b1aade8086",
+      alert_name: "order_placed",
+      is_sms: true,
+      is_whatsapp: true,
+      is_email: false,
+      is_push: false,
+      status: "1",
+    },
+    {
+      alert_id: "690dadec5be68535b6d85f14",
+      alert_name: "out_for_delivery",
+      is_sms: true,
+      is_whatsapp: true,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690dae5c9a3e1ff50a6b31e1",
+      alert_name: "delivered_successfully",
+      is_sms: true,
+      is_whatsapp: true,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690dca15ab64ea29a0147e11",
+      alert_name: "delivery_failed",
+      is_sms: true,
+      is_whatsapp: true,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690db4edbb205f58f3a5ccf4",
+      alert_name: "delivery_handover_otp",
+      is_sms: true,
+      is_whatsapp: false,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690db5c1f1c5e0926ff27c9f",
+      alert_name: "return_created",
+      is_sms: true,
+      is_whatsapp: false,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690db9c54a3fcbe615ff6dad",
+      alert_name: "return_approved",
+      is_sms: true,
+      is_whatsapp: true,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690dbca55fe4eb5c3fcc78a2",
+      alert_name: "refund_initiated",
+      is_sms: true,
+      is_whatsapp: false,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+    {
+      alert_id: "690dbb81f673206726f64341",
+      alert_name: "refund_approved",
+      is_sms: true,
+      is_whatsapp: true,
+      is_email: false,
+      is_push: true,
+      status: "1",
+    },
+  ];
+
+  for (const alertData of moengageAlertData) {
+    const existing = await moengageService.listMoengageAlerts({ alert_id: alertData.alert_id } as any);
+    if (existing.length) {
+      logger.info(`Moengage alert '${alertData.alert_name}' already exists, skipping.`);
+      continue;
+    }
+    await moengageService.createMoengageAlerts(alertData as any);
+    logger.info(`Created moengage alert: ${alertData.alert_name}`);
+  }
+  logger.info("Finished seeding Moengage alerts.");
+
+  // ── Phone OTP bypass config (idempotent) ──
+  logger.info("Seeding phone OTP bypass config...");
+  const systemConfigService = container.resolve<SystemConfigModuleService>(SYSTEM_CONFIG_SECTION_MODULE);
+
+  const otpConfigs = [
+    { key: "otp_bypass_phone", value: "7777777777" },
+    { key: "otp_bypass_code", value: "010203" },
+  ];
+
+  for (const config of otpConfigs) {
+    const existing = await systemConfigService.listSystemConfigs({ key: config.key } as any);
+    if (existing.length) {
+      logger.info(`System config '${config.key}' already exists, skipping.`);
+      continue;
+    }
+    await systemConfigService.createSystemConfigs(config as any);
+    logger.info(`Created system config: ${config.key} = ${config.value}`);
+  }
+  logger.info("Finished seeding phone OTP bypass config.");
 }
