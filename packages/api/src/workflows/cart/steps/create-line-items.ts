@@ -4,7 +4,8 @@ import {
 } from "@medusajs/framework/types"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
-import { SELLER_MODULE } from '../../../modules/seller'
+import SELLER_MODULE from '../../../modules/seller'
+import { MercurModules } from "@mercurjs/types"
 
 /**
  * The details of the line items to create.
@@ -53,7 +54,7 @@ export const createLineItemsStep = createStep(
 
       // seller line item link 
         const links = createdItems.map((item) => ({
-          [SELLER_MODULE]: { seller_id: sellerIds[0] }, 
+          [MercurModules.SELLER]: { seller_id: sellerIds[0] }, 
           [Modules.CART]: { line_item_id: item?.id },
         }))
 

@@ -68,7 +68,7 @@ export const refreshCartExtraChargesWorkflow = createWorkflow(
     }).config({ name: 'refetch-cart-after-extra-charges' })
     
     return new WorkflowResponse({ 
-      cart: updatedCarts[0],
+      cart: updatedCarts[0] as any,
       applied_charges: applicableCharges,
       removed_items: removedItems
     })

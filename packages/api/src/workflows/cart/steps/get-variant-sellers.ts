@@ -2,7 +2,8 @@ import {
   MedusaError
 } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
-import { VariantSellerService } from '../../../modules/seller'
+import  VariantSellerService  from '../../../modules/seller/variant-seller-service'
+
 
 type GetVariantSellersInput = {
   variant_ids: string[]

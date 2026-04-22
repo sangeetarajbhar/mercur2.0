@@ -293,7 +293,7 @@ export const updateCartWorkflow = createWorkflow(
         fields: ['id']
       })
 
-      const lineItemIds = transform({ lineItems }, ({ lineItems }) => {
+      const lineItemIds = transform({ lineItems: lineItems as any }, ({ lineItems }) => {
         return lineItems.data.map((i) => i.id)
       })
 

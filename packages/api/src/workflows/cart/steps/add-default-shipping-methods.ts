@@ -145,7 +145,7 @@ export const addDefaultShippingMethodsStep = createStep(
           const defaultShippingOption = shippingOnlyOptions[0]
 
           // error of isasync
-          // addSellerShippingMethodToCartWorkflow.runAsStep({
+          // customAddSellerShippingMethodToCartWorkflow.runAsStep({
           //   input: {
           //     cart_id: input.cart_id,
           //     option: {
@@ -155,7 +155,7 @@ export const addDefaultShippingMethodsStep = createStep(
           //   }
           // })
 
-          // addSellerShippingMethodToCartWorkflow.run({
+          // customAddSellerShippingMethodToCartWorkflow.run({
           //   input: {
           //     cart_id: input.cart_id,
           //     options: [

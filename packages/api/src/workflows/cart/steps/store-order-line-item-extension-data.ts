@@ -95,7 +95,7 @@ export const storeOrderLineItemExtensionData = createStep(
       })
 
       // Create a map for quick lookup
-      for (const config of data as (ProductConfigurationData & { product_id: string })[]) {
+      for (const config of data as unknown as (ProductConfigurationData & { product_id: string })[]) {
         productConfigurationsMap.set(config.product_id, config)
       }
     }

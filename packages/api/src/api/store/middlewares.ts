@@ -12,6 +12,7 @@ import { storeV2ProductListMiddlewares } from "./v2/productlist/middlewares"
 import { storeProductRoutesMiddlewares } from "./v2/products/middlewares"
 import { storeCustomerV2RoutesMiddlewares } from "./customers/middlewares"
 import { storeSellerMiddlewares } from "./seller/middlewares"
+import { storeCartsMiddlewares } from "./v2/carts/middlewares"
 
 export const storeMiddlewares: MiddlewareRoute[] = [
   ...storeRequestsMiddlewares,
@@ -25,5 +26,6 @@ export const storeMiddlewares: MiddlewareRoute[] = [
   ...storeProductRoutesMiddlewares,
   ...storeCustomerV2RoutesMiddlewares,
   ...storeSellerMiddlewares,
-  ...storeUploadsMiddlewares
+  ...storeUploadsMiddlewares,
+  ...storeCartsMiddlewares
 ]

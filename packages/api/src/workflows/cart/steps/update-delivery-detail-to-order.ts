@@ -47,7 +47,7 @@ export const updateDeliveryDetailToOrderStep = createStep(
       validateDateIsTodayOrTomorrow(cartDeliveryDetail.delivery_date)
 
       // Validate end time is in the future (in IST)
-      const endDateTime = combineDateAndTime(cartDeliveryDetail.delivery_date, cartDeliveryDetail.end_time)
+      const endDateTime = combineDateAndTime(cartDeliveryDetail?.delivery_date as any, cartDeliveryDetail.end_time)
       validateDateTimeIsInFuture(endDateTime)
 
 

@@ -3,7 +3,7 @@ import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { StoreAddCartShippingMethodsType } from '@medusajs/medusa/api/store/carts/validators'
 
 import {
-  addSellerShippingMethodToCartWorkflow,
+  customAddSellerShippingMethodToCartWorkflow
 } from '../../../../../workflows/cart/workflows/add-seller-shipping-method-to-cart'
 import { removeCartShippingMethodsWorkflow } from '../../../../../workflows/cart/workflows/remove-cart-shipping-method'
 import { StoreDeleteCartShippingMethodsType } from '../../validators'
@@ -14,7 +14,7 @@ export const POST = async (
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
-  await addSellerShippingMethodToCartWorkflow(req.scope).run({
+  await customAddSellerShippingMethodToCartWorkflow(req.scope).run({
     input: {
       cart_id: req.params.id,
       option: {

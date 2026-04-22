@@ -1,6 +1,6 @@
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 import { ContainerRegistrationKeys, MedusaError, Modules } from '@medusajs/framework/utils'
-import { SELLER_MODULE } from '../../../modules/seller'
+import { MercurModules } from '@mercurjs/types';
 
 /**
  * Associates orders with sellers by inserting records into the seller_seller_order_order junction table.
@@ -39,7 +39,7 @@ export const associateSellerOrdersStep = createStep(
       if (sellerOrderAssociations.length > 0) {
         for(const sellerOrderAssociation of sellerOrderAssociations) {
           await remoteLink.create({
-            [SELLER_MODULE]: {
+            [MercurModules.SELLER]: {
               seller_id: sellerOrderAssociation.seller_id
             },
             [Modules.ORDER]: {
@@ -71,7 +71,7 @@ export const associateSellerOrdersStep = createStep(
       for (const association of sellerOrderAssociations) {
         try {
           await remoteLink.dismiss({
-            [SELLER_MODULE]: {
+            [MercurModules.SELLER]: {
               seller_id: association.seller_id
             },
             [Modules.ORDER]: {
