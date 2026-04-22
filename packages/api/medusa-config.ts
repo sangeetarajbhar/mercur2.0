@@ -136,6 +136,23 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@medusajs/medusa/caching",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/caching-redis",
+            id: "caching-redis",
+            // Optional, makes this the default caching provider
+            is_default: true,
+            options: {
+              redisUrl: process.env.REDIS_URL,
+              // more options...
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "./src/modules/customer-bank-detail",
     },
     {
@@ -206,6 +223,12 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/pricing-extend",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
+      resolve: "./src/modules/price-list-import-request",
       definition: {
         isQueryable: true,
       },

@@ -22,15 +22,17 @@ export const vendorMiddlewares: MiddlewareRoute[] = [
   {
     matcher: '/vendor/*',
     middlewares: [
-      unlessBaseUrl(
-        /^\/vendor\/(sellers|invites\/accept)$/,
-        checkSellerApproved(['bearer', 'session'])
-      ),
+      // authenticate must run first — it validates bearer token OR session cookie
+      // and sets req.auth_context, which checkSellerApproved depends on.
       unlessBaseUrl(
         /^\/vendor\/(sellers|invites\/accept)$/,
         authenticate('seller', ['bearer', 'session'], {
           allowUnregistered: false
         })
+      ),
+      unlessBaseUrl(
+        /^\/vendor\/(sellers|invites\/accept)$/,
+        checkSellerApproved(['bearer', 'session'])
       ),
       unlessBaseUrl(
         /^\/vendor\/(sellers|orders|fulfillment|invites\/accept)/,

@@ -3,6 +3,8 @@ import { Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import CustomCacheModuleService from '../../modules/cache/service'
 import promotionExtensionLink from '../../links/promotion-custom'
 import { getCustomPromotionService } from './get-custom-promotion-service'
+import promotionSellerLink from '@mercurjs/core-plugin/links/promotion-seller-link'
+import { CACHE_ENABLE, CacheTTLMap, QueryGraphCacheKey } from './redisKey'
 
 /**
  * Standard fields to fetch for promotion extension queries
@@ -239,11 +241,26 @@ const fetchPromotionRulesFromDB = async (
     const link = promotionLinks[0]
     const promotionExtension = link?.promotion_extension
     
-    // Get seller restrictions from seller_seller_promotion_promotion table
-    const restrictedSellerIds: string[] = await knex("seller_seller_promotion_promotion")
-      .where({ promotion_id: promotionId })
-      .whereNull("deleted_at")
-      .pluck("seller_id")
+    // Get seller restrictions from promotion-seller link (cached query.graph)
+    const sellerLinksTtl = CacheTTLMap[QueryGraphCacheKey.FETCH_PROMOTION_SELLER_LINKS]
+    const { data: sellerLinks } = await query.graph(
+      {
+        entity: promotionSellerLink.entryPoint,
+        fields: ["seller_id"],
+        filters: {
+          promotion_id: promotionId,
+          deleted_at: null,
+        },
+      },
+      {
+        cache: {
+          enable: CACHE_ENABLE,
+          ttl: sellerLinksTtl,
+          key: QueryGraphCacheKey.FETCH_PROMOTION_SELLER_LINKS + `${promotionId}`,
+        },
+      }
+    )
+    const restrictedSellerIds: string[] = (sellerLinks || []).map((row: any) => row.seller_id)
     
     // Combine seller IDs from both sources
     let allSellerIds: string[] = []

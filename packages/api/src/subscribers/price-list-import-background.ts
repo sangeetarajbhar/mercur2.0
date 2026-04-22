@@ -6,16 +6,19 @@ import { MercurModules } from "@mercurjs/types"
 import sellerProduct from "@mercurjs/core-plugin/links/product-seller-link"
 import { PriceListImportEvents } from "../shared/events/price-list-import-events"
 import { parsePriceListsFromCsv } from "../workflows/price-list/utils/parse-price-list-csv"
-import { createCustomPriceListsWorkflow } from "../workflows/price-list/workflows"
 import { fetchDefaultRegionId } from "../workflows/price-list/utils/region-utils"
 import { formatDuration } from "../shared/utils/date-utils"
 import { FIXED_PERCENTAGE_DISCOUNT_VALUE_MAX } from "../config/fixed-price-list"
+import { processPriceLists } from "../shared/utils/price-list/process-price-lists"
+import {
+  PRICE_LIST_IMPORT_REQUEST_MODULE,
+  PriceListImportRequestModuleService,
+} from "../modules/price-list-import-request"
 
 const SELLER_MODULE = MercurModules.SELLER
 
 const SKU_CHUNK_SIZE = 100
 const PRODUCT_CHUNK_SIZE = 200
-const PRICE_LIST_BATCH_SIZE = 50
 
 type NotificationData = {
   to: string
@@ -158,7 +161,10 @@ export default async function priceListImportBackgroundSubscriber({
   const notifyTo = notification?.to || seller_id
   const notifyChannel = notification?.channel || "seller_feed"
   const notifyTemplate = notification?.template || "vendor-ui"
-  const redirect = notification?.redirectNotification || "/vendor/requests/price-list"
+  const redirect = notification?.redirectNotification || "/vendor/price-list/import"
+
+  // ENV flag: if true → create request for admin approval; if false → direct insert
+  const requireApproval = process.env.PRICE_LIST_IMPORT_REQUIRE_APPROVAL || "false"
 
   try {
     // 1) Parse CSV and group by date range
@@ -301,65 +307,66 @@ export default async function priceListImportBackgroundSubscriber({
       return
     }
 
-    // 6) All records validated — batch insert into price table
-    const linkService = container.resolve(ContainerRegistrationKeys.LINK) as any
-    const failedCreates: Array<{ title: string; error: string }> = []
-    const createdPriceLists: any[] = []
-
-    for (let i = 0; i < processedPriceLists.length; i += PRICE_LIST_BATCH_SIZE) {
-      const batch = processedPriceLists.slice(i, i + PRICE_LIST_BATCH_SIZE)
-
-      const batchResults = await Promise.allSettled(
-        batch.map(async (payload) => {
-          const { result } = await createCustomPriceListsWorkflow(container as any).run({
-            input: { price_lists_data: [payload.data] },
-            container: container as any,
-          })
-          const created = Array.isArray(result) ? result[0] : result
-          if (created?.id) {
-            await linkService.create([
-              {
-                [Modules.PRICING]: { price_list_id: created.id },
-                [SELLER_MODULE]: { seller_id },
-              },
-            ])
-          }
-          return created
-        })
+    // 6a) Request flow: save to DB for admin approval
+    if (requireApproval) {
+      const requestService = container.resolve<PriceListImportRequestModuleService>(
+        PRICE_LIST_IMPORT_REQUEST_MODULE
       )
 
-      batchResults.forEach((r, idx) => {
-        const title = batch[idx]?.data?.title || `group_${i + idx + 1}`
-        if (r.status === "fulfilled" && r.value) {
-          createdPriceLists.push(r.value)
-        } else {
-          const reason: any = r.status === "rejected" ? r.reason : null
-          failedCreates.push({ title, error: reason?.message ?? String(reason ?? "Unknown error") })
+      const createdRequests: any[] = []
+      const failedCreates: Array<{ title: string; error: string }> = []
+
+      for (const payload of processedPriceLists) {
+        try {
+          const request = await requestService.createPriceListImportRequests({
+            type: "price_list",
+            data: payload.data,
+            submitter_id,
+            seller_id,
+            file_name,
+            transaction_id,
+            status: "pending",
+          })
+          createdRequests.push(request)
+        } catch (err: any) {
+          failedCreates.push({
+            title: payload.data?.title || "unknown",
+            error: err?.message ?? String(err ?? "Unknown error"),
+          })
         }
+      }
+
+      const formattedDuration = formatDuration(Date.now() - startTime)
+      await notificationService.createNotifications({
+        to: notifyTo,
+        channel: notifyChannel,
+        template: notifyTemplate,
+        content: { subject: "Price List Import Pending Approval" },
+        data: {
+          title: "Import Pending Admin Approval",
+          description:
+            `Price list import of "${file_name}" validated in ${formattedDuration}. ` +
+            `${createdRequests.length} price list(s) are pending admin approval.` +
+            (failedCreates.length ? ` ${failedCreates.length} group(s) could not be queued.` : ""),
+          transaction_id,
+          pending_request_ids: createdRequests.map((r) => r.id).filter(Boolean),
+          failed_groups: failedCreates.length ? failedCreates.slice(0, 25) : undefined,
+          redirect,
+        },
       })
+      return
     }
 
-    const formattedDuration = formatDuration(Date.now() - startTime)
-    const successCount = createdPriceLists.length
-    const failCount = failedCreates.length
-
-    await notificationService.createNotifications({
-      to: notifyTo,
-      channel: notifyChannel,
-      template: notifyTemplate,
-      content: { subject: failCount === 0 ? "Price List Import Completed Successfully" : "Price List Import Completed (Partial)" },
-      data: {
-        title: failCount === 0 ? "Import Completed Successfully" : "Import Completed (Partial)",
-        description:
-          failCount === 0
-            ? `Price list import of "${file_name}" completed in ${formattedDuration}. Created ${successCount} price list(s).`
-            : `Price list import of "${file_name}" completed in ${formattedDuration}. Created ${successCount} price list(s), ${failCount} group(s) failed.`,
-        transaction_id,
-        created_price_list_ids: createdPriceLists.map((p) => p.id).filter(Boolean),
-        failed_groups: failCount ? failedCreates.slice(0, 25) : undefined,
-        redirect,
-      },
-    })
+    // 6b) Direct insert: all records validated — batch insert into price table
+    await processPriceLists(
+      container as any,
+      processedPriceLists,
+      seller_id,
+      transaction_id,
+      file_name,
+      { to: notifyTo, channel: notifyChannel, template: notifyTemplate, redirect },
+      startTime
+    )
   } catch (error: any) {
     const formattedDuration = formatDuration(Date.now() - startTime)
     const errorMessage = error?.message || String(error || "Unknown error")

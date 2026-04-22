@@ -2,29 +2,20 @@ import { NextFunction } from 'express'
 
 import {
   AuthType,
-  ConfigModule,
   MedusaRequest,
   MedusaResponse,
-  getAuthContextFromJwtToken
 } from '@medusajs/framework'
-import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 
-export function checkSellerApproved(authTypes: AuthType[]) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function checkSellerApproved(_authTypes: AuthType[]) {
   return async (
     req: MedusaRequest,
     res: MedusaResponse,
     next: NextFunction
   ) => {
-    const {
-      projectConfig: { http }
-    } = req.scope.resolve<ConfigModule>(ContainerRegistrationKeys.CONFIG_MODULE)
-
-    const ctx = getAuthContextFromJwtToken(
-      req.headers.authorization,
-      http.jwtSecret!,
-      authTypes,
-      ['seller']
-    )
+    // auth_context is set by the authenticate() middleware (bearer/session).
+    // Cast to any since MedusaRequest doesn't expose it but it is present at runtime.
+    const ctx = (req as any).auth_context
 
     if (!ctx) {
       return res.status(401).json({
