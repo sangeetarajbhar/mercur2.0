@@ -322,7 +322,13 @@ module.exports = defineConfig({
         ]
       }
     },
-    { resolve: './src/modules/marketplace' }
+    { resolve: './src/modules/marketplace' },
+    {
+      resolve: './src/modules/split-order-payment',
+      definition: {
+        isQueryable: true,
+      },
+    }
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",
