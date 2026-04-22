@@ -144,7 +144,7 @@ export type Routes = {
             $id: typeof import("@medusajs/medusa/api/admin/invites/[id]/route") & {
                 resend: typeof import("@medusajs/medusa/api/admin/invites/[id]/resend/route");
             };
-            accept: typeof import("@medusajs/medusa/api/admin/invites/accept/route");
+            accept: typeof import("@mercurjs/core-plugin/api/admin/invites/accept/route");
         };
         locales: typeof import("@medusajs/medusa/api/admin/locales/route") & {
             $code: typeof import("@medusajs/medusa/api/admin/locales/[code]/route");
@@ -442,6 +442,7 @@ export type Routes = {
             $id: typeof import("@mercurjs/core-plugin/api/admin/payouts/[id]/route");
         };
         sellers: typeof import("@mercurjs/core-plugin/api/admin/sellers/route") & {
+            invite: typeof import("@mercurjs/core-plugin/api/admin/sellers/invite/route");
             $id: typeof import("@mercurjs/core-plugin/api/admin/sellers/[id]/route");
         };
         attributes: typeof import("./mercur-custom-route-stub") & {
@@ -493,6 +494,9 @@ export type Routes = {
             $id: typeof import("./mercur-custom-route-stub");
         };
         payoutTransactions: typeof import("./mercur-custom-route-stub");
+        priceListRequests: typeof import("./mercur-custom-route-stub") & {
+            $id: typeof import("./mercur-custom-route-stub");
+        };
         refundMethods: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
         };
@@ -870,6 +874,9 @@ export type Routes = {
         partner: typeof import("./mercur-custom-route-stub");
         priceList: {
             import: typeof import("./mercur-custom-route-stub");
+            requests: typeof import("./mercur-custom-route-stub") & {
+                $id: typeof import("./mercur-custom-route-stub");
+            };
         };
         requests: {
             productCategories: typeof import("./mercur-custom-route-stub");
