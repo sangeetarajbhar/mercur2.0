@@ -1,61 +1,109 @@
 import { constructS3Url } from '../../../shared/utils/common'
 import type { ControlSettings } from './fetch-control-settings'
-import type { LocationOperatingHours } from './fetch-location-hours'
+import type { LocationTiming } from '../../../modules/zone/utils/location-timing'
 import type { DeliveryPromiseResult } from './calculate-delivery-promise-from-zone'
 import { parseHHMM, addMinutes, getTodayIST } from '../utils/date-time-utils'
+import { CacheTTLMap, QueryGraphCacheKey } from '../../../shared/utils/redisKey'
+import { CACHE_ENABLE } from '../../../shared/utils/redisKey'
 
 const PROMISE_TEXT_PLACEHOLDER = '{{PROMISE_MINUTES}}'
 
-// Calculate instant delivery promise
-export async function calculateInstantDelivery(
+export type EffectiveInstantPromise = {
+  promiseMinutes: number
+  displayMinutes: number
+  netPromiseMinutes: number
+  promiseText: string | null
+}
+
+export async function getEffectiveInstantPromise(
   query: any,
   zone_id: string,
-  location_id: string,
-  now: Date,
   controlSettings: ControlSettings,
-  locationHours: LocationOperatingHours,
-  seller_id: string
-): Promise<DeliveryPromiseResult | null> {
-  const { data: instantPromisesData } = await query.graph({
-    entity: 'instant_promise',
-    fields: ['*'],
-    filters: {
-      zone_id: zone_id,
-      is_active: true,
-      deleted_at: null
+  seller_id: string,
+  omniExtraPromiseMinutes = 0
+): Promise<EffectiveInstantPromise | null> {
+  const { data: [instantPromises] } = await query.graph({
+      entity: 'instant_promise',
+      fields: ['id', 'promise_minutes', 'return_lead_minutes', 'promise_text'],
+      filters: {
+        zone_id: zone_id,
+        is_active: true,
+        deleted_at: null
+      }
+    },
+    {
+      cache: {
+        enable: CACHE_ENABLE,
+        ttl: CacheTTLMap[QueryGraphCacheKey.FETCH_INSTANT_PROMISES],
+        key: QueryGraphCacheKey.FETCH_INSTANT_PROMISES + `${zone_id}`,
+      },
     }
-  })
-
-  const sortedInstantPromises = (instantPromisesData || []).sort((a: any, b: any) =>
-    a.promise_minutes - b.promise_minutes
   )
-  const instantPromises = sortedInstantPromises[0] || null
-
 
   if (!instantPromises) {
     return null
   }
 
-  let promiseMinutes = (instantPromises.promise_minutes || 0) + (instantPromises.return_lead_minutes || 0) + (controlSettings.delayMinutes || 0)
+  let promiseMinutes =
+    (instantPromises.promise_minutes || 0) +
+    (instantPromises.return_lead_minutes || 0) +
+    (controlSettings.delayMinutes || 0)
 
-  const locationStart = parseHHMM(locationHours.startTime)
-  const locationEnd = parseHHMM(locationHours.endTime)
+  let netPromiseMinutes = (instantPromises.promise_minutes || 0) +
+  (controlSettings.delayMinutes || 0)
+
+  let displayMinutes =
+    (instantPromises.promise_minutes || 0) +
+    (controlSettings.delayMinutes || 0)
 
   if (seller_id && seller_id !== process.env.ZILO_SELLER_ID) {
-    promiseMinutes = promiseMinutes + parseInt(process.env.OMNI_SELLER_EXTRA_MINUTES || '0')
+    promiseMinutes += omniExtraPromiseMinutes
+    displayMinutes += omniExtraPromiseMinutes
+    netPromiseMinutes += omniExtraPromiseMinutes
   }
+
+  return {
+    promiseMinutes,
+    displayMinutes,
+    netPromiseMinutes,
+    promiseText: instantPromises.promise_text || null
+
+  }
+}
+
+// Calculate instant delivery promise
+export async function calculateInstantDelivery(
+  promiseConfig: EffectiveInstantPromise,
+  locationHours: LocationTiming,
+  now: Date,
+  controlSettings: ControlSettings,
+  location_id: string,
+): Promise<DeliveryPromiseResult | null> {
+  // const promiseConfig =
+  //   effectiveInstantPromise ??
+  //   await getEffectiveInstantPromise(
+  //     query,
+  //     zone_id,
+  //     controlSettings,
+  //     seller_id,
+  //     omniExtraPromiseMinutes
+  //   )
+
+  // if (!promiseConfig) {
+  //   return null
+  // }
+
+  const { promiseMinutes, displayMinutes, promiseText } = promiseConfig
+
+  const locationStart = parseHHMM(locationHours.start_time)
+  const locationEnd = parseHHMM(locationHours.end_time)
 
   const eta = addMinutes(now, promiseMinutes)
 
   const todayStr = now.toISOString().split('T')[0]
   const etaDateStr = eta.toISOString().split('T')[0]
-  let displayMinutes = (instantPromises.promise_minutes || 0) + (controlSettings.delayMinutes || 0)
 
-  if (seller_id && seller_id !== process.env.ZILO_SELLER_ID) {
-    displayMinutes = displayMinutes + parseInt(process.env.OMNI_SELLER_EXTRA_MINUTES || '0')
-  }
-
-  const baseMessage = instantPromises.promise_text || `Delivery in ${displayMinutes} minutes`
+  const baseMessage = promiseText || `Delivery in ${displayMinutes} minutes`
   const message = baseMessage.includes(PROMISE_TEXT_PLACEHOLDER)
     ? baseMessage.replace(new RegExp(PROMISE_TEXT_PLACEHOLDER, 'g'), `${displayMinutes}`)
     : baseMessage

@@ -57,7 +57,8 @@
     "multer": "^1.4.5-lts.2",
     "razorpay": "^2.9.6",
     "sharp": "^0.34.5",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@medusajs/caching-redis": "2.13.4"
   },
   "devDependencies": {
     "@medusajs/test-utils": "^2.13.4",

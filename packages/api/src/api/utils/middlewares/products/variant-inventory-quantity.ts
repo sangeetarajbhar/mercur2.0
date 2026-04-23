@@ -257,12 +257,19 @@ interface VariantWithStockStatus extends VariantInput {
     min_price_seller_id?: string
   }
   seller_location_inventory_stock_status?: boolean
+  seller_inventory?: Record<
+    string,
+    {
+      seller_location_inventory_stock_status: boolean
+    }
+  >
 }
 
 interface StockStatusExtraData {
   seller_id?: string
   location_ids?: string[]
   stockStatusSellerId?: string // The seller to use for stock status calculation
+  seller_ids?: string[]
 }
 
 /**
@@ -423,166 +430,160 @@ export const wrapVariantsWithSellerInventory = async (
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   const { location_ids = [] } = extraData || {}
+  const { seller_ids = [] } = extraData || {}
+
+  if(!seller_ids?.length) {
+    return 
+  }
 
   try {
-    // Process each variant individually
+    // Initialize default OUT_OF_STOCK for all requested sellers on all variants.
     for (const variant of variants) {
-      try {
-        // Initialize seller_inventory object
-        ;(variant as any).seller_inventory = {}
-
-        // Check if inventory management is enabled
-        if (variant?.manage_inventory === false) {
-          // If inventory not managed, set all sellers as in stock
-          const sellerPrices = (variant.calculated_price as any)?.seller_prices
-          if (sellerPrices) {
-            Object.keys(sellerPrices).forEach(sellerId => {
-              ;(variant as any).seller_inventory[sellerId] = {
-                seller_location_inventory_stock_status: true
-              }
-            })
-          }
-          continue
+      ;(variant as any).seller_inventory = {}
+      seller_ids.forEach((sellerId) => {
+        ;(variant as any).seller_inventory[sellerId] = {
+          seller_location_inventory_stock_status: false
         }
-
-        // Step 1: Get inventory items for this variant
-        const inventoryItemsResult = await query.graph({
-          entity: 'product_variant_inventory_item',
-          fields: ['variant_id', 'inventory_item_id'],
-          filters: { variant_id: variant.id }
-        })
-
-        const inventoryItems = inventoryItemsResult.data || []
-
-        if (inventoryItems.length > 0) {
-          const inventoryItemIds = inventoryItems.map((item: any) => item.inventory_item_id)
-
-          // Step 2: Get inventory levels for these inventory items with location filtering
-          const inventoryLevelsFilters: any = {
-            inventory_item_id: inventoryItemIds
-          }
-
-          // Apply location filtering - location_ids already includes parent + child from PDP route
-          if (location_ids.length > 0) {
-            inventoryLevelsFilters.location_id = location_ids
-          }
-
-          const inventoryLevelsResult = await query.graph({
-            entity: 'inventory_level',
-            fields: ['inventory_item_id', 'location_id', 'stocked_quantity', 'reserved_quantity'],
-            filters: inventoryLevelsFilters
-          })
-
-          const inventoryLevels = inventoryLevelsResult.data || []
-
-          // Get unique location IDs from inventory levels (in case location_ids is not provided)
-          const locationIdsFromInventory = [...new Set(inventoryLevels.map((level: any) => level.location_id).filter(Boolean))]
-          
-          // Use provided location_ids if available, otherwise use locations from inventory
-          const allLocationIds = location_ids.length > 0 ? location_ids : locationIdsFromInventory
-          
-          if (allLocationIds.length > 0) {
-            // Step 3: Get all sellers mapped to ALL locations (parent + child)
-            const sellerLocationResult = await query.graph({
-              entity: stockLocationSellerLink.entryPoint,
-              fields: ['seller_id', 'stock_location_id'],
-              filters: {
-                stock_location_id: allLocationIds
-              }
-            })
-
-            const sellerLocations = sellerLocationResult.data || []
-            
-            // Create a map of seller_id -> location_ids for quick lookup
-            const sellerLocationMap = new Map<string, string[]>()
-            sellerLocations.forEach((item: any) => {
-              const sellerId = item.seller_id
-              const locationId = item.stock_location_id
-              if (!sellerLocationMap.has(sellerId)) {
-                sellerLocationMap.set(sellerId, [])
-              }
-              sellerLocationMap.get(sellerId)!.push(locationId)
-            })
-
-            // Step 4: Calculate inventory for each seller
-            const sellerPrices = (variant.calculated_price as any)?.seller_prices
-            if (sellerPrices) {
-              Object.keys(sellerPrices).forEach(sellerId => {
-                const sellerLocationIds = sellerLocationMap.get(sellerId) || []
-                
-                if (sellerLocationIds.length > 0) {
-                  // Calculate available inventory (stocked - reserved) from locations where seller is mapped
-                  const filteredLevels = inventoryLevels.filter((level: any) => sellerLocationIds.includes(level.location_id))
-                  
-                  const totalAvailableInventory = filteredLevels.reduce((sum: number, level: any) => {
-                    const availableQty = Math.max(0, (level.stocked_quantity || 0) - (level.reserved_quantity || 0))
-                    return sum + availableQty
-                  }, 0)
-                  
-                  ;(variant as any).seller_inventory[sellerId] = {
-                    seller_location_inventory_stock_status: totalAvailableInventory > 0
-                  }
-                } else {
-                  // Seller is not mapped to any of the provided locations
-                  ;(variant as any).seller_inventory[sellerId] = {
-                    seller_location_inventory_stock_status: false
-                  }
-                }
-              })
-            } else {
-              // No seller prices found - this shouldn't happen normally, but handle gracefully
-              console.warn(`Variant ${variant.id}: No seller_prices found in calculated_price`)
-            }
-          } else {
-            // No location IDs available (neither provided nor from inventory)
-            // Set all sellers as out of stock
-            const sellerPrices = (variant.calculated_price as any)?.seller_prices
-            if (sellerPrices) {
-              Object.keys(sellerPrices).forEach(sellerId => {
-                ;(variant as any).seller_inventory[sellerId] = {
-                  seller_location_inventory_stock_status: false
-                }
-              })
-            }
-          }
-        } else {
-          // No inventory items, set all sellers as out of stock
-          const sellerPrices = (variant.calculated_price as any)?.seller_prices
-          if (sellerPrices) {
-            Object.keys(sellerPrices).forEach(sellerId => {
-              ;(variant as any).seller_inventory[sellerId] = {
-                seller_location_inventory_stock_status: false
-              }
-            })
-          }
-        }
-
-      } catch (variantError) {
-        console.error(`Error processing seller inventory for variant ${variant.id}:`, variantError)
-        // Set all sellers as out of stock on error
-        const sellerPrices = (variant.calculated_price as any)?.seller_prices
-        if (sellerPrices) {
-          Object.keys(sellerPrices).forEach(sellerId => {
-            ;(variant as any).seller_inventory[sellerId] = {
-              seller_location_inventory_stock_status: false
-            }
-          })
-        }
-      }
+      })
     }
 
+    // If inventory is not managed, mark all requested sellers as in stock.
+    const managedVariants = variants.filter((variant) => variant?.manage_inventory !== false)
+    const unmanagedVariants = variants.filter((variant) => variant?.manage_inventory === false)
+
+    for (const variant of unmanagedVariants) {
+      seller_ids.forEach((sellerId) => {
+        ;(variant as any).seller_inventory[sellerId] = {
+          seller_location_inventory_stock_status: true
+        }
+      })
+    }
+
+    if (!managedVariants.length) {
+      return
+    }
+
+    // Step 1 (batched): variant -> inventory_item mappings for all variants at once.
+    const managedVariantIds = managedVariants.map((variant) => variant.id)
+    const inventoryItemsResult = await query.graph({
+      entity: 'product_variant_inventory_item',
+      fields: ['variant_id', 'inventory_item_id'],
+      filters: { variant_id: managedVariantIds }
+    })
+
+    const inventoryItems = inventoryItemsResult.data || []
+    if (!inventoryItems.length) {
+      return
+    }
+
+    const variantToInventoryItemIds = new Map<string, string[]>()
+    const allInventoryItemIds = new Set<string>()
+    inventoryItems.forEach((item: any) => {
+      if (!variantToInventoryItemIds.has(item.variant_id)) {
+        variantToInventoryItemIds.set(item.variant_id, [])
+      }
+      variantToInventoryItemIds.get(item.variant_id)!.push(item.inventory_item_id)
+      allInventoryItemIds.add(item.inventory_item_id)
+    })
+
+    // Step 2 (batched): inventory levels for all required inventory items.
+    const inventoryLevelsFilters: any = {
+      inventory_item_id: Array.from(allInventoryItemIds),
+    }
+    if (location_ids.length > 0) {
+      inventoryLevelsFilters.location_id = location_ids
+    }
+
+    const inventoryLevelsResult = await query.graph({
+      entity: 'inventory_level',
+      fields: ['inventory_item_id', 'location_id', 'stocked_quantity', 'reserved_quantity'],
+      filters: inventoryLevelsFilters
+    })
+
+    const inventoryLevels = inventoryLevelsResult.data || []
+    if (!inventoryLevels.length) {
+      return
+    }
+
+    const levelsByInventoryItemId = new Map<string, any[]>()
+    const locationIdsFromInventory = new Set<string>()
+    inventoryLevels.forEach((level: any) => {
+      if (!levelsByInventoryItemId.has(level.inventory_item_id)) {
+        levelsByInventoryItemId.set(level.inventory_item_id, [])
+      }
+      levelsByInventoryItemId.get(level.inventory_item_id)!.push(level)
+      if (level.location_id) {
+        locationIdsFromInventory.add(level.location_id)
+      }
+    })
+
+    const allLocationIds = location_ids.length > 0 ? location_ids : Array.from(locationIdsFromInventory)
+    if (!allLocationIds.length) {
+      return
+    }
+
+    // Step 3 (batched): seller-location mappings scoped to requested sellers.
+    const sellerLocationResult = await query.graph({
+      entity: stockLocationSellerLink.entryPoint,
+      fields: ['seller_id', 'stock_location_id'],
+      filters: {
+        stock_location_id: allLocationIds,
+        seller_id: seller_ids,
+      }
+    })
+
+    const sellerLocations = sellerLocationResult.data || []
+    const sellerLocationSetMap = new Map<string, Set<string>>()
+    seller_ids.forEach((sellerId) => sellerLocationSetMap.set(sellerId, new Set<string>()))
+    sellerLocations.forEach((item: any) => {
+      if (!sellerLocationSetMap.has(item.seller_id)) {
+        sellerLocationSetMap.set(item.seller_id, new Set<string>())
+      }
+      sellerLocationSetMap.get(item.seller_id)!.add(item.stock_location_id)
+    })
+
+    // Step 4: per-variant inventory status from preloaded maps (no queries in loop).
+    for (const variant of managedVariants) {
+      const inventoryItemIds = variantToInventoryItemIds.get(variant.id) || []
+      if (!inventoryItemIds.length) {
+        continue
+      }
+
+      seller_ids.forEach((sellerId) => {
+        const sellerLocationSet = sellerLocationSetMap.get(sellerId) || new Set<string>()
+        if (!sellerLocationSet.size) {
+          return
+        }
+
+        let totalAvailableInventory = 0
+        for (const inventoryItemId of inventoryItemIds) {
+          const levels = levelsByInventoryItemId.get(inventoryItemId) || []
+          for (const level of levels) {
+            if (!sellerLocationSet.has(level.location_id)) {
+              continue
+            }
+            const availableQty = Math.max(0, (level.stocked_quantity || 0) - (level.reserved_quantity || 0))
+            totalAvailableInventory += availableQty
+          }
+        }
+
+        if (totalAvailableInventory > 0) {
+          ;(variant as any).seller_inventory[sellerId] = {
+            seller_location_inventory_stock_status: true
+          }
+        }
+      })
+    }
   } catch (error) {
     console.error('wrapVariantsWithSellerInventory: Critical error occurred:', error)
-    // Set all sellers as out of stock on error
+    // Set requested sellers as out of stock on critical error
     variants.forEach(variant => {
-      const sellerPrices = (variant.calculated_price as any)?.seller_prices
-      if (sellerPrices) {
-        Object.keys(sellerPrices).forEach(sellerId => {
-          ;(variant as any).seller_inventory[sellerId] = {
-            seller_location_inventory_stock_status: false
-          }
-        })
-      }
+      ;(variant as any).seller_inventory = (variant as any).seller_inventory || {}
+      seller_ids.forEach((sellerId) => {
+        ;(variant as any).seller_inventory[sellerId] = {
+          seller_location_inventory_stock_status: false
+        }
+      })
     })
   }
 }

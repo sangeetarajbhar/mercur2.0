@@ -1,10 +1,12 @@
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { MedusaContainer } from '@medusajs/framework'
 import { fetchControlSettings } from './fetch-control-settings'
-import { fetchLocationOperatingHours, type LocationOperatingHours } from './fetch-location-hours'
-import { calculateInstantDelivery } from './calculate-instant-delivery'
+import { calculateInstantDelivery, getEffectiveInstantPromise } from './calculate-instant-delivery'
 import { calculateSlottedDelivery } from './calculate-slotted-delivery'
 import { prepareSlottedDeliveryLocation } from './prepare-slotted-delivery-location'
+import { getOmniExtraPromiseMinutesForDsAndChild } from '../../../shared/utils/location-hierarchy'
+import { fetchLocationTiming, LocationTiming } from '../../../modules/zone/utils/location-timing'
+import { addMinutes, createISTDateTime, getTodayIST, parseHHMM } from '../utils/date-time-utils'
 
 export type CalculateDeliveryPromiseInput = {
   scope: MedusaContainer
@@ -46,10 +48,7 @@ export async function calculateDeliveryPromiseFromZone({
   try {
     // Fetch and merge control settings from zone and location
     const controlSettings = await fetchControlSettings(query, zone_id, location_id)
-    // console.log('controlSettings: ')
-    // console.log(controlSettings, { depth: null, colors: true})
 
-    // Check if any delivery options are available
     if (!controlSettings.isInstantEnabled && !controlSettings.isSlottedEnabled) {
       return {
         status: false,
@@ -58,14 +57,13 @@ export async function calculateDeliveryPromiseFromZone({
       }
     }
 
-    // Resolve location + hours to use for promise calculations.
-    // For non-zilo sellers, use omni location (if resolved) + its operating hours for BOTH instant and slotted.
     let slottedLocationId = location_id
     let minSlotStartTime: Date | null = null
     let maxSlotEndTime: Date | null = null
-    let locationHours: LocationOperatingHours = { startTime: null, endTime: null }
+    let locationHours: LocationTiming = { start_time: null, end_time: null }
 
     if (seller_id && seller_id !== process.env.ZILO_SELLER_ID) {
+      
       const prepared = await prepareSlottedDeliveryLocation({
         scope,
         location_id,
@@ -75,39 +73,68 @@ export async function calculateDeliveryPromiseFromZone({
       })
 
       slottedLocationId = prepared.slottedLocationId
-      minSlotStartTime = prepared.minSlotStartTime
-      maxSlotEndTime = prepared.maxSlotEndTime
       locationHours = prepared.locationHours
       
-      if (!locationHours.startTime && !locationHours.endTime) {
-        locationHours = await fetchLocationOperatingHours(query, slottedLocationId)
-      }
     } else {
-      locationHours = await fetchLocationOperatingHours(query, location_id)
+      console.log("else",location_id)
+      locationHours = await fetchLocationTiming(scope, location_id)
     }
 
-    // console.log("locationHours",locationHours)
-    // console.log("minSlotStartTime",minSlotStartTime)
-    // console.log("maxSlotEndTime",maxSlotEndTime)
-    // console.log("slottedLocationId",slottedLocationId)
-    // console.log("seller_id",seller_id)
+    /** When omni seller resolves to a child omni under DS, extra minutes come from location_hierarchy.promise_minutes */
+    let omniExtraPromiseMinutes = 0
+    if (
+      seller_id &&
+      seller_id !== process.env.ZILO_SELLER_ID &&
+      slottedLocationId !== location_id
+    ) {
+      omniExtraPromiseMinutes = await getOmniExtraPromiseMinutesForDsAndChild(
+        query,
+        location_id,
+        slottedLocationId
+      )
+    }
+
+    const effectiveInstantPromise = await getEffectiveInstantPromise(
+      query,
+      zone_id,
+      controlSettings,
+      seller_id || '',
+      omniExtraPromiseMinutes
+    )
     
+    // console.log("effectiveInstantPromise",effectiveInstantPromise)
     let result: DeliveryPromiseResult | null = null
 
     // Try instant delivery first (only shows if delivery is possible TODAY)
-    if (controlSettings.isInstantEnabled) {
+    if (controlSettings.isInstantEnabled && effectiveInstantPromise) {
       result = await calculateInstantDelivery(
-        query,
-        zone_id,
-        location_id,
+        effectiveInstantPromise,
+        locationHours,
         now,
         controlSettings,
-        locationHours,
-        seller_id || ''
+        location_id
       )
     }
 
     if (!result && controlSettings.isSlottedEnabled) {
+
+      const startParsed = parseHHMM(locationHours.start_time)
+      if (startParsed) {
+        const todayStr = getTodayIST(now)
+        const startStr = `${String(startParsed.h).padStart(2, '0')}:${String(startParsed.m).padStart(2, '0')}`
+        const startDateTime = createISTDateTime(todayStr, startStr)
+        minSlotStartTime = addMinutes(startDateTime, effectiveInstantPromise?.netPromiseMinutes ?? 0)
+      }
+
+      const endParsed = parseHHMM(locationHours.end_time)
+      if (endParsed) {
+        const todayStr = getTodayIST(now)
+        const endStr = `${String(endParsed.h).padStart(2, '0')}:${String(endParsed.m).padStart(2, '0')}`
+        maxSlotEndTime = createISTDateTime(todayStr, endStr)
+      }
+
+      // console.log("minSlotStartTime",minSlotStartTime)
+      // console.log("maxSlotEndTime",maxSlotEndTime)
 
       result = await calculateSlottedDelivery(
         query,

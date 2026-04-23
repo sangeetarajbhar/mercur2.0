@@ -4,8 +4,12 @@ import LocationHierarchyModuleService from "../../../modules/location-hierarchy/
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const service = req.scope.resolve(LOCATION_HIERARCHY_MODULE) as LocationHierarchyModuleService
-  const { parent_location_id, child_location_id } = req.body as Record<string, string>
-  const locationHierarchy = await service.createLocationHierarchies({ parent_location_id, child_location_id })
+  const { parent_location_id, child_location_id, promise_minutes } = req.body as Record<string, any>
+  const locationHierarchy = await service.createLocationHierarchies({
+    parent_location_id,
+    child_location_id,
+    promise_minutes: promise_minutes ?? 0,
+  })
   return res.json({ locationHierarchy })
 }
 

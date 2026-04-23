@@ -1,8 +1,8 @@
 import { MedusaContainer } from '@medusajs/framework'
 import { fetchOmniLocationIdByClusterVariant } from './fetch-omniLocationId-By-cluster-variant'
 import { fetchLocationTiming } from '../../../modules/zone/utils/location-timing'
-import { addMinutes, parseHHMM, createISTDateTime, getTodayIST } from '../utils/date-time-utils'
-import { type LocationOperatingHours } from './fetch-location-hours'
+// import { addMinutes, parseHHMM, createISTDateTime, getTodayIST } from '../utils/date-time-utils'
+import { type LocationTiming } from '../../../modules/zone/utils/location-timing'
 
 export type PrepareSlottedDeliveryLocationInput = {
     scope: MedusaContainer
@@ -14,9 +14,9 @@ export type PrepareSlottedDeliveryLocationInput = {
 
 export type PrepareSlottedDeliveryLocationOutput = {
     slottedLocationId: string
-    minSlotStartTime: Date | null
-    maxSlotEndTime: Date | null
-    locationHours: LocationOperatingHours
+    // minSlotStartTime: Date | null
+    // maxSlotEndTime: Date | null
+    locationHours: LocationTiming
 }
 
 /**
@@ -37,7 +37,7 @@ export async function prepareSlottedDeliveryLocation({
     let slottedLocationId = location_id
     let minSlotStartTime: Date | null = null
     let maxSlotEndTime: Date | null = null
-    let locationHours: LocationOperatingHours = { startTime: null, endTime: null }
+    let locationHours: LocationTiming = { start_time: null, end_time: null }
 
     // For non-zilo sellers with variant_id, try to find omni location where variant is available
     if (variant_id && seller_id && seller_id !== process.env.ZILO_SELLER_ID) {
@@ -49,42 +49,41 @@ export async function prepareSlottedDeliveryLocation({
         if (omniLocationId) {
             slottedLocationId = omniLocationId
         }
-
         // Calculate minSlotStartTime for non-zilo sellers
         const locationTiming = await fetchLocationTiming(scope, slottedLocationId)
         locationHours = {
-            startTime: locationTiming.start_time,
-            endTime: locationTiming.end_time
+            start_time: locationTiming.start_time,
+            end_time: locationTiming.end_time
         }
 
-        if (locationTiming.start_time) {
-            const todayStr = getTodayIST(now)
-            const startTimeParsed = parseHHMM(locationTiming.start_time)
+        // if (locationTiming.start_time) {
+        //     const todayStr = getTodayIST(now)
+        //     const startTimeParsed = parseHHMM(locationTiming.start_time)
 
-            if (startTimeParsed) {
-                const startTimeStr = `${String(startTimeParsed.h).padStart(2, '0')}:${String(startTimeParsed.m).padStart(2, '0')}`
-                const locationStartDateTime = createISTDateTime(todayStr, startTimeStr)
-                minSlotStartTime = addMinutes(locationStartDateTime, 60)
-            }
-        }
+        //     if (startTimeParsed) {
+        //         const startTimeStr = `${String(startTimeParsed.h).padStart(2, '0')}:${String(startTimeParsed.m).padStart(2, '0')}`
+        //         const locationStartDateTime = createISTDateTime(todayStr, startTimeStr)
+        //         minSlotStartTime = addMinutes(locationStartDateTime, 60)
+        //     }
+        // }
 
-        if (locationTiming.end_time) {
-            const todayStr = getTodayIST(now)
-            const endTimeParsed = parseHHMM(locationTiming.end_time)
+        // if (locationTiming.end_time) {
+        //     const todayStr = getTodayIST(now)
+        //     const endTimeParsed = parseHHMM(locationTiming.end_time)
 
-            if (endTimeParsed) {
-                const endTimeStr = `${String(endTimeParsed.h).padStart(2, '0')}:${String(endTimeParsed.m).padStart(2, '0')}`
-                const locationEndDateTime = createISTDateTime(todayStr, endTimeStr)
-                maxSlotEndTime = locationEndDateTime
-            }
-        }
+        //     if (endTimeParsed) {
+        //         const endTimeStr = `${String(endTimeParsed.h).padStart(2, '0')}:${String(endTimeParsed.m).padStart(2, '0')}`
+        //         const locationEndDateTime = createISTDateTime(todayStr, endTimeStr)
+        //         maxSlotEndTime = locationEndDateTime
+        //     }
+        // }
 
     }
 
     return {
         slottedLocationId,
-        minSlotStartTime,
-        maxSlotEndTime,
+        // minSlotStartTime,
+        // maxSlotEndTime,
         locationHours
     }
 }
