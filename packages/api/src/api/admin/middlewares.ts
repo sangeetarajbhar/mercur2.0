@@ -24,9 +24,11 @@ import { adminStockLocationRoutesMiddlewares } from "./stock-locations/middlewar
 import { adminProductsMiddlewares } from "./products/middlewares"
 import { sellerMiddlewares } from "./sellers/middlewares"
 import { adminRatingMiddlewares } from "./rating/middlewares"
+import { adminPriceListRequestsMiddlewares } from "./price-list-requests/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
+  ...adminPriceListRequestsMiddlewares,
   ...adminAttributesMiddlewares,
   ...adminBrandsMiddlewares,
   ...adminCustomerBankAccountVerificationMiddlewares,

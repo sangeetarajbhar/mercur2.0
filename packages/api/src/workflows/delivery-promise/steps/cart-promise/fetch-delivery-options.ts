@@ -1,12 +1,13 @@
 import { fetchControlSettings } from '../fetch-control-settings'
 import { calculateInstantDelivery } from '../calculate-instant-delivery'
-import { fetchLocationOperatingHours } from '../fetch-location-hours'
 import { prepareSlottedDeliveryLocation } from '../prepare-slotted-delivery-location'
 import { fetchAvailableSlots } from './fetch-available-slots'
 import type { DeliveryPromiseResult as InstantPromiseData } from '../calculate-delivery-promise-from-zone'
 import type { AvailableSlots } from './fetch-available-slots'
 import type { ZoneData } from './fetch-zone-by-pincode'
 import type { MedusaContainer } from '@medusajs/framework'
+import { getOmniExtraPromiseMinutesForDsAndChild } from '../../../../shared/utils/location-hierarchy'
+import { fetchLocationTiming } from '../../../../modules/zone/utils/location-timing'
 
 export type DeliveryOptions = {
   instantPromise: InstantPromiseData | null
@@ -36,14 +37,17 @@ export async function fetchDeliveryOptions(
   }
 ): Promise<DeliveryOptions> {
   const zone_id = zone.id
-  let locationId = zone.location_id
+  const darkStoreLocationId = zone.location_id
+  let locationId = darkStoreLocationId
+  let omniExtraPromiseMinutes = 0
 
   // Fetch control settings for zone and location
   const controlSettings = await fetchControlSettings(query, zone_id, locationId)
 
   // Resolve omni location + timings for non-zilo seller when variant is available.
   // This keeps cart instant promise aligned with omni operating hours, same as PDP/PLP.
-  let locationHours = await fetchLocationOperatingHours(query, locationId)
+  // let locationHours = await fetchLocationOperatingHours(query, locationId)
+  let locationHours = await fetchLocationTiming(query, locationId)
   if (
     options?.scope &&
     options?.variant_id &&
@@ -52,11 +56,18 @@ export async function fetchDeliveryOptions(
   ) {
     const prepared = await prepareSlottedDeliveryLocation({
       scope: options.scope,
-      location_id: zone.location_id,
+      location_id: darkStoreLocationId,
       variant_id: options.variant_id,
       seller_id,
       now: new Date(),
     })
+    if (prepared.slottedLocationId !== darkStoreLocationId) {
+      omniExtraPromiseMinutes = await getOmniExtraPromiseMinutesForDsAndChild(
+        query,
+        darkStoreLocationId,
+        prepared.slottedLocationId
+      )
+    }
     locationId = prepared.slottedLocationId
     locationHours = prepared.locationHours
   }
@@ -64,14 +75,24 @@ export async function fetchDeliveryOptions(
   // Calculate instant promise if enabled
   let instantPromise: InstantPromiseData | null = null
   if (controlSettings.isInstantEnabled) {
+
+    // instantPromise = await calculateInstantDelivery(
+    //   query,
+    //   zone_id,
+    //   locationId,
+    //   new Date(),
+    //   controlSettings,
+    //   locationHours,
+    //   seller_id || '',
+    //   omniExtraPromiseMinutes
+    // )
+
     instantPromise = await calculateInstantDelivery(
       query,
-      zone_id,
-      locationId,
+      locationHours,
       new Date(),
       controlSettings,
-      locationHours,
-      seller_id || ''
+      locationId
     )
   }
 

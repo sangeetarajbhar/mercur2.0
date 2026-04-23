@@ -1,6 +1,7 @@
 import { Knex } from 'knex'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import { MedusaContainer } from '@medusajs/framework'
+import { MedusaContainer, container } from '@medusajs/framework'
+import { CACHE_ENABLE, CacheTTLMap, QueryGraphCacheKey } from '../../../../shared/utils/redisKey'
 
 export type ZoneData = {
   id: string
@@ -21,14 +22,36 @@ export async function fetchZoneByPincode(
   knex: Knex
 ): Promise<ZoneData | null> {
   try {
-    const zones = await knex('zone')
-      .select('*')
-      .whereRaw('postcodes::jsonb @> ?', [JSON.stringify([pincode])])
-      .where('is_active', true)
-      .whereNull('deleted_at')
+    // const zones = await knex('zone')
+    //   .select('*')
+    //   .whereRaw('postcodes::jsonb @> ?', [JSON.stringify([pincode])])
+    //   .where('is_active', true)
+    //   .whereNull('deleted_at')
+
+    const ttl = CacheTTLMap[QueryGraphCacheKey.FETCH_ZONE_BY_PINCODE]
+    const query = container.resolve(ContainerRegistrationKeys.QUERY)
+    const { data: zones } = await query.graph({
+        entity: "zone",
+        fields: ["*"],
+        filters: {
+          is_active: true,
+          deleted_at: null,
+          postcodes: {
+            $contains: [pincode], // JSONB @>
+          },
+        },
+      },
+      {
+        cache: {
+          enable: CACHE_ENABLE,
+          ttl: ttl,
+          key: QueryGraphCacheKey.FETCH_ZONE_BY_PINCODE+`${pincode}`
+        }
+      }
+    )
 
     const zone = zones?.[0]
-
+    // console.log('zone',zone)
     if (!zone) {
       return null
     }
@@ -37,7 +60,7 @@ export async function fetchZoneByPincode(
       id: zone.id,
       location_id: zone.location_id,
       name: zone.name,
-      postcodes: zone.postcodes,
+      postcodes: (zone.postcodes as unknown) as string[],
       is_active: zone.is_active
     }
   } catch (error) {
@@ -62,15 +85,14 @@ export async function fetchZoneIdByLocationId(
       fields: ['id', 'location_id'],
       filters: { location_id, is_active: true, deleted_at: { $eq: null } }
     })
-    
+
     if (zones && zones.length > 0) {
       return zones[0].id
     }
-    
+
     return null
   } catch (error) {
     console.error('Error fetching zone by location_id:', error)
     return null
   }
 }
-

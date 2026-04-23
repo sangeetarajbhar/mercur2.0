@@ -156,6 +156,23 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@medusajs/medusa/caching",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/caching-redis",
+            id: "caching-redis",
+            // Optional, makes this the default caching provider
+            is_default: true,
+            options: {
+              redisUrl: process.env.REDIS_URL,
+              // more options...
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "./src/modules/customer-bank-detail",
     },
     {
@@ -258,6 +275,12 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "./src/modules/price-list-import-request",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/payout-transactions",
     },
     {
@@ -349,6 +372,13 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/rating",
     },
+    { resolve: './src/modules/marketplace' },
+    {
+      resolve: './src/modules/split-order-payment',
+      definition: {
+        isQueryable: true,
+      },
+    }
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",
