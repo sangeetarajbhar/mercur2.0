@@ -9,10 +9,15 @@ export enum RedisKey {
 export enum QueryGraphCacheKey {
   'CHECK_CART_IS_COMPLETED' = 'check_cart_is_completed_',
   'FETCH_ZONE_BY_PINCODE' = 'fetch_zone_by_pincode_',
-  'FETCH_PROMOTION_SELLER_LINKS' = 'fetch_promotion_seller_links_',
   'FETCH_CONTROL_BY_ZONE_ID' = 'fetch_control_by_zone_id_',
   'FETCH_CONTROL_BY_DARK_STORE_ID' = 'fetch_control_by_dark_store_id_',
   'GET_LOCATION_EXTENSION_TIME' = 'get_location_extension_time_',
+  'GET_LOCATION_HIERARCHIES' = 'get_location_hierarchies_',
+  /** DS (parent) + omni (child) row — promise_minutes for omni delivery uplift */
+  'GET_LOCATION_HIERARCHY_OMNI_PROMISE' = 'get_location_hierarchy_omni_promise_',
+  'FETCH_VARIANT_INVENTORY_ITEMS' = 'fetch_variant_inventory_items_',
+  'FETCH_INSTANT_PROMISES' = 'fetch_instant_promises_',
+  'FETCH_SLOT_OVERRIDES' = 'fetch_slot_overrides_',
 }
 
 export enum UseQueryGraphStepCacheKey {
@@ -27,25 +32,51 @@ export enum UseQueryGraphStepCacheKey {
 const DEFAULT_TTL = Number(process.env.CACHE_TTL_DEFAULT ?? 300)
 export const CACHE_ENABLE = process.env.CACHE_ENABLE ? JSON.parse(process.env.CACHE_ENABLE) : false
 
-const getTTL = (key: string): number => {
-  const envKey = `CACHE_TTL_${key.toUpperCase()}`
-  const value = process.env[envKey]
+const SHORT_LIVE_TTL = Number(process.env.CACHE_TTL_SHORT_LIVE)
+const LONG_LIVE_TTL = Number(process.env.CACHE_TTL_LONG_LIVE)
 
-  const ttl = value !== undefined ? Number(value) : NaN
+const resolveTTL = (ttl: number): number => {
   return Number.isFinite(ttl) ? ttl : DEFAULT_TTL
 }
 
-export const CacheTTLMap = {
-  [QueryGraphCacheKey.CHECK_CART_IS_COMPLETED]: getTTL('CHECK_CART_IS_COMPLETED'),
-  [QueryGraphCacheKey.FETCH_ZONE_BY_PINCODE]: getTTL('FETCH_ZONE_BY_PINCODE'),
-  [QueryGraphCacheKey.FETCH_PROMOTION_SELLER_LINKS]: getTTL('FETCH_PROMOTION_SELLER_LINKS'),
-  [QueryGraphCacheKey.FETCH_CONTROL_BY_ZONE_ID]: getTTL('FETCH_CONTROL_BY_ZONE_ID'),
-  [QueryGraphCacheKey.FETCH_CONTROL_BY_DARK_STORE_ID]: getTTL('FETCH_CONTROL_BY_DARK_STORE_ID'),
-  [QueryGraphCacheKey.GET_LOCATION_EXTENSION_TIME]: getTTL('GET_LOCATION_EXTENSION_TIME'),
+const SHORT_LIVE_CACHE_TTL = resolveTTL(SHORT_LIVE_TTL)
+const LONG_LIVE_CACHE_TTL = resolveTTL(LONG_LIVE_TTL)
 
-  [UseQueryGraphStepCacheKey.CHECK_CART_POSTAL_CODE]: getTTL('CHECK_CART_POSTAL_CODE'),
-  [UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME]: getTTL('GET_CUSTOMER_NAME'),
-  [UseQueryGraphStepCacheKey.GET_LOCATION_EXTENSION]: getTTL('GET_LOCATION_EXTENSION'),
-  [UseQueryGraphStepCacheKey.GET_LOCATION_HIERARCHIES]: getTTL('GET_LOCATION_HIERARCHIES'),
-  [UseQueryGraphStepCacheKey.GET_REGION]: getTTL('GET_REGION'),
+type CartCacheKey = QueryGraphCacheKey | UseQueryGraphStepCacheKey
+
+const shortLiveCacheKeys: CartCacheKey[] = [
+  QueryGraphCacheKey.CHECK_CART_IS_COMPLETED,
+  QueryGraphCacheKey.FETCH_VARIANT_INVENTORY_ITEMS,
+  QueryGraphCacheKey.FETCH_SLOT_OVERRIDES,
+  UseQueryGraphStepCacheKey.CHECK_CART_POSTAL_CODE,
+  UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME,
+]
+
+const longLiveCacheKeys: CartCacheKey[] = [
+  QueryGraphCacheKey.FETCH_ZONE_BY_PINCODE,
+  QueryGraphCacheKey.FETCH_CONTROL_BY_ZONE_ID,
+  QueryGraphCacheKey.FETCH_CONTROL_BY_DARK_STORE_ID,
+  QueryGraphCacheKey.GET_LOCATION_EXTENSION_TIME,
+  QueryGraphCacheKey.GET_LOCATION_HIERARCHIES,
+  QueryGraphCacheKey.GET_LOCATION_HIERARCHY_OMNI_PROMISE,
+  QueryGraphCacheKey.FETCH_INSTANT_PROMISES,
+  UseQueryGraphStepCacheKey.GET_LOCATION_EXTENSION,
+  UseQueryGraphStepCacheKey.GET_LOCATION_HIERARCHIES,
+  UseQueryGraphStepCacheKey.GET_REGION,
+]
+
+const createCacheTTLMap = (): Record<CartCacheKey, number> => {
+  const map = {} as Record<CartCacheKey, number>
+
+  shortLiveCacheKeys.forEach((key) => {
+    map[key] = SHORT_LIVE_CACHE_TTL
+  })
+
+  longLiveCacheKeys.forEach((key) => {
+    map[key] = LONG_LIVE_CACHE_TTL
+  })
+
+  return map
 }
+
+export const CacheTTLMap = createCacheTTLMap()

@@ -17,8 +17,6 @@ import {
 } from "../../../products/helpers"
 import { HttpTypes } from "@medusajs/framework/types"
 import stockLocationSellerLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
-import stockLocationExtensionLink from "../../../../../links/stock-location-stock-location-extension"
-import { LocationType } from '../../../../../modules/stock-location-extension/types/common'
 import { calculateProductPromotions } from '../../../product-list/utils/calculate-product-promotions'
 import { Modules } from '@medusajs/framework/utils'
 
@@ -27,18 +25,8 @@ import {
   PdpSectionResults,
 } from '../utils/pdp-sections'
 import { formatPromotionSavingsText } from "../../../../../shared/utils/validate-promotion-restrictions"
-// Define the type for the extension object
-interface StockLocationExtensionData {
-  stock_location_extension: {
-    location_type: string;
-  };
-}
-
-// Define the type for location hierarchy objects
-interface LocationHierarchy {
-  parent_location_id: string;
-  child_location_id: string;
-}
+import { resolveClusterContext } from "../utils/cluster-context"
+import { fetchSellerLocationLinks } from "../utils/seller-location-links"
 
 export const GET = async (
   req: RequestWithContext<HttpTypes.StoreProductParams>,
@@ -67,110 +55,24 @@ export const GET = async (
     throw new MedusaError(MedusaError.Types.INVALID_DATA, `cluster_id must be provided`)
   }
 
-  // Step 1: Check location types (dark store and omni store)
-  // Get all extensions for all provided locations
-  const {data : locationExtensions} = await query.graph({
-    entity: stockLocationExtensionLink.entryPoint,
-    fields: [
-      'stock_location_id',
-      'stock_location_extension.location_type',
-      'stock_location_extension.id'
-    ],
-    filters: {
-      stock_location_id: cluster_id
-    }
-  },
-  {
-    cache: {
-      enable: true,
-      key: "location-extensions:" + cluster_id,
-    },
-  })
-
-
-  // Then filter for dark store (location_type = '1')
-  const darkStoreExtensions = locationExtensions?.filter(
-    (ext: StockLocationExtensionData) => ext.stock_location_extension?.location_type === LocationType.DARK_STORE.toString()
-  )
-
-  if (!darkStoreExtensions.length) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, `Cluster Location is not a valid dark store`)
-  }
-
-  // stock location extension data will have only one record against each stock location
-  // const darkStoreExt = darkStoreExtensions[0]
-  const darkStoreLocationId = darkStoreExtensions[0].stock_location_id
-
-  // Get all omni store locations, parent_location_id is dark store location id and child_location_id is omni store location id
-  const { data: locationHierarchies } = await query.graph({
-    entity: 'location_hierarchy',
-    fields: ['parent_location_id', 'child_location_id'],
-    filters: { parent_location_id: darkStoreLocationId }
-  },
-  {
-    cache: {
-      enable: true,
-      key: "location-hierarchies:" + darkStoreLocationId,
-    },
-  })
-
-  const childLocations = locationHierarchies.map((loc: LocationHierarchy) => loc.child_location_id)
-
-  // Combine dark store + omni store cluster_id in one array
-  const darkStoreWithChildrenStockLocation = [darkStoreLocationId, ...childLocations]
+  const {
+    darkStoreLocationId,
+    darkStoreWithChildrenStockLocation,
+  } = await resolveClusterContext(query, cluster_id as string)
 
   // Step 1: Check seller-stock location relationship (only if seller_id is provided)
   if (seller_id && cluster_id) {
-    // first check seller_id is itself a dark store seller or not
-    //   const checkSeller = await query.graph({
-    //     entity: sellerStockLocation.entryPoint,
-    //     fields: ['seller_id', 'stock_location_id'],
-    //     filters: {
-    //       seller_id: seller_id,
-    //       stock_location_id: darkStoreLocationId,
-    //     }
-    //   },
-    //   {
-    //     cache: {
-    //       enable: true,
-    //     },
-    //   }
-    //  )
+    const sellerLocationLinks = await fetchSellerLocationLinks(
+      query,
+      seller_id as string,
+      darkStoreWithChildrenStockLocation,
+      darkStoreLocationId
+    )
 
-    // If seller_id is itself is not a dark store seller, that means given seller is an omni store seller
-    // then check seller_id is linked to any of the omni store locations, where omni store locations are child locations of dark store location
-    // if (!checkSeller.data.length) {
-      const {data : sellerLocationLinks} = await query.graph({
-        entity: stockLocationSellerLink.entryPoint,
-        fields: ['seller_id', 'stock_location_id'],
-        filters: {
-          seller_id: seller_id,
-          stock_location_id: darkStoreWithChildrenStockLocation,
-        }
-      },{
-        cache: {
-          enable: true,
-          key: "seller-stock-location:" + seller_id + darkStoreLocationId,
-          // key: async (args, cachingModuleService) => {
-          //   const [{ filters }] = args
-          //
-          //   // Build an object that uniquely represents this query
-          //   return await cachingModuleService.computeKey({
-          //     prefix: "seller-stock-location",
-          //     seller_id: filters.seller_id,
-          //     stock_location_ids: filters.stock_location_id, // array is OK here
-          //   })
-        // }
-      }
-      })
-
-      if (!sellerLocationLinks.length) {
-        throw new MedusaError(MedusaError.Types.INVALID_DATA, `Seller is not linked to this cluster stock location`)
-      }
-    // }
+    if (!sellerLocationLinks.length) {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, `Seller is not linked to this cluster stock location`)
+    }
   }
-
-
 
   // Field processing - need to keep this for proper field handling
   const withInventoryQuantity = req.queryConfig.fields.some((field) =>
@@ -240,13 +142,35 @@ export const GET = async (
     (product as any).options = options || []
   }
 
+  // Filter sellers to only show those available in the location
+  await filterSellersByLocationAvailability(
+    req,
+    product,
+    {
+      location_ids: darkStoreWithChildrenStockLocation,
+      seller_id: seller_id as string,
+    }
+  )
+
+  // Add seller_inventory object to each variant for all sellers
+  await wrapVariantsWithSellerInventory(
+      req.scope,
+      product.variants, 
+      {
+        location_ids: darkStoreWithChildrenStockLocation,
+        seller_ids: product.sellers?.map((seller: any) => seller.id) || [ seller_id as string ],
+      }
+  )
+  
+
   // console.log("product", product);
 
   // Step 2: First calculate all seller prices to determine minimum price seller
   const initialExtraData = {
-    seller_id: undefined, // Don't filter by seller initially to get all seller prices
+    // seller_id: undefined, // Don't filter by seller initially to get all seller prices
     location_ids: darkStoreWithChildrenStockLocation,
-    filterToSingleSeller: false // Never filter in the initial call
+    // filterToSingleSeller: false, // Never filter in the initial call
+    seller_ids: product.sellers?.map((seller: any) => seller.id) || [ seller_id as string ],
   };
 
   // console.log("initialExtraData", initialExtraData);
@@ -256,88 +180,25 @@ export const GET = async (
 
   await wrapVariantsWithSellerPricing(req.scope, product.variants, req.pricingContext, initialExtraData);
 
-  // Step 2.5: Capture the TRUE minimum price seller BEFORE any filtering
-  let trueMiniumumPriceSellerId: string | undefined;
-  if (product.variants?.length > 0) {
-    const firstVariant = product.variants[0];
-    trueMiniumumPriceSellerId = firstVariant.calculated_price?.min_price_seller_id;
-  }
-
-  // console.log("trueMiniumumPriceSellerId", trueMiniumumPriceSellerId);
-  // Step 3: Determine the selected seller (provided seller_id or minimum price seller)
-  let selectedSellerId: string | undefined = seller_id as string;
-  const userRequestedSpecificSeller = !!seller_id; // Track if user explicitly requested a seller
-
-  // If no seller_id provided, use the minimum price seller from the first variant
-  if (!selectedSellerId && product.variants?.length > 0) {
-    selectedSellerId = trueMiniumumPriceSellerId;
-
-    if (!selectedSellerId) {
-      throw new MedusaError(MedusaError.Types.INVALID_DATA, `Default seller not found`)
-    }
-
-    // If we found a minimum price seller, validate seller-location relationship
-    if (selectedSellerId) {
-      // Step 4: Default seller-location relationship
-      const {data : defaultSellerLocationLinks} = await query.graph({
-        entity: stockLocationSellerLink.entryPoint,
-        fields: ['seller_id', 'stock_location_id'],
-        filters: {
-          seller_id: selectedSellerId,
-          stock_location_id: darkStoreWithChildrenStockLocation,
-        }
-      })
-
-      // If seller_id is itself is not a dark store seller, that means default seller is an omni store seller
-      // then check seller_id is linked to any of the omni store locations, where omni store locations are child locations of dark store location
-      // if (!checkDefaultSeller.data.length) {
-      //   const defaultSellerLocationLinks = await query.graph({
-      //     entity: sellerStockLocation.entryPoint,
-      //     fields: ['seller_id', 'stock_location_id'],
-      //     filters: {
-      //       seller_id: seller_id,
-      //       stock_location_id: childLocations, // Now checking array of child locations
-      //     }
-      //   })
-
-        if (!defaultSellerLocationLinks.length) {
-          throw new MedusaError(MedusaError.Types.INVALID_DATA, `Default Seller is not linked to this stock location`)
-        }
-      // }
-    }
-  }
-
-  // Step 5: Now get inventory with the selected seller context
-  const finalExtraData = {
-    seller_id: selectedSellerId,
-    location_ids: darkStoreWithChildrenStockLocation,
-    filterToSingleSeller: userRequestedSpecificSeller
-  };
-
-  // Add seller_inventory object to each variant for all sellers
-  await wrapVariantsWithSellerInventory(
-    req,
-    product.variants || [],
-    finalExtraData
-  )
-
-  // Filter sellers to only show those available in the location
-  await filterSellersByLocationAvailability(
-    req,
-    product,
-    finalExtraData
-  )
-
-  // Step 6: Recalculate pricing with selected seller context for more accurate results
-  // Only recalculate if user explicitly requested a specific seller to avoid pricing context issues
-  if (userRequestedSpecificSeller) {
-    await wrapVariantsWithSellerPricing(req.scope, product.variants, req.pricingContext, finalExtraData);
-  }
-
   await wrapProductsWithTaxPrices(req, [product])
 
   // Add min_variant_id and other sorting data using dataNormalization
   await dataNormalization(req, [product]);
+
+  const selectedSellerId =
+    (seller_id as string | undefined) ||
+    (() => {
+      const minPriceVariantId = (product as any).min_price_variant_id
+      if (!minPriceVariantId) {
+        return undefined
+      }
+
+      const minPriceVariant = product.variants?.find(
+        (variant: any) => variant.id === minPriceVariantId
+      )
+
+      return minPriceVariant?.calculated_price?.min_price_seller_id
+    })()
 
   // Transform relative image paths to full URLs with multiple resolutions for frontend consumption
   transformSingleProductImageUrlsWithMultipleResolutions(product, requestedResolutions);
