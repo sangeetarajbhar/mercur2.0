@@ -7,6 +7,7 @@ import {
 import { MedusaRequest, MedusaStoreRequest } from "@medusajs/framework/http"
 import { transformAndValidateSalesChannelIds } from "./filter-by-valid-sales-channels"
 import stockLocationSellerLink from '@mercurjs/core-plugin/links/stock-location-seller-link'
+import { Context, MedusaContainer } from "@medusajs/framework/types"
 
 export const wrapVariantsWithTotalInventoryQuantity = async (
   req: MedusaRequest,
@@ -414,7 +415,7 @@ export const wrapVariantsWithSellerLocationStockStatus = async (
  * and filter sellers to only show those available in the location
  */
 export const wrapVariantsWithSellerInventory = async (
-  req: MedusaStoreRequest<unknown>,
+  scope: MedusaContainer,
   variants: VariantWithStockStatus[],
   extraData?: StockStatusExtraData
 ): Promise<void> => {
@@ -423,12 +424,12 @@ export const wrapVariantsWithSellerInventory = async (
     return
   }
 
-  if (!req?.scope) {
+  if (!scope) {
     console.error('wrapVariantsWithSellerInventory: Invalid request scope provided')
     return
   }
 
-  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as Query
+  const query = scope.resolve(ContainerRegistrationKeys.QUERY) as Query
   const { location_ids = [] } = extraData || {}
   const { seller_ids = [] } = extraData || {}
 

@@ -154,7 +154,7 @@ export const GET = async (
 
   // Add seller_inventory object to each variant for all sellers
   await wrapVariantsWithSellerInventory(
-      req,
+      req.scope,
       product.variants, 
       {
         location_ids: darkStoreWithChildrenStockLocation,
