@@ -24,4 +24,4 @@ build
 !.yarn/versions
 
 .medusa
-.mercur
+.medusa/types
