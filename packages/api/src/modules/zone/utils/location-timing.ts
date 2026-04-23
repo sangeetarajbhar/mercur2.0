@@ -12,7 +12,7 @@ export async function fetchLocationTiming(
   locationId: string
 ): Promise<LocationTiming> {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY) as any
-  console.log("fetchLocationTiming", locationId)
+  // console.log("fetchLocationTiming", locationId)
   try {
     const { data: locationExtensions } = await query.graph({
       entity: stockLocationStockLocationExtension.entryPoint,

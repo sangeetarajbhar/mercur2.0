@@ -9,7 +9,8 @@ export type PrepareSlottedDeliveryLocationInput = {
     location_id: string
     variant_id?: string
     seller_id?: string | null
-    now: Date
+    // now: Date,
+    omni_location_id?: string | null
 }
 
 export type PrepareSlottedDeliveryLocationOutput = {
@@ -32,7 +33,8 @@ export async function prepareSlottedDeliveryLocation({
     location_id,
     variant_id,
     seller_id,
-    now
+    // now,
+    omni_location_id
 }: PrepareSlottedDeliveryLocationInput): Promise<PrepareSlottedDeliveryLocationOutput> {
     let slottedLocationId = location_id
     let minSlotStartTime: Date | null = null
@@ -49,6 +51,9 @@ export async function prepareSlottedDeliveryLocation({
         if (omniLocationId) {
             slottedLocationId = omniLocationId
         }
+    } else if (omni_location_id && seller_id && seller_id !== process.env.ZILO_SELLER_ID) {
+        slottedLocationId = omni_location_id
+    }
         // Calculate minSlotStartTime for non-zilo sellers
         const locationTiming = await fetchLocationTiming(scope, slottedLocationId)
         locationHours = {
@@ -78,7 +83,7 @@ export async function prepareSlottedDeliveryLocation({
         //     }
         // }
 
-    }
+
 
     return {
         slottedLocationId,

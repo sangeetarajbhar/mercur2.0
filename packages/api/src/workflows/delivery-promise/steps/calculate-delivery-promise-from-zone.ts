@@ -14,6 +14,7 @@ export type CalculateDeliveryPromiseInput = {
   location_id: string
   seller_id?: string | null
   variant_id?: string
+  omni_location_id?: string | null
 }
 
 export type DeliveryPromiseResult = {
@@ -40,7 +41,8 @@ export async function calculateDeliveryPromiseFromZone({
   zone_id,
   location_id,
   seller_id,
-  variant_id
+  variant_id,
+  omni_location_id
 }: CalculateDeliveryPromiseInput): Promise<DeliveryPromiseErrorResult | DeliveryPromiseResult> {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
   const now = new Date()
@@ -69,14 +71,15 @@ export async function calculateDeliveryPromiseFromZone({
         location_id,
         variant_id,
         seller_id,
-        now
+        // now,
+        omni_location_id
       })
 
       slottedLocationId = prepared.slottedLocationId
       locationHours = prepared.locationHours
       
     } else {
-      console.log("else",location_id)
+      // console.log("else",location_id)
       locationHours = await fetchLocationTiming(scope, location_id)
     }
 
@@ -93,6 +96,7 @@ export async function calculateDeliveryPromiseFromZone({
         slottedLocationId
       )
     }
+
 
     const effectiveInstantPromise = await getEffectiveInstantPromise(
       query,
@@ -116,6 +120,7 @@ export async function calculateDeliveryPromiseFromZone({
       )
     }
 
+    // console.log("result",result)
     if (!result && controlSettings.isSlottedEnabled) {
 
       const startParsed = parseHHMM(locationHours.start_time)
@@ -148,6 +153,8 @@ export async function calculateDeliveryPromiseFromZone({
       )
 
     }
+
+    // console.log("slot result",result)
 
     // Return error if no delivery promise is available
     if (!result) {
