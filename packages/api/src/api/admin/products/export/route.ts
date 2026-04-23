@@ -7,6 +7,8 @@ export const POST = async (
   res: MedusaResponse
 ) => {
   try {
+
+
     // Extract query parameters (Medusa's default export uses query params)
     // Handle status as array (status[0]=published) or single value
     let statusValue: string | undefined = undefined

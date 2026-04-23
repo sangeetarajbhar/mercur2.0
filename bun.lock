@@ -114,6 +114,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "@mercurjs/core-plugin@2.0.2": "patches/@mercurjs%2Fcore-plugin@2.0.2.patch",
+  },
   "packages": {
     "@acme/admin": ["@acme/admin@workspace:apps/admin"],
 

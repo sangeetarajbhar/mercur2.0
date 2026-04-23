@@ -65,6 +65,41 @@
           "default": "false",
           "mappedType": "boolean"
         },
+        "is_hidden": {
+          "name": "is_hidden",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "override_existing": {
+          "name": "override_existing",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "true",
+          "mappedType": "boolean"
+        },
+        "applicable_on": {
+          "name": "applicable_on",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'all'",
+          "enumItems": [
+            "all",
+            "app",
+            "web"
+          ],
+          "mappedType": "enum"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamptz",
@@ -108,7 +143,7 @@
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_promotion_extension_deleted_at\" ON \"promotion_extension\" (deleted_at) WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_promotion_extension_deleted_at\" ON \"promotion_extension\" (\"deleted_at\") WHERE deleted_at IS NULL"
         },
         {
           "keyName": "promotion_extension_pkey",
@@ -128,4 +163,3 @@
   ],
   "nativeEnums": {}
 }
-

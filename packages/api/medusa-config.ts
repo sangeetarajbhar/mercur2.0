@@ -25,9 +25,9 @@ module.exports = defineConfig({
       options: {
         customFields: {
           Seller: {
-            company_spocs: { type: "string",  },
+            company_spocs: { type: "string", },
           },
-         
+
         },
       },
     },
@@ -345,6 +345,9 @@ module.exports = defineConfig({
           }
         ]
       }
+    },
+    {
+      resolve: "./src/modules/rating",
     },
   ],
   plugins: [{
