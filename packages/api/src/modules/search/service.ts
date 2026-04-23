@@ -4,7 +4,7 @@ import { ContainerRegistrationKeys, QueryContext } from '@medusajs/framework/uti
 import { SearchProviderStrategy, SearchQuery, SearchResult, SearchProduct } from './types'
 import { createAllSearchStrategies } from './search-product-factory'
 import { wrapVariantsWithSellerPricing } from '../../api/utils/middlewares/products/variant-seller-pricing'
-
+import { wrapVariantsWithSellerInventory } from '../../api/utils/middlewares/products/variant-inventory-quantity'
 import { constructS3Url } from '../../shared/utils/common'
 import { selectProductsAvailableLocationsBatch } from '../../subscribers/utils/algolia-product'
 
@@ -585,10 +585,27 @@ export default class SearchModuleService {
 
         // Expanded locations for pricing (same as Algolia)
         const locationIdsForPricing = availableLocationsMap.get(product.id)
+
+        const sellerIdsForPricing =
+          (product.sellers || [])
+            .map((s: any) => s?.id)
+            .filter(Boolean)
+
         const extraData =
           locationIdsForPricing && locationIdsForPricing.length > 0
-            ? { location_ids: locationIdsForPricing, filterToSingleSeller: false }
-            : { filterToSingleSeller: false }
+            ? { location_ids: locationIdsForPricing, seller_ids: sellerIdsForPricing }
+            : { seller_ids: sellerIdsForPricing }
+
+          // const extraData =
+          //   locationIdsForPricing && locationIdsForPricing.length > 0
+          //     ? { location_ids: locationIdsForPricing, filterToSingleSeller: false }
+          //     : { filterToSingleSeller: false }
+        
+        await wrapVariantsWithSellerInventory(
+          container,
+          product.variants, 
+          extraData
+        ) 
 
         await wrapVariantsWithSellerPricing(
           container,
@@ -625,7 +642,8 @@ export default class SearchModuleService {
         categories: product.categories || [],
         attribute_values: product.attribute_values || [],
         filters,
-        price_asc: this.getMinPrice(product.variants),
+        // price_asc: this.getMinPrice(product.variants),
+        price_asc: this.getMinPriceStockAware(product.variants),
         price_max: this.getMaxPrice(product.variants),
         price,
         mrp,
@@ -724,7 +742,7 @@ export default class SearchModuleService {
 
     return [0]
   }
-
+  
   /**
    * Get minimum price from variants
    */
@@ -750,6 +768,35 @@ export default class SearchModuleService {
 
     return prices.length > 0 ? Math.max(...prices) : 0
   }
+
+  
+  private getVariantEffectivePrice(variant: any): number | null {
+    const cp = variant?.calculated_price
+    if (!cp) return null
+  
+    const sellerId = cp.min_price_seller_id
+    if (sellerId && cp.seller_prices?.[sellerId]) {
+      const amt = cp.seller_prices[sellerId]?.calculated_amount
+      if (typeof amt === "number" && amt > 0) return amt
+    }
+  
+    if (typeof cp.calculated_amount === "number" && cp.calculated_amount > 0) {
+      return cp.calculated_amount
+    }
+  
+    return null
+  }
+  
+  private getMinPriceStockAware(variants: any[]): number {
+    if (!variants?.length) return 0
+  
+    const prices = variants
+      .map((v) => this.getVariantEffectivePrice(v))
+      .filter((p): p is number => typeof p === "number" && p > 0)
+  
+    return prices.length ? Math.min(...prices) : 0
+  }
+
 
   /**
    * Get price and MRP for a product using the same logic as price sync (syncPrices):
