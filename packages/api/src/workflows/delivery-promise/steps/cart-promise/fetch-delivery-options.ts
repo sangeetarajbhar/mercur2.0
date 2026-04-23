@@ -75,15 +75,24 @@ export async function fetchDeliveryOptions(
   // Calculate instant promise if enabled
   let instantPromise: InstantPromiseData | null = null
   if (controlSettings.isInstantEnabled) {
+
+    // instantPromise = await calculateInstantDelivery(
+    //   query,
+    //   zone_id,
+    //   locationId,
+    //   new Date(),
+    //   controlSettings,
+    //   locationHours,
+    //   seller_id || '',
+    //   omniExtraPromiseMinutes
+    // )
+
     instantPromise = await calculateInstantDelivery(
       query,
-      zone_id,
-      locationId,
+      locationHours,
       new Date(),
       controlSettings,
-      locationHours,
-      seller_id || '',
-      omniExtraPromiseMinutes
+      locationId
     )
   }
 
