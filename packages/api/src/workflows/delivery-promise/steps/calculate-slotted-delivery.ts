@@ -41,13 +41,13 @@ async function fetchSlotOverrides(
       deleted_at: null
     }
   },
-  {
-    cache: {
-      enable: CACHE_ENABLE,
-      ttl: CacheTTLMap[QueryGraphCacheKey.FETCH_SLOT_OVERRIDES],
-      key: QueryGraphCacheKey.FETCH_SLOT_OVERRIDES + `${zone_id}_${todayStr}_${tomorrowStr}`,
-    },
-  }
+  // {
+  //   cache: {
+  //     enable: CACHE_ENABLE,
+  //     ttl: CacheTTLMap[QueryGraphCacheKey.FETCH_SLOT_OVERRIDES],
+  //     key: QueryGraphCacheKey.FETCH_SLOT_OVERRIDES + `${zone_id}_${todayStr}_${tomorrowStr}`,
+  //   },
+  // }
   )
 
   return (slotOverridesData || []).sort((a: any, b: any) => {
