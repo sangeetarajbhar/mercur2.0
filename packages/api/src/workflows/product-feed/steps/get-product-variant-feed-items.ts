@@ -203,7 +203,7 @@ export const getProductVariantFeedItemsStep = createStep(
             { currency_code: currencyCode, region_id: regionId },
             {
               location_ids: locationIds,
-              filterToSingleSeller: true,
+              // filterToSingleSeller: true,
             }
           )
         }

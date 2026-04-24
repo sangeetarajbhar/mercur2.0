@@ -13,6 +13,7 @@ import { vendorCors } from "./cors"
 import { unlessBaseUrl } from "../../shared/infra/http/utils"
 import { checkSellerApproved, storeActiveGuard } from "../../shared/infra/http/middlewares"
 import { authenticate } from "@medusajs/framework"
+import { vendorNotificationMiddlewares } from "./notifications/middlewares"
 
 export const vendorMiddlewares: MiddlewareRoute[] = [
   {
@@ -48,5 +49,6 @@ export const vendorMiddlewares: MiddlewareRoute[] = [
   ...vendorAttributesMiddlewares,
   ...vendorBrandsMiddlewares,
   ...vendorPartnerMiddlewares,
-  ...vendorStockLocationsMiddlewares
+  ...vendorStockLocationsMiddlewares,
+  ...vendorNotificationMiddlewares
 ]

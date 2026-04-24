@@ -25,6 +25,7 @@ import { adminProductsMiddlewares } from "./products/middlewares"
 import { sellerMiddlewares } from "./sellers/middlewares"
 import { adminRatingMiddlewares } from "./rating/middlewares"
 import { adminPriceListRequestsMiddlewares } from "./price-list-requests/middlewares"
+import { yesplzTagMappingUploadMiddlewares } from "./yesplz-tag-mapping/upload/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
@@ -51,5 +52,6 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminStockLocationRoutesMiddlewares,
   ...adminProductsMiddlewares,
   ...sellerMiddlewares,
+  ...yesplzTagMappingUploadMiddlewares,
   ...adminRatingMiddlewares
 ]
