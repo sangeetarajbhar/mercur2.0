@@ -52,14 +52,14 @@ const Seller = model
     msme: model.boolean().nullable(),
     seller_type: model.enum(['BRAND', 'SELLER', 'DISTRIBUTOR']).nullable(),
 
-    onboarding: model.hasOne(() => SellerOnboarding).nullable(),
-    company_spocs: model.hasMany(() => CompanySpoc),
-    kyc_documents: model.hasMany(() => KycDocument),
-    bank_detail: model.hasOne(() => BankDetail).nullable(),
+    onboarding: model.hasOne(() => SellerOnboarding, { mappedBy: "seller" }).nullable(),
+    company_spocs: model.hasMany(() => CompanySpoc, { mappedBy: "seller" }),
+    kyc_documents: model.hasMany(() => KycDocument, { mappedBy: "seller" }),
+    bank_detail: model.hasOne(() => BankDetail, { mappedBy: "seller" }).nullable(),
     metadata: model.json().nullable(),
   })
   .cascades({
-    delete: ["professional_details", "address", "payment_details", "member_invites"],
+    delete: ["member_invites"],
     detach: ["members"],
   })
   .indexes([

@@ -1,6 +1,6 @@
 import { toHandle, Modules, MedusaError } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
-import { MercurModules, SellerRole } from '@mercurjs/types'
+import { MercurModules, SellerRole, SellerStatus } from '@mercurjs/types'
 import { generateUniqueBarcode } from '../../../api/admin/sellers/utils'
 import { BRAND_MODULE } from '../../../modules/brand'
 import {
@@ -42,6 +42,7 @@ export const createAdminSellerStep = createStep(
     const seller = await service.createSellers({
       ...sellerPayload,
       barcode,
+      status: SellerStatus.OPEN,
       handle: toHandle(input.name),
     })
 

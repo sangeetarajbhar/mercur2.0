@@ -14,7 +14,9 @@ export const fetchSellerByAuthActorId = async (
   } = await query.graph({
     entity: 'seller',
     filters: {
+      members: {
         id: authActorId
+      }
     },
     fields
   })

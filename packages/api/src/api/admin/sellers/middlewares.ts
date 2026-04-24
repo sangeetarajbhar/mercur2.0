@@ -118,7 +118,6 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
           { name: "kyc_files", maxCount: 10 }
         ]),
         validateAndTransformBody(createSellerOnboardingSchema)
-
       ],
     },
     {

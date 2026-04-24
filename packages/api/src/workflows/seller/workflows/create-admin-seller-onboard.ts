@@ -44,7 +44,7 @@ export const createSellerOnboardingWorkflow = createWorkflow<
 
     setAuthAppMetadataStep({
         authIdentityId: input.auth_identity_id,
-        actorType: 'seller',
+        actorType: 'member',
         value: seller.members[0].id
     })
 

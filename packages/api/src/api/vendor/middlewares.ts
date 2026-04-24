@@ -26,7 +26,7 @@ export const vendorMiddlewares: MiddlewareRoute[] = [
       // and sets req.auth_context, which checkSellerApproved depends on.
       unlessBaseUrl(
         /^\/vendor\/(sellers|invites\/accept)$/,
-        authenticate('seller', ['bearer', 'session'], {
+        authenticate('member', ['bearer', 'session'], {
           allowUnregistered: false
         })
       ),

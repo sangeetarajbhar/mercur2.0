@@ -7,6 +7,10 @@ module.exports = defineConfig({
   admin: {
     disable: true
   },
+  featureFlags: {
+    rbac: true,
+    seller_registration: true
+  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     http: {
@@ -44,7 +48,6 @@ module.exports = defineConfig({
       options: {
         appDir: path.join(__dirname, '../../apps/vendor'),
         path: '/seller',
-        disable: true
       } as DashboardModuleOptions
     },
     {
