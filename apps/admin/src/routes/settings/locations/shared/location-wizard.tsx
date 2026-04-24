@@ -102,6 +102,9 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
       gst_pdf: [],
       fssai_number: "",
       fssai_pdf: [],
+      stock_location_extension_id: "",
+      stock_location_section_id: "",
+      stock_location_contact_id: "",
     },
     resolver: zodResolver(CreateLocationSchema),
   });
@@ -243,6 +246,9 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
       gst_pdf: values.gst_pdf,
       fssai_number: values.fssai_number,
       fssai_pdf: values.fssai_pdf,
+      stock_location_extension_id: values.stock_location_extension_id,
+      stock_location_section_id: values.stock_location_section_id,
+      stock_location_contact_id: values.stock_location_contact_id,
     };
 
     const existingMetadata =

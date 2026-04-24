@@ -120,6 +120,9 @@ export const CreateLocationSchema = LocationNameFieldSchema.merge(
     gst_pdf: z.array(FileSchema).min(1, "GST PDF file is required"),
     fssai_number: z.string().min(1, "FSSAI Number is required"),
     fssai_pdf: z.array(FileSchema).min(1, "FSSAI PDF file is required"),
+    stock_location_extension_id: z.string().optional(),
+    stock_location_section_id: z.string().optional(),
+    stock_location_contact_id: z.string().optional(),
   })
 );
 

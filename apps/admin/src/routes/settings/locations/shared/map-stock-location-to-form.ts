@@ -334,5 +334,8 @@ export function mapStockLocationToFormDefaults(
         "fssaiFileUrl"
       ) ?? docFile(fssaiDoc)
     ),
+    stock_location_extension_id: str(extension.id),
+    stock_location_section_id: str(section.id),
+    stock_location_contact_id: str(contact.id),
   };
 }

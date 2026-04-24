@@ -1,6 +1,7 @@
 // Shared delivery promise steps
 export * from './calculate-delivery-promise-from-zone'
 export * from './fetch-control-settings'
+export * from './fetch-location-hours'
 export * from './calculate-instant-delivery'
 export * from './calculate-slotted-delivery'
 export * from './fetch-omniLocationId-By-cluster-variant'
