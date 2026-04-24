@@ -1,4 +1,6 @@
 // Control settings types
+import { CACHE_ENABLE, CacheTTLMap, QueryGraphCacheKey } from "../../../shared/utils/redisKey";
+
 export type ControlSettings = {
   isInstantEnabled: boolean
   isSlottedEnabled: boolean
@@ -13,6 +15,8 @@ export async function fetchControlSettings(
   zone_id: string,
   location_id: string
 ): Promise<ControlSettings> {
+
+  const fetchControlByZoneIdTtl = CacheTTLMap[QueryGraphCacheKey.FETCH_CONTROL_BY_ZONE_ID]
   // Get zone control settings
   const { data: zoneControlData } = await query.graph({
     entity: 'control',
@@ -23,9 +27,18 @@ export async function fetchControlSettings(
       is_active: true,
       deleted_at: null
     }
-  })
+  },
+    {
+      cache: {
+        enable: CACHE_ENABLE,
+        ttl: fetchControlByZoneIdTtl,
+        key: QueryGraphCacheKey.FETCH_CONTROL_BY_ZONE_ID+`${zone_id}`
+      }
+    }
+  )
   const zoneControl = zoneControlData?.[0] || null
 
+  const fetchControlByDarkStoreIdTtl = CacheTTLMap[QueryGraphCacheKey.FETCH_CONTROL_BY_DARK_STORE_ID]
   // Get location-level control
   const { data: locationControlData } = await query.graph({
     entity: 'control',
@@ -36,7 +49,15 @@ export async function fetchControlSettings(
       is_active: true,
       deleted_at: null
     }
-  })
+  },
+    {
+      cache: {
+        enable: CACHE_ENABLE,
+        ttl: fetchControlByDarkStoreIdTtl,
+        key: QueryGraphCacheKey.FETCH_CONTROL_BY_DARK_STORE_ID+`${location_id}`
+      }
+    }
+  )
   const locationControl = locationControlData?.[0] || null
 
   return mergeControlSettings(zoneControl, locationControl)
@@ -84,4 +105,3 @@ function mergeControlSettings(zoneControl: any, locationControl: any): ControlSe
     messageIcon
   }
 }
-

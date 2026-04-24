@@ -37,8 +37,8 @@ export async function prepareSlottedDeliveryLocation({
     omni_location_id
 }: PrepareSlottedDeliveryLocationInput): Promise<PrepareSlottedDeliveryLocationOutput> {
     let slottedLocationId = location_id
-    let minSlotStartTime: Date | null = null
-    let maxSlotEndTime: Date | null = null
+    // let minSlotStartTime: Date | null = null
+    // let maxSlotEndTime: Date | null = null
     let locationHours: LocationTiming = { start_time: null, end_time: null }
 
     // For non-zilo sellers with variant_id, try to find omni location where variant is available
