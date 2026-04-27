@@ -164,7 +164,7 @@ export default async function priceListImportBackgroundSubscriber({
   const redirect = notification?.redirectNotification || "/vendor/price-list/import"
 
   // ENV flag: if true → create request for admin approval; if false → direct insert
-  const requireApproval = process.env.PRICE_LIST_IMPORT_REQUIRE_APPROVAL || "false"
+  const requireApproval = process.env.PRICE_LIST_IMPORT_REQUIRE_APPROVAL || false
 
   try {
     // 1) Parse CSV and group by date range

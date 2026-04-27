@@ -9,6 +9,7 @@ export const POST = async (
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) => {
+  console.log("req.validatedBody >>>>>>>>>>>>>>>>>>>>>")
   const input = (req as any).file
   if (!input) {
     throw new MedusaError(

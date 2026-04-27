@@ -23,7 +23,7 @@ export const storeActiveGuard = async (
     // ['e2`']
   )
 
-  const isActiveStore = seller?.status === SellerStatus.ACTIVE
+  const isActiveStore = seller?.status === SellerStatus.OPEN
   const isGetRequest = req.method === 'GET'
 
   if (isActiveStore || isGetRequest) {
