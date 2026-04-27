@@ -119,6 +119,8 @@ export const addToCartWorkflowId = "add-to-cart-v2"
  */
 export const addToCartWorkflow = createWorkflow({
   name: addToCartWorkflowId,
+  store: true,
+  retentionTime: 99999
 },
   (input: WorkflowData<AddToCartWorkflowInputDTO & AdditionalData & { fields?: string[] }>) => {
     // Merge input fields with required fields for pricing context
@@ -264,13 +266,14 @@ export const addToCartWorkflow = createWorkflow({
         return [darkStoreData.darkStoreLocationId, ...childLocations]
       }
     )
-
+    console.log("cart.items", cart.items);
     const wrapVariantPrices = wrapVariantsWithSellerPricingStep({priceContext:pricingContext, variants:variants, extraData: {location_ids: darkStoreWithChildrenStockLocation, filterToSingleSeller: false, seller_id: undefined}})
+    console.log("wrapVariantPrices", wrapVariantPrices);
     const variantsWithPrices = transform({ wrapVariantPrices }, ({ wrapVariantPrices }) => {
       return wrapVariantPrices
     })
 
-
+    return;
     validateVariantPricesStep({ variants:variantsWithPrices })
 
     const lineItems = transform({ input, variants:variantsWithPrices }, (data) => {
