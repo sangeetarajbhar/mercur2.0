@@ -1,0 +1,174 @@
+store [icon: store, color: blue] {
+  id string pk
+  name string
+  default_location_id string
+  default_sales_channel_id string
+  default_region_id string
+  metadata Json
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+location [icon: map-pin, color: blue] {
+  id string pk
+}
+
+sales_channel [icon: radio, color: blue] {
+  id string pk
+}
+
+region [icon: globe, color: blue] {
+  automatic_taxes boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  metadata Json
+  name string
+  currency_code string
+  id string pk
+}
+
+region_country [icon: flag, color: blue] {
+  iso_2 string pk
+  iso_3 string
+  num_code string
+  name string
+  display_name string
+  region_id string
+  metadata Json
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+payment_provider [icon: credit-card, color: blue] {
+  id string pk
+  is_enabled boolean
+}
+
+region_payment_provider [icon: link, color: blue] {
+  region_id string
+  payment_provider_id string
+}
+
+currency [icon: coins, color: blue] {
+  code string pk
+  symbol string
+  symbol_native string
+  name string
+  decimal_digits number
+  rounding number
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+store_currency [icon: layers, color: blue] {
+  id string pk
+  store_id string
+  currency_code string
+  is_default boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+price_preference [icon: sliders, color: blue] {
+  is_tax_inclusive boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  attribute string
+  value string
+  id string pk
+}
+
+tax_provider [icon: percent, color: blue] {
+  id string pk
+  is_enabled boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+tax_region [icon: map, color: blue] {
+  id string pk
+  provider_id string
+  country_code string
+  province_code string
+  parent_id string
+  metadata Json
+  created_at timestamp
+  updated_at timestamp
+  created_by string
+  deleted_at timestamp
+}
+
+tax_rate [icon: percent, color: blue] {
+  id string pk
+  rate number
+  code string
+  name string
+  is_default boolean
+  is_combinable boolean
+  tax_region_id string
+  metadata Json
+  created_at timestamp
+  updated_at timestamp
+  created_by string
+  deleted_at timestamp
+}
+
+tax_rate_rule [icon: filter, color: blue] {
+  id string pk
+  tax_rate_id string
+  reference_id string
+  reference string
+  metadata Json
+  created_at timestamp
+  updated_at timestamp
+  created_by string
+  deleted_at timestamp
+}
+
+return_reason [icon: rotate-ccw, color: blue] {
+  id string pk
+  value string
+  label string
+  description string
+  metadata Json
+  parent_return_reason_id string
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+refund_reason [icon: banknote, color: blue] {
+  id string pk
+  code string
+  label string
+  description string
+  metadata Json
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+store.default_location_id > location.id
+store.default_sales_channel_id > sales_channel.id
+store.default_region_id > region.id
+region.id < region_country.region_id
+region.currency_code > currency.code
+region.id < region_payment_provider.region_id
+region_payment_provider.payment_provider_id > payment_provider.id
+store.id < store_currency.store_id
+store_currency.currency_code > currency.code
+price_preference.value > currency.code
+price_preference.value > region.id
+tax_region.parent_id > tax_region.id
+tax_region.provider_id > tax_provider.id
+tax_region.id < tax_rate.tax_region_id
+tax_rate.id < tax_rate_rule.tax_rate_id
+tax_region.country_code > region_country.iso_2
+return_reason.parent_return_reason_id > return_reason.id

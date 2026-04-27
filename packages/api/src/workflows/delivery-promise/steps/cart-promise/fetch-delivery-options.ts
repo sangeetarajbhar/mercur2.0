@@ -59,7 +59,7 @@ export async function fetchDeliveryOptions(
       location_id: darkStoreLocationId,
       variant_id: options.variant_id,
       seller_id,
-      now: new Date(),
+      // now: new Date(),
     })
     if (prepared.slottedLocationId !== darkStoreLocationId) {
       omniExtraPromiseMinutes = await getOmniExtraPromiseMinutesForDsAndChild(

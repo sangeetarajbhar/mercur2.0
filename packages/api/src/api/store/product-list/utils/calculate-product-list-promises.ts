@@ -1,5 +1,10 @@
 import { MedusaContainer } from '@medusajs/framework'
 import { calculateDeliveryPromiseFromZone } from '../../../../workflows/delivery-promise/steps'
+import { resolveOmniLocationForProductsBulk } from './resolve-omni-location-bulk'
+import type {
+  DeliveryPromiseErrorResult,
+  DeliveryPromiseResult
+} from '../../../../workflows/delivery-promise/steps/calculate-delivery-promise-from-zone'
 
 export type ProductPromise = {
   delivery_type: 'instant' | 'slotted' | null
@@ -40,98 +45,230 @@ export type CalculateProductListPromisesInput = {
  * 
  * @returns Map of product_id -> ProductPromise
  */
+
+
 export async function calculateProductListPromises({
   scope,
   products,
   zone_id,
   cluster_id
 }: CalculateProductListPromisesInput): Promise<Map<string, ProductPromise>> {
-  const promiseMap = new Map<string, ProductPromise>()
-
-  if (!zone_id || !products || products.length === 0) {
-    return promiseMap
-  }
 
   try {
+    const promiseMap = new Map<string, ProductPromise>()
 
-    // Extract variant IDs and create product -> variant mapping
-    const productVariantMap = new Map<string, string>() // product_id -> variant_id
-
-    products.forEach((product) => {
-
-      const minPriceVariantId = product.variants && product.variants.length > 0 ? product.variants[0].id : null
-
-      if (!minPriceVariantId) return
-
-      productVariantMap.set(product.id, minPriceVariantId)
-    })
-
-    if (productVariantMap.size === 0) {
+    if (!zone_id || !products?.length) {
       return promiseMap
     }
 
-    // Calculate promises for all products in parallel using calculateDeliveryPromiseFromZone (same as PDP)
-    const promisePromises = products.map(async (product) => {
-      const variantId = productVariantMap.get(product.id)
-      if (!variantId) {
-        return { productId: product.id, promise: null }
+    // Bucket products:
+    // - Darkstore (Zilo): reuse a single promise for the whole cluster
+    // - Others: handled by existing per-variant logic (unchanged for now)
+    const ziloSellerId = process.env.ZILO_SELLER_ID ?? null
+    const darkstoreProductIds: string[] = []
+    const nonDarkstoreProducts: CalculateProductListPromisesInput["products"] = []
+
+    for (const p of products) {
+      const sellerId = (p as any)?.seller?.sellerId ?? null
+      if (!sellerId || (ziloSellerId && sellerId === ziloSellerId)) {
+        darkstoreProductIds.push(p.id)
+      } else {
+        nonDarkstoreProducts.push(p)
       }
+    }
 
-      const sellerId = product.seller_id || null
+    // console.log('darkstoreProductIds', darkstoreProductIds)
+    // console.log('nonDarkstoreProducts', nonDarkstoreProducts)
 
+    // Darkstore promise: compute once per request and reuse
+    if (darkstoreProductIds.length) {
       try {
-
-        // Use calculateDeliveryPromiseFromZone (same as PDP flow)
-        const promiseResult = await calculateDeliveryPromiseFromZone({
+        const result = await calculateDeliveryPromiseFromZone({
           scope,
           zone_id,
-          location_id: cluster_id,
-          seller_id: sellerId,
-          variant_id: variantId
+          location_id: cluster_id
         })
 
-        // Transform DeliveryPromiseResult to ProductPromise format
-        // Check if it's an error result (has 'error' field) or success result (has 'delivery_type')
-        if (promiseResult && 'error' in promiseResult) {
-          // It's an error result
-          return { productId: product.id, promise: null }
-        }
-
-        // It's a success result - check for delivery_type
-        if (promiseResult && 'delivery_type' in promiseResult) {
-          const result = promiseResult as any
-          const promise: ProductPromise = {
+        if (result && !('error' in result) && 'delivery_type' in result) {
+          const mapped: ProductPromise = {
             delivery_type: result.delivery_type || null,
             delivery_minutes: result.delivery_minutes || null,
             message: result.message || '',
             eta_iso: result.eta_iso,
-            // For slotted delivery, delivery_date is available but slot details are in the message
             ...(result.delivery_type === 'slotted' && {
               slot_date: result.delivery_date
             })
           }
-          return { productId: product.id, promise }
+
+          for (const productId of darkstoreProductIds) {
+            promiseMap.set(productId, mapped)
+          }
+        }
+      } catch {
+        // Best-effort: if darkstore promise fails, just skip setting it.
+      }
+    }
+
+    // ─── Step 1: Build product → variant map ───────────────────────────────
+    const productVariantMap = new Map<string, string>()
+    for (const product of nonDarkstoreProducts) {
+      const variantId =
+        product.variants && product.variants.length > 0 ? product.variants[0].id : null
+
+      if (variantId) {
+        productVariantMap.set(product.id, variantId)
+      }
+    }
+
+    // If we don't have variant_ids (PLP case: only product_id + seller_id),
+    // resolve omni location by product inventory and de-dupe by seller+resolved location.
+    if (!productVariantMap.size) {
+      const resolvedLocationByProductId = await resolveOmniLocationForProductsBulk({
+        scope,
+        cluster_id,
+        items: nonDarkstoreProducts.map((p) => ({
+          product_id: p.id,
+          seller_id: p.seller_id ?? null
+        }))
+      })
+// 
+      const groups = new Map<
+        string,
+        { sellerId: string; omniLocationId: string | null; productIds: string[] }
+      >()
+
+      for (const p of nonDarkstoreProducts) {
+        const sellerId = p.seller_id ?? null
+        if (!sellerId) continue
+
+        const omniLocationId = resolvedLocationByProductId.get(p.id) ?? null
+        const key = `${sellerId}:${omniLocationId || 'cluster'}:${zone_id}:${cluster_id}`
+
+        const existing = groups.get(key)
+        if (existing) {
+          existing.productIds.push(p.id)
+        } else {
+          groups.set(key, { sellerId, omniLocationId, productIds: [p.id] })
+        }
+      }
+
+      const requestCache = new Map<
+        string,
+        DeliveryPromiseResult | DeliveryPromiseErrorResult | null
+      >()
+
+      await Promise.all(
+        Array.from(groups.entries()).map(async ([key, group]) => {
+          try {
+            const result = await calculateDeliveryPromiseFromZone({
+              scope,
+              zone_id,
+              location_id: cluster_id,
+              seller_id: group.sellerId,
+              omni_location_id: group.omniLocationId
+            })
+            requestCache.set(key, result)
+          } catch {
+            requestCache.set(key, null)
+          }
+        })
+      )
+
+      for (const [key, group] of groups.entries()) {
+        const result = requestCache.get(key)
+        if (!result || 'error' in result || !('delivery_type' in result)) {
+          continue
         }
 
-        return { productId: product.id, promise: null }
-      } catch (error) {
-        console.error(`Error calculating promise for product ${product.id}:`, error)
-        return { productId: product.id, promise: null }
-      }
-    })
+        const mapped: ProductPromise = {
+          delivery_type: result.delivery_type || null,
+          delivery_minutes: result.delivery_minutes || null,
+          message: result.message || '',
+          eta_iso: result.eta_iso,
+          ...(result.delivery_type === 'slotted' && {
+            slot_date: result.delivery_date
+          })
+        }
 
-    const promiseResults = await Promise.all(promisePromises)
-
-    // Build promise map
-    promiseResults.forEach(({ productId, promise }) => {
-      if (promise) {
-        promiseMap.set(productId, promise)
+        for (const productId of group.productIds) {
+          promiseMap.set(productId, mapped)
+        }
       }
-    })
+
+      return promiseMap
+    }
+
+    // ─── Step 2: Pre-group unique computation keys ─────────────────────────
+    const uniqueKeys = new Map<
+      string,
+      { variantId: string; sellerId: string | null }
+    >()
+
+    for (const product of nonDarkstoreProducts) {
+      const variantId = productVariantMap.get(product.id)
+      if (!variantId) continue
+
+      const sellerId = product.seller_id || null
+      const key = `${variantId}:${sellerId}:${zone_id}:${cluster_id}`
+
+      if (!uniqueKeys.has(key)) {
+        uniqueKeys.set(key, { variantId, sellerId })
+      }
+    }
+
+    // ─── Step 3: Execute ONLY unique calls ────────────────────────────────
+    const requestCache = new Map<
+      string,
+      DeliveryPromiseResult | DeliveryPromiseErrorResult | null
+    >()
+
+    await Promise.all(
+      Array.from(uniqueKeys.entries()).map(async ([key, { variantId, sellerId }]) => {
+        try {
+          const result = await calculateDeliveryPromiseFromZone({
+            scope,
+            zone_id,
+            location_id: cluster_id,
+            seller_id: sellerId,
+            variant_id: variantId
+          })
+
+          requestCache.set(key, result)
+        } catch {
+          requestCache.set(key, null)
+        }
+      })
+    )
+
+    // ─── Step 4: Map results back to products ─────────────────────────────
+    for (const product of nonDarkstoreProducts) {
+      const variantId = productVariantMap.get(product.id)
+      if (!variantId) continue
+
+      const sellerId = product.seller_id || null
+      const key = `${variantId}:${sellerId}:${zone_id}:${cluster_id}`
+
+      const result = requestCache.get(key)
+
+      if (!result || 'error' in result || !('delivery_type' in result)) {
+        continue
+      }
+
+      promiseMap.set(product.id, {
+        delivery_type: result.delivery_type || null,
+        delivery_minutes: result.delivery_minutes || null,
+        message: result.message || '',
+        eta_iso: result.eta_iso,
+        ...(result.delivery_type === 'slotted' && {
+          slot_date: result.delivery_date
+        })
+      })
+    }
 
     return promiseMap
+
   } catch (error) {
-    console.error('Error in calculateProductListPromises:', error)
-    return promiseMap
+    console.error('Error calculating product list promises:', error)
+    return new Map()
   }
 }

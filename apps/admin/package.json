@@ -12,7 +12,7 @@
   "dependencies": {
     "@acme/api": "*",
     "@medusajs/types": "2.13.6",
-    "@mercurjs/admin": "2.0.0"
+    "@mercurjs/admin": "2.0.2"
   },
   "devDependencies": {
     "@medusajs/admin-vite-plugin": "2.13.6",
