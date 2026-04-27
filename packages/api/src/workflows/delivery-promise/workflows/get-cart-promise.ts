@@ -79,7 +79,7 @@ export async function getCartPromise({ scope, cart, postal_code, lat, long }: Ge
     const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
 
     // STEP 9: Get zone by pincode and get dark store's child locations
-    const zone = await fetchZoneByPincode(pincode, knex)
+    const zone = await fetchZoneByPincode(pincode)
 
     if (!zone) {
       return buildCartPromiseErrorResponse(

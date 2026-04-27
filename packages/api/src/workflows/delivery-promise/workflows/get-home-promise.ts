@@ -11,11 +11,10 @@ export type GetHomePromiseInput = {
 export { DeliveryPromiseResult, DeliveryPromiseErrorResult }
 
 export async function getHomePromise({ scope, pincode }: GetHomePromiseInput): Promise<DeliveryPromiseErrorResult | DeliveryPromiseResult> {
-  const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
 
   try {
     // 1) Find zone by postcode
-    const zone = await fetchZoneByPincode(pincode, knex)
+    const zone = await fetchZoneByPincode(pincode)
 
     if (!zone) {
       return { 
