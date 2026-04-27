@@ -22,9 +22,14 @@ import { stockLocationRoutesMiddlewares } from "./locations/middlewares"
 import { stockLocationExtensionRoutesMiddlewares } from "./stock-location-extension/middlewares"
 import { adminStockLocationRoutesMiddlewares } from "./stock-locations/middlewares"
 import { adminProductsMiddlewares } from "./products/middlewares"
+import { sellerMiddlewares } from "./sellers/middlewares"
+import { adminRatingMiddlewares } from "./rating/middlewares"
+import { adminPriceListRequestsMiddlewares } from "./price-list-requests/middlewares"
+import { yesplzTagMappingUploadMiddlewares } from "./yesplz-tag-mapping/upload/middlewares"
 
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
+  ...adminPriceListRequestsMiddlewares,
   ...adminAttributesMiddlewares,
   ...adminBrandsMiddlewares,
   ...adminCustomerBankAccountVerificationMiddlewares,
@@ -45,5 +50,8 @@ export const adminMiddlewares: MiddlewareRoute[] = [
   ...stockLocationRoutesMiddlewares,  
   ...stockLocationExtensionRoutesMiddlewares,
   ...adminStockLocationRoutesMiddlewares,
-  ...adminProductsMiddlewares
+  ...adminProductsMiddlewares,
+  ...sellerMiddlewares,
+  ...yesplzTagMappingUploadMiddlewares,
+  ...adminRatingMiddlewares
 ]

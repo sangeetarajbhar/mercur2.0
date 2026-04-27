@@ -2,6 +2,7 @@ import { constructS3Url } from '../../../shared/utils/common'
 import type { ControlSettings } from './fetch-control-settings'
 import type { DeliveryPromiseResult } from './calculate-delivery-promise-from-zone'
 import { parseHHMM, withTime, formatToHrTime, getTodayIST, getTomorrowIST, createISTDateTime } from '../utils/date-time-utils'
+import { CACHE_ENABLE, CacheTTLMap, QueryGraphCacheKey } from '../../../shared/utils/redisKey'
 // import { SLOT_OVERRIDES_MODULE } from '../../../modules/slot-overrides'
 // import type SlotOverrideModuleService from '../../../modules/slot-overrides/service'
 // import type { MedusaContainer } from '@medusajs/framework'
@@ -32,14 +33,22 @@ async function fetchSlotOverrides(
 ): Promise<any[]> {
   const { data: slotOverridesData } = await query.graph({
     entity: 'slot_override',
-    fields: ['*'],
+    fields: ['id', 'slot_date', 'start_time', 'end_time', 'remaining_capacity', 'cut_off_time'],
     filters: {
       zone_id: zone_id,
       slot_date: [todayStr, tomorrowStr],
       is_active: true,
       deleted_at: null
     }
-  })
+  },
+  // {
+  //   cache: {
+  //     enable: CACHE_ENABLE,
+  //     ttl: CacheTTLMap[QueryGraphCacheKey.FETCH_SLOT_OVERRIDES],
+  //     key: QueryGraphCacheKey.FETCH_SLOT_OVERRIDES + `${zone_id}_${todayStr}_${tomorrowStr}`,
+  //   },
+  // }
+  )
 
   return (slotOverridesData || []).sort((a: any, b: any) => {
     const dateCompare = a.slot_date.localeCompare(b.slot_date)

@@ -3,6 +3,7 @@ import { createRemoteLinkStep, useQueryGraphStep } from "@medusajs/medusa/core-f
 import { Modules } from "@medusajs/framework/utils"
 import {MercurModules} from "@mercurjs/types"
 const SELLER_MODULE = MercurModules.SELLER
+import productSellerLink from "@mercurjs/core-plugin/links/product-seller-link"
 
 type WorkflowInput = { product: string, sellerId: string }
 
@@ -141,7 +142,7 @@ const mapProductToSellerStep = createStep(
     const inventoryItems = await inventoryModuleService.listInventoryItems({ id: inventoryItemIds as string[] })
 
     const { data: existingProductLinks } = await query.graph({
-      entity: "seller_product", // Adjust entity name if different
+      entity: productSellerLink.entryPoint, // Adjust entity name if different
       fields: ["seller_id", "product_id"],
       filters: { seller_id: target_seller_id, product_id: productLinks.map((product) => product.id) },
     });
@@ -156,12 +157,12 @@ const mapProductToSellerStep = createStep(
     //   [Modules.PRODUCT]: { product_id: productLinks.map((product) => product.id) },
     // }
     const productLinksTransformed = productLinks.map((product) => ({
-      [SELLER_MODULE]: { seller_id: target_seller_id },
       [Modules.PRODUCT]: { product_id: product.id },
+      [SELLER_MODULE]: { seller_id: target_seller_id },
     }))
     const inventoryLinks = inventoryItems.map((item) => ({
-      [SELLER_MODULE]: { seller_id: target_seller_id },
       [Modules.INVENTORY]: { inventory_item_id: item.id },
+      [SELLER_MODULE]: { seller_id: target_seller_id },
     }))
     const links = [...productLinksTransformed, ...inventoryLinks]
     // const links = []

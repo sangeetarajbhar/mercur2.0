@@ -29,7 +29,7 @@ export async function validateUniquePostcodesMiddleware(
   next: MedusaNextFunction
 ) {
   try {
-    debugger
+    
 
     const zoneService = req.scope.resolve<ZoneModuleService>(ZONE_MODULE)
 

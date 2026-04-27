@@ -144,7 +144,7 @@ export type Routes = {
             $id: typeof import("@medusajs/medusa/api/admin/invites/[id]/route") & {
                 resend: typeof import("@medusajs/medusa/api/admin/invites/[id]/resend/route");
             };
-            accept: typeof import("@medusajs/medusa/api/admin/invites/accept/route");
+            accept: typeof import("@mercurjs/core-plugin/api/admin/invites/accept/route");
         };
         locales: typeof import("@medusajs/medusa/api/admin/locales/route") & {
             $code: typeof import("@medusajs/medusa/api/admin/locales/[code]/route");
@@ -255,6 +255,7 @@ export type Routes = {
                         batch: typeof import("@medusajs/medusa/api/admin/products/[id]/variants/inventory-items/batch/route");
                     };
                 };
+                applicableAttributes: typeof import("./mercur-custom-route-stub");
             };
             batch: typeof import("@medusajs/medusa/api/admin/products/batch/route");
             export: typeof import("@medusajs/medusa/api/admin/products/export/route");
@@ -268,6 +269,18 @@ export type Routes = {
                     confirm: typeof import("@medusajs/medusa/api/admin/products/imports/[transaction_id]/confirm/route");
                 };
             };
+            bulkClone: typeof import("./mercur-custom-route-stub") & {
+                $jobId: {
+                    status: typeof import("./mercur-custom-route-stub");
+                };
+            };
+            enhancedImport: typeof import("./mercur-custom-route-stub") & {
+                $transactionId: {
+                    status: typeof import("./mercur-custom-route-stub");
+                    confirm: typeof import("./mercur-custom-route-stub");
+                };
+            };
+            linkCatalog: typeof import("./mercur-custom-route-stub");
         };
         promotions: typeof import("@medusajs/medusa/api/admin/promotions/route") & {
             $id: typeof import("./mercur-custom-route-stub") & {
@@ -429,6 +442,7 @@ export type Routes = {
             $id: typeof import("@mercurjs/core-plugin/api/admin/payouts/[id]/route");
         };
         sellers: typeof import("@mercurjs/core-plugin/api/admin/sellers/route") & {
+            invite: typeof import("@mercurjs/core-plugin/api/admin/sellers/invite/route");
             $id: typeof import("@mercurjs/core-plugin/api/admin/sellers/[id]/route");
         };
         attributes: typeof import("./mercur-custom-route-stub") & {
@@ -480,6 +494,9 @@ export type Routes = {
             $id: typeof import("./mercur-custom-route-stub");
         };
         payoutTransactions: typeof import("./mercur-custom-route-stub");
+        priceListRequests: typeof import("./mercur-custom-route-stub") & {
+            $id: typeof import("./mercur-custom-route-stub");
+        };
         refundMethods: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
         };
@@ -570,9 +587,11 @@ export type Routes = {
         };
         customers: typeof import("@medusajs/medusa/api/store/customers/route") & {
             me: typeof import("@medusajs/medusa/api/store/customers/me/route") & {
-                addresses: typeof import("@medusajs/medusa/api/store/customers/me/addresses/route") & {
-                    $addressId: typeof import("@medusajs/medusa/api/store/customers/me/addresses/[address_id]/route");
+                addresses: typeof import("./mercur-custom-route-stub") & {
+                    $addressId: typeof import("./mercur-custom-route-stub");
                 };
+                nextTier: typeof import("./mercur-custom-route-stub");
+                v2: typeof import("./mercur-custom-route-stub");
             };
             autocomplete: typeof import("./mercur-custom-route-stub");
             location: typeof import("./mercur-custom-route-stub");
@@ -618,7 +637,7 @@ export type Routes = {
         regions: typeof import("@medusajs/medusa/api/store/regions/route") & {
             $id: typeof import("@medusajs/medusa/api/store/regions/[id]/route");
         };
-        returnReasons: typeof import("@medusajs/medusa/api/store/return-reasons/route") & {
+        returnReasons: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("@medusajs/medusa/api/store/return-reasons/[id]/route");
         };
         returns: typeof import("@medusajs/medusa/api/store/returns/route");
@@ -636,6 +655,8 @@ export type Routes = {
         attributes: typeof import("./mercur-custom-route-stub");
         brands: typeof import("./mercur-custom-route-stub");
         custom: typeof import("./mercur-custom-route-stub");
+        deliveryPromise: typeof import("./mercur-custom-route-stub");
+        locations: typeof import("./mercur-custom-route-stub");
         promotions: typeof import("./mercur-custom-route-stub") & {
             $promoCode: {
                 eligibility: typeof import("./mercur-custom-route-stub");
@@ -646,6 +667,10 @@ export type Routes = {
                 setDefault: typeof import("./mercur-custom-route-stub");
             };
         };
+        seller: typeof import("./mercur-custom-route-stub") & {
+            $handle: typeof import("./mercur-custom-route-stub");
+        };
+        uploads: typeof import("./mercur-custom-route-stub");
         v2: {
             productlist: typeof import("./mercur-custom-route-stub") & {
                 collections: typeof import("./mercur-custom-route-stub");
@@ -847,6 +872,12 @@ export type Routes = {
         };
         brands: typeof import("./mercur-custom-route-stub");
         partner: typeof import("./mercur-custom-route-stub");
+        priceList: {
+            import: typeof import("./mercur-custom-route-stub");
+            requests: typeof import("./mercur-custom-route-stub") & {
+                $id: typeof import("./mercur-custom-route-stub");
+            };
+        };
         requests: {
             productCategories: typeof import("./mercur-custom-route-stub");
             productCollections: typeof import("./mercur-custom-route-stub");

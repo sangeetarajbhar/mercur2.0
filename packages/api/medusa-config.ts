@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
+import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys, HasMany } from '@medusajs/framework/utils'
 import { DashboardModuleOptions } from '@mercurjs/types'
 import path from 'path'
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
@@ -6,6 +6,10 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 module.exports = defineConfig({
   admin: {
     disable: true
+  },
+  featureFlags: {
+    rbac: true,
+    seller_registration: true
   },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -21,6 +25,17 @@ module.exports = defineConfig({
   },
   modules: [
     {
+      resolve: "@mercurjs/core-plugin/modules/custom-fields",
+      options: {
+        customFields: {
+          Seller: {
+            company_spocs: { type: "string", },
+          },
+
+        },
+      },
+    },
+    {
       resolve: '@mercurjs/core-plugin/modules/admin-ui',
       options: {
         appDir: path.join(__dirname, '../../apps/admin'),
@@ -33,11 +48,19 @@ module.exports = defineConfig({
       options: {
         appDir: path.join(__dirname, '../../apps/vendor'),
         path: '/seller',
-        disable: true
       } as DashboardModuleOptions
     },
     {
+      resolve: '@medusajs/medusa/rbac',
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
       resolve: "./src/modules/moengage_alert",
+    },
+    {
+      resolve: "./src/modules/seller",
     },
     {
       resolve: "@medusajs/medusa/notification",
@@ -136,6 +159,23 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@medusajs/medusa/caching",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/caching-redis",
+            id: "caching-redis",
+            // Optional, makes this the default caching provider
+            is_default: true,
+            options: {
+              redisUrl: process.env.REDIS_URL,
+              // more options...
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "./src/modules/customer-bank-detail",
     },
     {
@@ -187,6 +227,33 @@ module.exports = defineConfig({
       resolve: './src/modules/enhanced-product-import'
     },
     {
+      resolve: '@medusajs/medusa/file',
+      options: {
+        providers: [
+          {
+            resolve: './src/modules/file-s3-no-acl',
+            id: 's3-no-acl',
+            options: {
+              file_url: process.env.S3_FILE_URL,
+              access_key_id: process.env.S3_ACCESS_KEY_ID,
+              secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
+              region: process.env.S3_REGION,
+              bucket: process.env.S3_BUCKET,
+              endpoint: process.env.S3_ENDPOINT,
+            }
+          }
+          // {
+          //   resolve: "@medusajs/medusa/file-local",
+          //   id: "local",
+          //   options: {
+          //     upload_dir: "static",
+          //     backend_url: "http://localhost:9000/static"
+          //   },
+          // },
+        ]
+      }
+    },
+    {
       resolve: "./src/modules/tier",
     },
     {
@@ -206,6 +273,12 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/pricing-extend",
+      definition: {
+        isQueryable: true,
+      },
+    },
+    {
+      resolve: "./src/modules/price-list-import-request",
       definition: {
         isQueryable: true,
       },
@@ -299,6 +372,16 @@ module.exports = defineConfig({
         ]
       }
     },
+    {
+      resolve: "./src/modules/rating",
+    },
+    { resolve: './src/modules/marketplace' },
+    {
+      resolve: './src/modules/split-order-payment',
+      definition: {
+        isQueryable: true,
+      },
+    }
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",

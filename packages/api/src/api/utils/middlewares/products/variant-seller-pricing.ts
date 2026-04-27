@@ -215,9 +215,10 @@ type CustomData = {
 }
 
 type ExtraData = {
-  seller_id?: string,
+  // seller_id?: string,
   location_ids?: string[],
-  filterToSingleSeller?: boolean  // Flag to indicate if seller_prices should be filtered to single seller
+  // filterToSingleSeller?: boolean  // Flag to indicate if seller_prices should be filtered to single seller
+  seller_ids?: string[]
 }
 
 // Custom implementation of calculatePrices function
@@ -269,8 +270,12 @@ async function calculatePrices(
 
 
     // If specific seller_id is provided in the customData, filter by it
-    if (customData.seller_id) {
-      filters.seller_id = customData.seller_id
+    // if (customData.seller_id) {
+    //   filters.seller_id = customData.seller_id
+    // }
+
+    if (validSellers?.length) {
+      filters.seller_id = { $in: validSellers }
     }
 
 
@@ -318,25 +323,7 @@ async function calculatePrices(
 
     const priceListsBySeller = new Map<string, any[]>()
 
-    // if (sellerPriceListLinks?.data?.length) {
-    //   sellerPriceListLinks.data.forEach((link: any) => {
-    //     if (!priceListsBySeller.has(link.seller_id)) {
-    //       priceListsBySeller.set(link.seller_id, [])
-    //     }
-    //     priceListsBySeller.get(link.seller_id).push(link.price_list_id)
-    //   })
-    // }
-
-    // activeSellerPriceLists.forEach((link: any) => {
-    //   if (!priceListsBySeller.has(link.seller_id)) {
-    //     priceListsBySeller.set(link.seller_id, []);
-    //   }
-    //   priceListsBySeller.get(link.seller_id).push(link.price_list);
-    // });
-
-    // Get sellers that are mapped to BOTH locations AND products (intersection)
-    // const validSellers = await getValidSellersForLocationAndProducts(container, locationIds, contextProductIds);
-
+  
     // Filter active seller price lists to only include valid sellers (intersection)
     const filteredActiveSellerPriceLists = activeSellerPriceLists.filter((link: any) => {
       return customData.seller_id ? link.seller_id === customData.seller_id : validSellers?.includes(link.seller_id);
@@ -380,11 +367,6 @@ async function calculatePrices(
       if(!priceListsBySeller.size){
         pricesSetPricesPriceListMap.set(priceSetId, [price]);
       }else{
-        // for (const [sellerId, sellerPriceLists] of priceListsBySeller.entries()) {
-        //   if (sellerPriceLists.includes(priceListId) || !priceListId) {
-        //     groupedByPriceListId[sellerId].push(price);
-        //   }
-        // }
         for (const [sellerId, sellerPriceLists] of priceListsBySeller.entries()) {
           // sellerPriceLists is now an array with a single latest price list object
           const latestPriceList = sellerPriceLists[0];
@@ -396,9 +378,7 @@ async function calculatePrices(
 
     }
 
-    // if (Object.keys(groupedByPriceListId).length) {
-    //   pricesSetPricesPriceListMap.set(priceSetId, groupedByPriceListId);
-    // }
+
     if (Object.keys(groupedByPriceListId).length) {
       pricesSetPricesPriceListMap.set(priceSetId, groupedByPriceListId);
     } else {
@@ -893,6 +873,7 @@ export const wrapVariantsWithSellerPricing = async (
   }
 
   const variantIds = variants.map((variant) => variant.id)
+  const seller_ids = extraData?.seller_ids || []
 
   // Extract product IDs from variants for validation context
   const productIds = [...new Set(variants.map((variant: any) => variant.product_id).filter(Boolean))]
@@ -952,8 +933,8 @@ export const wrapVariantsWithSellerPricing = async (
     const pricePreferenceService = (pricingService as any).pricePreferenceService_
 
 
-    const validSellers = await getValidSellersForLocationAndProducts(container, extraData?.location_ids, productIds)
-
+    // const validSellers = await getValidSellersForLocationAndProducts(container, extraData?.location_ids, productIds)
+    const validSellers = seller_ids
 
     // Calculate default prices (without price lists)
     const defaultPrices = await calculatePrices(
@@ -1021,6 +1002,9 @@ export const wrapVariantsWithSellerPricing = async (
       const enhancedSellerPrices: any = {}
       let minPrice = Infinity
       let minPriceSellerId: string | null = null
+      let fallbackMinPrice = Infinity
+      let fallbackMinPriceSellerId: string | null = null
+      const sellerInventory = (variant as any).seller_inventory || {}
 
       Object.entries(sellerVariantPrice).forEach(([sellerId, sellerPrice]: [string, any]) => {
         const calculatedPriceId = sellerPrice.calculated_price?.id
@@ -1032,48 +1016,62 @@ export const wrapVariantsWithSellerPricing = async (
           percentage_of_discount: percentageDiscount
         }
 
-        // Track minimum price and seller ID
+        // Track minimum price and seller ID (stock-aware first)
         const currentPrice = sellerPrice.calculated_amount
-        if (currentPrice && currentPrice < minPrice) {
-          minPrice = currentPrice
-          minPriceSellerId = sellerId
+        if (typeof currentPrice === "number" && currentPrice >= 0) {
+          if (currentPrice < fallbackMinPrice) {
+            fallbackMinPrice = currentPrice
+            fallbackMinPriceSellerId = sellerId
+          }
+
+          const isInStock =
+            sellerInventory?.[sellerId]?.seller_location_inventory_stock_status === true
+
+          if (isInStock && currentPrice < minPrice) {
+            minPrice = currentPrice
+            minPriceSellerId = sellerId
+          }
         }
       })
+
+      if (!minPriceSellerId) {
+        minPriceSellerId = fallbackMinPriceSellerId
+      }
 
       // Filter seller prices only if explicitly requested via filterToSingleSeller flag
       let finalSellerPrices = enhancedSellerPrices
       let finalMinPriceSellerId: string | null = minPriceSellerId
       let updatedCalculatedPrice = { ...variant.calculated_price }
 
-      if (extraData?.filterToSingleSeller && extraData?.seller_id) {
-        const targetSellerId = extraData.seller_id
+      // if (extraData?.filterToSingleSeller && extraData?.seller_id) {
+      //   const targetSellerId = extraData.seller_id
 
-        // Only include the specified seller if it exists in the prices
-        if (enhancedSellerPrices[targetSellerId]) {
-          finalSellerPrices = {
-            [targetSellerId]: enhancedSellerPrices[targetSellerId]
-          }
-          finalMinPriceSellerId = targetSellerId
+      //   // Only include the specified seller if it exists in the prices
+      //   if (enhancedSellerPrices[targetSellerId]) {
+      //     finalSellerPrices = {
+      //       [targetSellerId]: enhancedSellerPrices[targetSellerId]
+      //     }
+      //     finalMinPriceSellerId = targetSellerId
 
-          // Update main calculated_price to match the filtered seller's pricing
-          const targetSellerPrice = enhancedSellerPrices[targetSellerId]
-          updatedCalculatedPrice = {
-            ...variant.calculated_price,
-            calculated_amount: targetSellerPrice.calculated_amount,
-            raw_calculated_amount: targetSellerPrice.raw_calculated_amount,
-            original_amount: targetSellerPrice.original_amount,
-            raw_original_amount: targetSellerPrice.raw_original_amount,
-            is_calculated_price_price_list: targetSellerPrice.is_calculated_price_price_list,
-            is_calculated_price_tax_inclusive: targetSellerPrice.is_calculated_price_tax_inclusive,
-            calculated_price: targetSellerPrice.calculated_price,
-            currency_code: targetSellerPrice.currency_code
-          }
-        } else {
-          // If the specified seller doesn't have pricing data, return empty seller_prices
-          finalSellerPrices = {}
-          finalMinPriceSellerId = null
-        }
-      }
+      //     // Update main calculated_price to match the filtered seller's pricing
+      //     const targetSellerPrice = enhancedSellerPrices[targetSellerId]
+      //     updatedCalculatedPrice = {
+      //       ...variant.calculated_price,
+      //       calculated_amount: targetSellerPrice.calculated_amount,
+      //       raw_calculated_amount: targetSellerPrice.raw_calculated_amount,
+      //       original_amount: targetSellerPrice.original_amount,
+      //       raw_original_amount: targetSellerPrice.raw_original_amount,
+      //       is_calculated_price_price_list: targetSellerPrice.is_calculated_price_price_list,
+      //       is_calculated_price_tax_inclusive: targetSellerPrice.is_calculated_price_tax_inclusive,
+      //       calculated_price: targetSellerPrice.calculated_price,
+      //       currency_code: targetSellerPrice.currency_code
+      //     }
+      //   } else {
+      //     // If the specified seller doesn't have pricing data, return empty seller_prices
+      //     finalSellerPrices = {}
+      //     finalMinPriceSellerId = null
+      //   }
+      // }
 
       // Replace the calculated_price with seller-specific prices including discounts and min price seller
       variant.calculated_price = {

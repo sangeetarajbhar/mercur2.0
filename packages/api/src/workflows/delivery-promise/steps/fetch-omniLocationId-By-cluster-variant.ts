@@ -1,5 +1,7 @@
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { MedusaContainer } from '@medusajs/framework'
+import { getLocationHierarchiesByParent } from '../../../shared/utils/location-hierarchy'
+import { getVariantInventoryItemsByVariantId } from '../../../shared/utils/product-variant-inventory'
 
 export type FetchOmniLocationIdByClusterVariantInput = {
     scope: MedusaContainer
@@ -18,14 +20,9 @@ export async function fetchOmniLocationIdByClusterVariant({
     variant_id
 }: FetchOmniLocationIdByClusterVariantInput): Promise<string | null> {
     const query = scope.resolve(ContainerRegistrationKeys.QUERY)
-
+    
     try {
-
-        const { data: locationHierarchies } = await query.graph({
-            entity: 'location_hierarchy',
-            fields: ['id', 'parent_location_id', 'child_location_id'],
-            filters: { parent_location_id: cluster_id }
-        })
+        const locationHierarchies = await getLocationHierarchiesByParent(query, cluster_id)
 
         if (!locationHierarchies || locationHierarchies.length === 0) {
             return null
@@ -39,12 +36,11 @@ export async function fetchOmniLocationIdByClusterVariant({
             return null
         }
 
-        // Step 2: Get variant's inventory_item_id
-        const { data: variantInventoryItems } = await query.graph({
-            entity: 'product_variant_inventory_item',
-            fields: ['variant_id', 'inventory_item_id'],
-            filters: { variant_id: variant_id }
-        })
+        // Step 2: Get variant's inventory_item_id (cached util)
+        const variantInventoryItems = await getVariantInventoryItemsByVariantId(
+            query,
+            variant_id
+        )
 
         if (!variantInventoryItems || variantInventoryItems.length === 0) {
             return null

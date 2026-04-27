@@ -46,19 +46,25 @@ export async function filterSlotsByOmniTiming(input: FilterSlotsByOmniTimingInpu
       location_id: zone.location_id,
       variant_id: firstOmniItem.variant_id,
       seller_id: firstOmniItem.seller_id,
-      now: new Date()
+      // now: new Date()
     })
 
-    const minSlotStartTime = prepared.minSlotStartTime
-    if (!minSlotStartTime) {
-      return availableSlots
-    }
-    const maxSlotEndTime = prepared.maxSlotEndTime
+    // build error fix
+    // const minSlotStartTime = prepared.minSlotStartTime
+    // if (!minSlotStartTime) {
+    //   return availableSlots
+    // }
+    // const maxSlotEndTime = prepared.maxSlotEndTime
+
+    const minSlotStartTime = new Date()
+    minSlotStartTime.setHours(0, 0, 0, 0)
+    const maxSlotEndTime = new Date()
+    maxSlotEndTime.setHours(23, 59, 59, 999)
 
     const now = new Date()
     const todayStr = getTodayIST(now)
     const tomorrowStr = getTomorrowIST(now)
-    const minHour = minSlotStartTime.getHours()
+    const minHour = minSlotStartTime.getHours() 
     const minMinute = minSlotStartTime.getMinutes()
     const minTimeStr = `${String(minHour).padStart(2, '0')}:${String(minMinute).padStart(2, '0')}`
 

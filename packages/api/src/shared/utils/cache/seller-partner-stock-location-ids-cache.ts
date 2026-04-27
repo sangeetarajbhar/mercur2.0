@@ -14,7 +14,7 @@ function enabledSellerPartnerStockLocationsBaseQuery(
   knex: Knex,
   sellerId: string
 ) {
-  return knex('seller_seller_stock_location_stock_location as ssl')
+  return knex('stock_location_stock_location_seller_seller as ssl')
     .innerJoin(
       'stock_location_stock_location_extension as slsle',
       'slsle.stock_location_id',

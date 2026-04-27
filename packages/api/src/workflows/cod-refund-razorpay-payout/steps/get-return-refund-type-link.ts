@@ -2,7 +2,7 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { MedusaError } from "@medusajs/framework/utils"
 import ReturnRefundTypeLinkModuleService from "../../../modules/return-refund-type-link/service"
 import { RETURN_REFUND_TYPE_LINK_MODULE } from "../../../modules/return-refund-type-link"
-import { ReturnRefundTypeLinkStatus } from "../../../utils/constants/return-refund-type-link"
+import { ReturnRefundTypeLinkStatus } from "../../../utils/constants/return_refund_type_link"
 
 export type GetReturnRefundTypeLinkStepInput = {
   return_id: string
