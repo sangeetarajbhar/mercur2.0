@@ -128,7 +128,7 @@ export type LocationCreateOrUpdatePayload = {
     province: string;
   };
   additional_data?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
 };
 
 export const useCreateStockLocation = () => {

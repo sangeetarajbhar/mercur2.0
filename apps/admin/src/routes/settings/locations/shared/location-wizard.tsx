@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import {
+  type LocationCreateOrUpdatePayload,
   useCreateStockLocation,
   useStockLocation,
   useUpdateStockLocation,
@@ -256,20 +257,37 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
         ? ((stock_location as Record<string, unknown>).metadata as Record<string, unknown>) || {}
         : {};
 
-    const payload = {
+    const mergedMetadata = {
+      ...existingMetadata,
+      pan_number: values.pan_number,
+      gst_number: values.gst_number,
+      fssai_number: values.fssai_number,
+    };
+
+    const cleanedMetadata = Object.fromEntries(
+      Object.entries(mergedMetadata).filter(([, value]) => {
+        if (value === null || value === undefined) {
+          return false;
+        }
+        if (typeof value === "string" && value.trim() === "") {
+          return false;
+        }
+        return true;
+      })
+    );
+
+    const basePayload: LocationCreateOrUpdatePayload = {
       name: values.name,
       address: values.address,
-      metadata: {
-        ...existingMetadata,
-        pan_number: values.pan_number,
-        gst_number: values.gst_number,
-        fssai_number: values.fssai_number,
-      },
       additional_data: additionalData,
+    };
+    const updatePayload: LocationCreateOrUpdatePayload = {
+      ...basePayload,
+      metadata: Object.keys(cleanedMetadata).length ? cleanedMetadata : null,
     };
 
     if (mode === "create") {
-      await createAsync(payload, {
+      await createAsync(basePayload, {
         onSuccess: () => {
           toast.success("Location created");
           navigate(-1);
@@ -282,7 +300,7 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
     }
 
     if (!locationId) return;
-    await updateAsync(payload, {
+    await updateAsync(updatePayload, {
       onSuccess: () => {
         toast.success("Location updated");
         navigate(-1);
