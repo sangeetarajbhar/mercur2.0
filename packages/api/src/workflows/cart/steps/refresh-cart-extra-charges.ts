@@ -13,6 +13,12 @@ import { removeExtraChargeLineItemsStep } from '../steps/remove-extra-charge-lin
 
 export const refreshCartExtraChargesWorkflowId = 'refresh-cart-extra-charges'
 
+interface RefreshCartExtraChargesWorkflowResponse {
+  cart: any
+  applied_charges: any[]
+  removed_items: any
+}
+
 /**
  * This workflow refreshes a cart's extra charges by:
  * 1. Removing existing extra charge line items
@@ -67,10 +73,10 @@ export const refreshCartExtraChargesWorkflow = createWorkflow(
       fields: ['id', 'items.*', 'total', 'subtotal']
     }).config({ name: 'refetch-cart-after-extra-charges' })
     
-    return new WorkflowResponse({ 
-      cart: updatedCarts[0],
-      applied_charges: applicableCharges,
-      removed_items: removedItems
+    return new WorkflowResponse<RefreshCartExtraChargesWorkflowResponse>({
+      cart: updatedCarts[0] as any,
+      applied_charges: applicableCharges as any[],
+      removed_items: removedItems as any
     })
   }
 )

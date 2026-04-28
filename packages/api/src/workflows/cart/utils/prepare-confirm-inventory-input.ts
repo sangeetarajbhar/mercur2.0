@@ -91,7 +91,8 @@ interface ConfirmInventoryItem {
  * A list of inventory items to confirm. Only inventory items for variants with managed inventory are included.
  */
 export const prepareCustomConfirmInventoryInput = (data: {
-  input: ConfirmVariantInventoryWorkflowInputDTO
+  input: ConfirmVariantInventoryWorkflowInputDTO & { extraData: { location_ids: string[] } }
+
 }) => {
   const productVariantInventoryItems = new Map<string, any>()
   const stockLocationIds = new Set<string>()
@@ -214,7 +215,7 @@ export const prepareCustomConfirmInventoryInput = (data: {
     variants: Array.from(allVariants.values()),
   })
 
-  return { items }
+  return { items, extraData: data.input.extraData }
 }
 
 const formatCustomInventoryInput = ({
@@ -368,7 +369,7 @@ export const prepareConfirmInventoryInput = (data: {
     variants: Array.from(allVariants.values())
   })
 
-  return { items }
+  return { items, extraData: data.input.extraData }
 }
 
 const formatInventoryInput = ({

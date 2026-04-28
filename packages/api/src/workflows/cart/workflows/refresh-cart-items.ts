@@ -247,22 +247,22 @@ export const refreshCartItemsWorkflow = createWorkflow(
       },
       }).config({ name: 'get-cart-for-postal-code' })
 
-
     // 2. Extract customer_id
     const customer_id = transform(
-      { cartForPostalCode },
-      ({ cartForPostalCode }) => {
-        return cartForPostalCode?.data?.[0]?.customer_id || null
-      }
-    )
+      { cartForPostalCode } as any,
+      (({ cartForPostalCode }: any) => {
+        return cartForPostalCode?.data?.[0]?.customer_id ?? null
+      }) as any
+    ) as any
 
+    
     // 3. Conditionally fetch customer
     const customerQuery = when(
       'fetch-customer-details',
-      { customer_id },
-      ({ customer_id }) => !!customer_id
-    ).then(() => {
-      const customerIdCacheKey = transform({ customer_id }, ({ customer_id }) => {
+      { customer_id } as any,
+      (({ customer_id }: any) => !!customer_id) as any
+    ).then((() => {
+      const customer_idCacheKey = transform({ customer_id } as any, ({ customer_id }: any) => {
         return `${UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME}${customer_id}`
       })
       const ttl = CacheTTLMap[UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME]
@@ -270,20 +270,20 @@ export const refreshCartItemsWorkflow = createWorkflow(
       return useQueryGraphStep({
         entity: 'customer',
         fields: ['id', 'first_name', 'last_name'],
-        filters: { id: customer_id },
+        filters: { id: customer_id as any },
         options: {
           cache: {
             enable: CACHE_ENABLE,
             ttl: ttl,
-            key: customerIdCacheKey
+            key: customer_idCacheKey
           },
         },
       }).config({ name: 'get-customer-details' })
-    })
+    }) as any)
 
     const updatePayload = transform(
-      { customerQuery, cartForPostalCode },
-      ({ customerQuery, cartForPostalCode }) => {
+      { customerQuery, cartForPostalCode, customer_id } as any,
+      (({ customerQuery, cartForPostalCode, customer_id }: any) => {
         const customer = customerQuery?.data?.[0]
 
         // if user is not login, then also item can add in a cart
@@ -299,8 +299,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
         const sanitize = (v?: string | null) =>
           v && v.trim().length > 0 ? v.trim() : null
 
-        const cartShipping =
-          cartForPostalCode?.data?.[0]?.shipping_address || {} as any
+        const cartShipping: any =
+          cartForPostalCode?.data?.[0]?.shipping_address || {}
 
         const updatedFirst = sanitize(cartShipping.first_name)
         const updatedLast = sanitize(cartShipping.last_name)
@@ -310,21 +310,17 @@ export const refreshCartItemsWorkflow = createWorkflow(
           return null
         }
 
-        if (!customer.id) {
-          return null
-        }
-
         return {
           selector: {
-            id: customer.id
+            id: [customer_id]
           },
           update: {
             first_name: updatedFirst,
             last_name: updatedLast
           }
         }
-      }
-    )
+      }) as any
+    ) as any
 
     //Conditionally run updateCustomersStep
     when(
@@ -338,14 +334,14 @@ export const refreshCartItemsWorkflow = createWorkflow(
 
     // Extract postal_code from input, fallback to shipping address postcode
     const postal_code = transform(
-      { input, cartForPostalCode },
-      ({ input, cartForPostalCode }) => {
+      { input, cartForPostalCode } as any,
+      (({ input, cartForPostalCode }: any) => {
         return (
           input.postal_code ||
           cartForPostalCode?.data?.[0]?.shipping_address?.postal_code
         )
-      }
-    )
+      }) as any
+    ) as any
 
     // Fetch zone by pincode conditionally
     const zoneResult = when(
@@ -457,14 +453,14 @@ export const refreshCartItemsWorkflow = createWorkflow(
       }).config({ name: 'fetch-cart-for-force-refresh' })
 
       // CRITICAL: Validate cart before processing
-      validateCartStep({ cart })
+      validateCartStep({ cart: cart as any })
 
-      const variantIds = transform({ cart }, ({ cart }) => {
-        return (cart.items ?? []).map((i) => i.variant_id).filter(Boolean)
+      const variantIds = transform({ cart } as any, ({ cart }: any) => {
+        return (cart.items ?? []).map((i: any) => i?.variant_id).filter(Boolean)
       })
 
       // Extract seller information from cart items
-      const cartItemSellerMapping = transform({ cart }, ({ cart }) => {
+      const cartItemSellerMapping = transform({ cart } as any, ({ cart }: any) => {
         // const mapping = new Map()
         const mapping: Record<string, string> = {}
         cart.items?.forEach((item) => {
@@ -478,8 +474,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
       })
 
       const cartPricingContext = transform(
-        { cart, setPricingContextResult },
-        ({ cart, setPricingContextResult }) => {
+        { cart, setPricingContextResult } as any,
+        (({ cart, setPricingContextResult }: any) => {
           return {
             ...filterObjectByKeys(cart, cartFieldsForPricingContext),
             ...(setPricingContextResult ? setPricingContextResult : {}),
@@ -489,8 +485,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
             customer_id: cart.customer_id,
             customer: cart.customer
           }
-        }
-      )
+        }) as any
+      ) as any
 
       // Note: Variants query with calculated_price context still uses useQueryGraphStep
       // but calculated_price requires special handling via remote query
@@ -511,8 +507,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
         variants: variants,
         extraData: {
           location_ids: darkStoreWithChildrenStockLocation,
-          filterToSingleSeller: false,
-          seller_id: undefined
+          // filterToSingleSeller: false,
+          // seller_id: undefined
         }
       })
 
@@ -532,10 +528,10 @@ export const refreshCartItemsWorkflow = createWorkflow(
       //     )
 
       const lineItems = transform(
-        { cart, variants: variantsWithPrices, cartItemSellerMapping },
-        ({ cart, variants, cartItemSellerMapping }) => {
-          const items = cart.items
-            .map((item) => {
+        { cart, variants: variantsWithPrices, cartItemSellerMapping } as any,
+        (({ cart, variants, cartItemSellerMapping }: any) => {
+          const items = (cart.items as any[])
+            .map((item: any) => {
               const variant = (variants ?? []).find(
                 (v) => v.id === item.variant_id
               )
@@ -612,15 +608,15 @@ export const refreshCartItemsWorkflow = createWorkflow(
                 data: preparedItem
               }
             })
-            .filter(Boolean)
+            .filter((item): item is { selector: { id: any }; data: any } => !!item)
 
           return items
-        }
-      )
+        }) as any
+      ) as any
 
       updateLineItemsStep({
         id: cart.id,
-        items: lineItems
+        items: lineItems as any
       })
     })
 
@@ -643,14 +639,14 @@ export const refreshCartItemsWorkflow = createWorkflow(
     })
 
     const refreshCartInput = transform(
-      { refetchedCart, input },
-      ({ refetchedCart, input }) => {
+      { refetchedCart, input } as any,
+      (({ refetchedCart, input }: any) => {
         return {
           cart: !input.force_refresh ? refetchedCart : undefined,
           cart_id: input.force_refresh ? input.cart_id : undefined
         }
-      }
-    )
+      }) as any
+    ) as any
 
     refreshCartShippingMethodsWorkflow.runAsStep({
       input: refreshCartInput
@@ -676,24 +672,24 @@ export const refreshCartItemsWorkflow = createWorkflow(
     }).then(() => {
       upsertTaxLinesWorkflow.runAsStep({
         input: transform(
-          { refetchedCart, input },
-          ({ refetchedCart, input }) => {
+          { refetchedCart, input } as any,
+          (({ refetchedCart, input }: any) => {
             return {
               cart: refetchedCart,
               items: input.items ?? [],
               shipping_methods: input.shipping_methods ?? [],
               force_tax_calculation: input.force_tax_calculation
             }
-          }
-        )
+          }) as any
+        ) as any
       })
     })
 
     // Reapply existing promotions after cart items are refreshed
     // This ensures promotions are recalculated with updated prices/quantities
     const cartPromoCodes = transform(
-      { refetchedCart, input, deviceRestrictedResult },
-      ({ refetchedCart, input, deviceRestrictedResult }) => {
+      { refetchedCart, input, deviceRestrictedResult } as any,
+      (({ refetchedCart, input, deviceRestrictedResult }: any) => {
         // Get existing promotion codes and combine with input promo codes
         const existingPromotions = refetchedCart.promotions || []
         const removedCodes = deviceRestrictedResult?.removedCodes || []
@@ -706,8 +702,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
         const allCodes = [...new Set([...existingCodes, ...(input.promo_codes || [])])]
 
         return allCodes
-      }
-    )
+      }) as any 
+    ) as any
 
     // Simple check: refresh promotions if there are any promotion codes to apply
     // Promotions depend on cart items/prices, so recalculation is needed when cart refreshes

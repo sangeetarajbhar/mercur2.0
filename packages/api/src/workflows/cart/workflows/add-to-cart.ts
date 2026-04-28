@@ -266,14 +266,13 @@ export const addToCartWorkflow = createWorkflow({
         return [darkStoreData.darkStoreLocationId, ...childLocations]
       }
     )
-    console.log("cart.items", cart.items);
-    const wrapVariantPrices = wrapVariantsWithSellerPricingStep({priceContext:pricingContext, variants:variants, extraData: {location_ids: darkStoreWithChildrenStockLocation, filterToSingleSeller: false, seller_id: undefined}})
-    console.log("wrapVariantPrices", wrapVariantPrices);
+
+    const wrapVariantPrices = wrapVariantsWithSellerPricingStep({priceContext:pricingContext, variants:variants, extraData: {location_ids: darkStoreWithChildrenStockLocation}})
+
     const variantsWithPrices = transform({ wrapVariantPrices }, ({ wrapVariantPrices }) => {
       return wrapVariantPrices
     })
 
-    return;
     validateVariantPricesStep({ variants:variantsWithPrices })
 
     const lineItems = transform({ input, variants:variantsWithPrices }, (data) => {
@@ -365,6 +364,7 @@ export const addToCartWorkflow = createWorkflow({
         variants,
         items: input.items,
         itemsToUpdate: itemsToConfirmInventory,
+        extraData: {location_ids: darkStoreWithChildrenStockLocation},
       },
     })
 

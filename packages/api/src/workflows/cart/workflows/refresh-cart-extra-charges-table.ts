@@ -40,13 +40,13 @@ export const refreshCartExtraChargesTableWorkflow = createWorkflow({
     // Evaluate applicable extra charges only if cart has items
     const applicableChargesResult = when(
       'check-cart-has-items',
-      { cartContext },
-      ({ cartContext }) => {
+      { cartContext } as any,
+      (({ cartContext }: any) => {
         return cartContext.cart.items && cartContext.cart.items.length > 0
       }
-    ).then(() => {
+    ) as any).then(() => {
       return evaluateExtraChargeRulesStep(cartContext)
-    })
+    }) as any
 
     // Transform to provide default empty array if no items in cart
     const applicableCharges = transform(

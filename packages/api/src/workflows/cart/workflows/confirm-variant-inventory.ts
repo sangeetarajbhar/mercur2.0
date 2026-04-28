@@ -9,6 +9,11 @@ import type { BigNumberInput } from "@medusajs/framework/types"
 import { confirmInventoryStep } from "../steps"
 import { prepareCustomConfirmInventoryInput } from "../utils/prepare-confirm-inventory-input"
 
+
+export type ConfirmVariantInventoryWorkflowInput =
+  ConfirmVariantInventoryWorkflowInputDTO & {
+    extraData: { location_ids: string[] }
+  }
 /**
  * The details of the cart items with inventory result computed for the specified input.
  */
@@ -147,15 +152,17 @@ export const confirmVariantInventoryWorkflowId = "confirm-custom-item-inventory"
 export const confirmVariantInventoryWorkflow = createWorkflow(
   confirmVariantInventoryWorkflowId,
   (
-    input: WorkflowData<ConfirmVariantInventoryWorkflowInputDTO>
+    input: WorkflowData<ConfirmVariantInventoryWorkflowInput>
   ): WorkflowResponse<ConfirmVariantInventoryWorkflowOutput> => {
     const confirmInventoryInput = transform(
       { input },
-      prepareCustomConfirmInventoryInput
+      (data: { input: ConfirmVariantInventoryWorkflowInput }) => {
+        return prepareCustomConfirmInventoryInput({ input: data.input })
+      }
     )
 
-    confirmInventoryStep(confirmInventoryInput)
+    confirmInventoryStep(confirmInventoryInput as any)
 
-    return new WorkflowResponse(confirmInventoryInput)
+    return new WorkflowResponse({ items: (confirmInventoryInput as any).items } as any)
   }
 )

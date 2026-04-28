@@ -31,6 +31,9 @@ export const POST = async (
       },
     })
 
+    console.log("cart", cart);
+    console.dir(cart, { depth: null });
+
     res.status(200).json({ cart: cart as HttpTypes.StoreCart })
   } catch (error: any) {
     // Check if this is a validation error

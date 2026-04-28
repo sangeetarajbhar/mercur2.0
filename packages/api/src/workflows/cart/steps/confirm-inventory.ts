@@ -12,7 +12,7 @@ import {
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 import { Knex } from 'knex'
 import { CACHE_ENABLE, CacheTTLMap, UseQueryGraphStepCacheKey } from "../../../shared/utils/redisKey";
-
+import sellerStockLocation from "@mercurjs/core-plugin/links/stock-location-seller-link";
 /**
  * The details of the cart items to confirm their inventory availability.
  */
@@ -55,6 +55,12 @@ export interface ConfirmVariantInventoryStepInput {
      */
     cluster_id?: string
   }[]
+  /**
+   * The extra data for the step
+   */
+  extraData: {
+    location_ids: string[]
+  }
 }
 
 export const confirmInventoryStepId = "confirm-custom-inventory-step"
@@ -86,7 +92,7 @@ export const confirmInventoryStep = createStep(
       Modules.INVENTORY
     )
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
-    const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
+    // const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
 
     const promises = data.items.map(async (item) => {
       if (item.allow_backorder) {
@@ -98,27 +104,9 @@ export const confirmInventoryStep = createStep(
       // CLUSTER-BASED VALIDATION: If cluster_id and seller_id are provided
       if (item.cluster_id && item.seller_id && item.variant_id) {
         try {
-          const darkStoreLocationIdCacheKey = `${UseQueryGraphStepCacheKey.GET_LOCATION_HIERARCHIES}${item.cluster_id}`
-          const ttl = CacheTTLMap[UseQueryGraphStepCacheKey.GET_LOCATION_HIERARCHIES]
-
-          // Get location hierarchy - include child OMNI stores
-          const locationHierarchiesResult = await query.graph({
-            entity: 'location_hierarchy',
-            fields: ['parent_location_id', 'child_location_id', 'id'],
-            filters: { parent_location_id: item.cluster_id },
-          },
-            {
-              cache: {
-                enable: CACHE_ENABLE,
-                ttl: ttl,
-                key: darkStoreLocationIdCacheKey,
-              },
-            }
-          )
-
-          const locationHierarchies = locationHierarchiesResult.data || []
-          const childLocations = locationHierarchies.map((loc: { child_location_id: string }) => loc.child_location_id)
-          const allLocationIds = [item.cluster_id, ...childLocations]
+          const allLocationIds = data.extraData?.location_ids?.length
+            ? data.extraData.location_ids
+            : [item.cluster_id]
 
           // Get inventory levels in cluster AND its child locations
           const inventoryLevelsResult = await query.graph({
@@ -140,11 +128,20 @@ export const confirmInventoryStep = createStep(
           }
 
           // Check if seller is mapped to cluster or child locations
-          const sellerLocationMappings = await knex('seller_seller_stock_location_stock_location')
-            .select('seller_id', 'stock_location_id')
-            .where('seller_id', item.seller_id)
-            .whereIn('stock_location_id', allLocationIds)
-            .whereNull('deleted_at')
+          const {data: sellerLocationMappings} = await query.graph({
+            entity: sellerStockLocation.entryPoint,
+            fields: ['seller_id', 'stock_location_id'],
+            filters: {
+              seller_id: item.seller_id,
+              stock_location_id: allLocationIds
+            }
+          })
+          
+          // await knex('seller_seller_stock_location_stock_location')
+          //   .select('seller_id', 'stock_location_id')
+          //   .where('seller_id', item.seller_id)
+          //   .whereIn('stock_location_id', allLocationIds)
+          //   .whereNull('deleted_at')
 
           const sellerLocationIds = sellerLocationMappings.map(m => m.stock_location_id)
 
@@ -181,7 +178,8 @@ export const confirmInventoryStep = createStep(
 
           return { success: true, item }
 
-        } catch {
+        } catch (error) {
+          console.error(error)
           return {
             success: false,
             item,
