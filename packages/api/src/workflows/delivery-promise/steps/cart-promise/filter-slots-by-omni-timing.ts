@@ -46,7 +46,7 @@ export async function filterSlotsByOmniTiming(input: FilterSlotsByOmniTimingInpu
       location_id: zone.location_id,
       variant_id: firstOmniItem.variant_id,
       seller_id: firstOmniItem.seller_id,
-      now: new Date()
+      // now: new Date()
     })
 
     // build error fix

@@ -118,6 +118,8 @@ async function processBulkCloneJob(req: MedusaRequest, jobId: string, productIds
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   try {
+
+    console.log('Bulk clone request received >>>>>>>>>>>>>>>>>>>>>', req.body)
     const validationResult = BulkCloneSchema.safeParse(req.body)
     if (!validationResult.success) {
       return res.status(400).json({
