@@ -138,4 +138,3 @@ export default async function yesPlzScoreSyncBackgroundSubscriber({
 export const config: SubscriberConfig = {
   event: [YesPlzEvents.SCORE_SYNC_PROCESS_BACKGROUND],
 }
-

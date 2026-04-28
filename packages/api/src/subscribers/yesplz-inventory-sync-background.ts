@@ -102,4 +102,3 @@ export const config: SubscriberConfig = {
   event: [YesPlzEvents.INVENTORY_SYNC_PROCESS_BACKGROUND],
 }
 
-

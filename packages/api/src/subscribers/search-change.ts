@@ -73,4 +73,3 @@ export const config: SubscriberConfig = {
   context: { subscriberId: 'search-change-handler' }
 }
 
-

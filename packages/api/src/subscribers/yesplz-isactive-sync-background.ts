@@ -5,8 +5,7 @@ import { INotificationModuleService } from "@medusajs/framework/types"
 import { YesPlzEvents } from "../shared/events/yesplz-events"
 import { SEARCH_MODULE } from "../modules/search"
 import SearchModuleService from "../modules/search/service"
-// import { formatDuration } from "../shared/utils/date-utils"
-const formatDuration = (ms: number) => `${Math.max(0, Math.round(ms / 1000))}s`
+import { formatDuration } from "../shared/utils/date-utils"
 
 interface NotificationData {
   to: string
@@ -144,4 +143,3 @@ export default async function yesPlzMarkInactiveBackgroundSubscriber({
 export const config: SubscriberConfig = {
   event: [YesPlzEvents.MARK_INACTIVE_PROCESS_BACKGROUND],
 }
-
