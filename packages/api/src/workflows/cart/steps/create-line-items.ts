@@ -4,17 +4,11 @@ import {
 } from "@medusajs/framework/types"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
-import { MercurModules } from "@mercurjs/types"
-
+import { ExtendedLineItem } from "../utils/extend-dto"
+import { MercurModules } from '@mercurjs/types'
 const SELLER_MODULE = MercurModules.SELLER
 
-/**
- * The details of the line items to create.
- */
 
-export interface ExtendedLineItem extends CreateLineItemForCartDTO {
-  seller_id: string
-}
 export interface CreateLineItemsCartStepInput {
   /**
    * The ID of the cart to create line items for.

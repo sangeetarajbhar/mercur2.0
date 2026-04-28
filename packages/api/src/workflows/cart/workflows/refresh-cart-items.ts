@@ -20,7 +20,7 @@ import {
   validateVariantPricesStep
 } from '@medusajs/medusa/core-flows'
 import { useQueryGraphStep } from '@medusajs/medusa/core-flows'
-import { AdditionalData, CartDTO } from '@medusajs/framework/types'
+import { AdditionalData } from '@medusajs/framework/types'
 
 import { defaultGetCartFields } from '../../../api/store/carts/query-config'
 import { transformCart } from '../../../api/store/v2/carts/helpers'
@@ -37,22 +37,25 @@ import {
   prepareLineItemData
 } from '../utils/prepare-line-item-data'
 import { pricingContextResult } from '../utils/schemas'
-import { refreshCartExtraChargesTableWorkflow } from '../workflows/refresh-cart-extra-charges-table'
+import { refreshCartExtraChargesTableWorkflow } from './refresh-cart-extra-charges-table'
 import { updateCartPromotionsWorkflow } from './update-cart-promotions'
 // import { refreshCartShippingMethodsWorkflow } from "./refresh-cart-shipping-methods"
-import { refreshPaymentCollectionForCartWorkflow } from '../steps/refresh-payment-collection'
+import { refreshPaymentCollectionForCartWorkflow } from '../steps'
 // import { updateCartPromotionsWorkflow } from "./update-cart-promotions"
 // import { updateTaxLinesWorkflow } from "./update-tax-lines"
 import { upsertTaxLinesWorkflow } from './upsert-tax-lines'
 import {
   checkPromotionActionStep,
   cleanupAutoPromotionsStep,
+  fetchLocationHierarchiesStep,
+  fetchStockLocationExtensionsStep,
   fetchZoneByPincodeStep,
   refetchCartWithDeliveryDetailsStep,
   removeDeviceRestrictedPromotionsStep,
   wrapVariantsWithSellerPricingStep
 } from '../steps'
 import { getCartPromiseStep } from '../../delivery-promise/steps'
+import { CacheTTLMap, UseQueryGraphStepCacheKey, CACHE_ENABLE } from '../../../shared/utils/redisKey'
 
 // import { confirmVariantInventoryWorkflow } from './confirm-variant-inventory'
 
@@ -134,33 +137,6 @@ export type RefreshCartItemsWorkflowInput = {
    * Used to filter out promotions that are not applicable on the current platform
    */
   agent_type?: 'app' | 'web'
-}
-
-type CartForPostalCode = {
-  customer_id?: string | null
-  shipping_address?: {
-    postal_code?: string | null
-    first_name?: string | null
-    last_name?: string | null
-  } | null
-}
-
-type CustomerForNameSync = {
-  id?: string
-  first_name?: string | null
-  last_name?: string | null
-}
-
-type CartLineItemForRefresh = {
-  id?: string
-  variant_id?: string
-  metadata?: { seller_id?: string } | null
-  seller?: { id?: string } | null
-  unit_price?: number
-  is_tax_inclusive?: boolean
-  is_custom_price?: boolean
-  subtitle?: string | null
-  [key: string]: any
 }
 
 export const refreshCartItemsWorkflowId = 'custom-refresh-cart-items'
@@ -251,64 +227,67 @@ export const refreshCartItemsWorkflow = createWorkflow(
     )
     const setPricingContextResult = setPricingContext.getResult()
 
-    // OPTIMIZATION: Consolidate cart queries - fetch initial cart state and postal code info in one query
-    // This allows us to detect actual changes in items (quantities, prices, additions, removals)
-    // Must be fetched before any cart updates happen
-    // const initialCartData = useQueryGraphStep({
-    //   entity: 'cart',
-    //   fields: [
-    //     'id',
-    //     'items.id',
-    //     'items.quantity',
-    //     'items.unit_price',
-    //     'items.variant_id',
-    //     'shipping_address.postal_code',
-    //     'shipping_address.first_name',
-    //     'shipping_address.last_name',
-    //     'customer_id'
-    //   ],
-    //   filters: { id: input.cart_id },
-    //   options: { isList: false }
-    // }).config({ name: 'fetch-initial-cart-for-comparison-and-postal-code' })
+
+    const cartIdCacheKey = transform({ input }, ({ input }) => {
+      return `${UseQueryGraphStepCacheKey.CHECK_CART_POSTAL_CODE}${input.cart_id}`
+    })
+    const ttl = CacheTTLMap[UseQueryGraphStepCacheKey.CHECK_CART_POSTAL_CODE]
 
     // Extract cart data for postal code and customer info
-    const { data: cartForPostalCode } = useQueryGraphStep({
+    const cartForPostalCode = useQueryGraphStep({
       entity: 'cart',
       fields: ['id', 'shipping_address.postal_code', 'shipping_address.first_name', 'shipping_address.last_name', 'customer_id'],
-      filters: { id: input.cart_id }
+      filters: { id: input.cart_id },
+      options: {
+        cache: {
+          enable: CACHE_ENABLE,
+          ttl: ttl,
+          key: cartIdCacheKey
+        },
+      },
       }).config({ name: 'get-cart-for-postal-code' })
-
 
     // 2. Extract customer_id
     const customer_id = transform(
-      { cartForPostalCode: cartForPostalCode as unknown as CartForPostalCode[] },
-      ({ cartForPostalCode}) => {
-        return cartForPostalCode?.[0]?.customer_id || undefined
-      }
-    )
+      { cartForPostalCode } as any,
+      (({ cartForPostalCode }: any) => {
+        return cartForPostalCode?.data?.[0]?.customer_id ?? null
+      }) as any
+    ) as any
 
-    // 3. Fetch customer (empty filter list when no customer_id)
-    const customerFilterIds = transform({ customer_id }, ({ customer_id }) =>
-      customer_id ? [customer_id] : []
-    )
+    
+    // 3. Conditionally fetch customer
+    const customerQuery = when(
+      'fetch-customer-details',
+      { customer_id } as any,
+      (({ customer_id }: any) => !!customer_id) as any
+    ).then((() => {
+      const customer_idCacheKey = transform({ customer_id } as any, ({ customer_id }: any) => {
+        return `${UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME}${customer_id}`
+      })
+      const ttl = CacheTTLMap[UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME]
 
-    const { data: customers } = useQueryGraphStep({
-      entity: 'customer',
-      fields: ['id', 'first_name', 'last_name'],
-      filters: { id: customerFilterIds }
-    }).config({ name: 'get-customer-details' })
+      return useQueryGraphStep({
+        entity: 'customer',
+        fields: ['id', 'first_name', 'last_name'],
+        filters: { id: customer_id as any },
+        options: {
+          cache: {
+            enable: CACHE_ENABLE,
+            ttl: ttl,
+            key: customer_idCacheKey
+          },
+        },
+      }).config({ name: 'get-customer-details' })
+    }) as any)
 
     const updatePayload = transform(
-      {
-        customers: customers as unknown as CustomerForNameSync[],
-        cartForPostalCode: cartForPostalCode as unknown as CartForPostalCode[],
-        customer_id
-      },
-      ({ customers, cartForPostalCode, customer_id }) => {
-        const customer = customers?.[0]
+      { customerQuery, cartForPostalCode, customer_id } as any,
+      (({ customerQuery, cartForPostalCode, customer_id }: any) => {
+        const customer = customerQuery?.data?.[0]
 
         // if user is not login, then also item can add in a cart
-        if (!customer || !customer_id) {
+        if (!customer) {
           return null
         }
 
@@ -320,8 +299,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
         const sanitize = (v?: string | null) =>
           v && v.trim().length > 0 ? v.trim() : null
 
-        const cartShipping =
-          cartForPostalCode?.[0]?.shipping_address || {}
+        const cartShipping: any =
+          cartForPostalCode?.data?.[0]?.shipping_address || {}
 
         const updatedFirst = sanitize(cartShipping.first_name)
         const updatedLast = sanitize(cartShipping.last_name)
@@ -340,8 +319,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
             last_name: updatedLast
           }
         }
-      }
-    )
+      }) as any
+    ) as any
 
     //Conditionally run updateCustomersStep
     when(
@@ -350,22 +329,19 @@ export const refreshCartItemsWorkflow = createWorkflow(
       ({ updatePayload }) => !!updatePayload
     ).then(() => {
       // update first_name, last_name only if in customer table first_name, last_name is null or empty
-      return updateCustomersStep(updatePayload!)
+      return updateCustomersStep(updatePayload as any)
     })
 
     // Extract postal_code from input, fallback to shipping address postcode
     const postal_code = transform(
-      {
-        input,
-        cartForPostalCode: cartForPostalCode as unknown as CartForPostalCode[]
-      },
-      ({ input, cartForPostalCode }) => {
+      { input, cartForPostalCode } as any,
+      (({ input, cartForPostalCode }: any) => {
         return (
           input.postal_code ||
-          cartForPostalCode?.[0]?.shipping_address?.postal_code
+          cartForPostalCode?.data?.[0]?.shipping_address?.postal_code
         )
-      }
-    )
+      }) as any
+    ) as any
 
     // Fetch zone by pincode conditionally
     const zoneResult = when(
@@ -396,17 +372,10 @@ export const refreshCartItemsWorkflow = createWorkflow(
         return !!cluster_id
       }
     ).then(() => {
-      return useQueryGraphStep({
-        entity: stockLocationExtensionLink.entryPoint,
-        fields: [
-          'stock_location_id',
-          'stock_location_extension.location_type',
-          'stock_location_extension.id'
-        ],
-        filters: {
-          stock_location_id: cluster_id
-        }
-      }).config({ name: 'get-location-extensions' })
+      return fetchStockLocationExtensionsStep({
+        stock_location_id: cluster_id as string
+      })
+     
     })
 
     // Step 2: Filter for dark store and validate
@@ -448,11 +417,10 @@ export const refreshCartItemsWorkflow = createWorkflow(
         return !!darkStoreData?.darkStoreLocationId
       }
     ).then(() => {
-      return useQueryGraphStep({
-        entity: 'location_hierarchy',
-        fields: ['parent_location_id', 'child_location_id'],
-        filters: { parent_location_id: darkStoreData.darkStoreLocationId }
-      }).config({ name: 'get-location-hierarchies' })
+      const darkStoreId = darkStoreData.darkStoreLocationId
+      return fetchLocationHierarchiesStep({
+        parent_location_id: darkStoreId
+      })
     })
 
     // Step 4: Combine dark store + omni store locations
@@ -485,44 +453,29 @@ export const refreshCartItemsWorkflow = createWorkflow(
       }).config({ name: 'fetch-cart-for-force-refresh' })
 
       // CRITICAL: Validate cart before processing
-      validateCartStep({ cart: cart as unknown as CartDTO })
+      validateCartStep({ cart: cart as any })
 
-      const variantIds = transform({ cart: cart as any }, ({ cart }) => {
-        const cartItems = ((cart as any).items ?? []) as CartLineItemForRefresh[]
-        const ids: string[] = []
-
-        for (const item of cartItems) {
-          if (item?.variant_id) {
-            ids.push(item.variant_id)
-          }
-        }
-
-        return ids
+      const variantIds = transform({ cart } as any, ({ cart }: any) => {
+        return (cart.items ?? []).map((i: any) => i?.variant_id).filter(Boolean)
       })
 
       // Extract seller information from cart items
-      const cartItemSellerMapping = transform({ cart: cart as any }, ({ cart }) => {
+      const cartItemSellerMapping = transform({ cart } as any, ({ cart }: any) => {
         // const mapping = new Map()
         const mapping: Record<string, string> = {}
-        const items = ((cart as any).items ?? []) as CartLineItemForRefresh[]
-
-        for (const item of items) {
-          if (!item?.variant_id) {
-            continue
-          }
-
+        cart.items?.forEach((item) => {
           const sellerId = item.metadata?.seller_id || item.seller?.id
           if (sellerId) {
             // mapping.set(item.variant_id, sellerId)
             mapping[item.variant_id] = sellerId
           }
-        }
+        })
         return mapping
       })
 
       const cartPricingContext = transform(
-        { cart: cart as any, setPricingContextResult },
-        ({ cart, setPricingContextResult }) => {
+        { cart, setPricingContextResult } as any,
+        (({ cart, setPricingContextResult }: any) => {
           return {
             ...filterObjectByKeys(cart, cartFieldsForPricingContext),
             ...(setPricingContextResult ? setPricingContextResult : {}),
@@ -532,8 +485,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
             customer_id: cart.customer_id,
             customer: cart.customer
           }
-        }
-      )
+        }) as any
+      ) as any
 
       // Note: Variants query with calculated_price context still uses useQueryGraphStep
       // but calculated_price requires special handling via remote query
@@ -554,8 +507,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
         variants: variants,
         extraData: {
           location_ids: darkStoreWithChildrenStockLocation,
-          filterToSingleSeller: false,
-          seller_id: undefined
+          // filterToSingleSeller: false,
+          // seller_id: undefined
         }
       })
 
@@ -575,29 +528,21 @@ export const refreshCartItemsWorkflow = createWorkflow(
       //     )
 
       const lineItems = transform(
-        {
-          cart: cart as any,
-          variants: variantsWithPrices,
-          cartItemSellerMapping
-        },
-        ({ cart, variants, cartItemSellerMapping }) => {
-          const itemsToUpdate: { selector: { id: string }; data: any }[] = []
-          const cartItems = ((cart as any).items ?? []) as CartLineItemForRefresh[]
-
-          for (const item of cartItems) {
-            if (!item?.id || !item?.variant_id) {
-              continue
-            }
-
-            const variant = (variants ?? []).find((v) => v.id === item.variant_id)
-
-            // Skip items without valid variants
-            if (!variant) {
-              console.warn(
-                `Variant not found for item ${item.id} with variant_id ${item.variant_id}`
+        { cart, variants: variantsWithPrices, cartItemSellerMapping } as any,
+        (({ cart, variants, cartItemSellerMapping }: any) => {
+          const items = (cart.items as any[])
+            .map((item: any) => {
+              const variant = (variants ?? []).find(
+                (v) => v.id === item.variant_id
               )
-              continue
-            }
+
+              // Skip items without valid variants
+              if (!variant) {
+                console.warn(
+                  `Variant not found for item ${item.id} with variant_id ${item.variant_id}`
+                )
+                return null
+              }
               // const input: PrepareLineItemDataInput = {
               //   item,
               //   variant: variant,
@@ -607,29 +552,31 @@ export const refreshCartItemsWorkflow = createWorkflow(
               // }
               // Get seller ID for this item
               // const sellerId = item.metadata?.seller_id || item.seller?.id || cartItemSellerMapping.get(item.variant_id)
-            const sellerId =
-              item.metadata?.seller_id ||
-              item.seller?.id ||
-              cartItemSellerMapping?.[item.variant_id]
+              const sellerId =
+                item.metadata?.seller_id ||
+                item.seller?.id ||
+                cartItemSellerMapping?.[item.variant_id]
 
-            // Get seller-specific pricing if available
-            let sellerPrice: any = null
-            if (sellerId && variant.calculated_price?.seller_prices?.[sellerId]) {
-              sellerPrice = variant.calculated_price.seller_prices[sellerId]
-              // console.log(`Using seller-specific price for item ${item.id}, seller ${sellerId}:`, sellerPrice)
-            }
+              // Get seller-specific pricing if available
+              let sellerPrice: any = null
+              if (
+                sellerId &&
+                variant.calculated_price?.seller_prices?.[sellerId]
+              ) {
+                sellerPrice = variant.calculated_price.seller_prices[sellerId]
+                // console.log(`Using seller-specific price for item ${item.id}, seller ${sellerId}:`, sellerPrice)
+              }
 
-            const input: PrepareLineItemDataInput = {
-              item: {
-                ...item,
-                subtitle: item.subtitle ?? undefined,
-                seller: sellerId ? { id: sellerId } : undefined
-              },
-              variant: variant,
-              cartId: cart.id,
-              unitPrice: item.unit_price,
-              isTaxInclusive: item.is_tax_inclusive
-            }
+              const input: PrepareLineItemDataInput = {
+                item: {
+                  ...item,
+                  seller: sellerId ? { id: sellerId } : undefined
+                },
+                variant: variant,
+                cartId: cart.id,
+                unitPrice: item.unit_price,
+                isTaxInclusive: item.is_tax_inclusive
+              }
 
               // if (!item.is_custom_price) {
               //   input.unitPrice = variant.calculated_price?.calculated_amount
@@ -637,35 +584,39 @@ export const refreshCartItemsWorkflow = createWorkflow(
               //     variant.calculated_price?.is_calculated_price_tax_inclusive
               // }
 
-            if (!item.is_custom_price) {
-              // Use seller-specific price if available, otherwise fall back to default
-              if (sellerPrice && sellerPrice.calculated_amount !== undefined) {
-                input.unitPrice = sellerPrice.calculated_amount
-                input.isTaxInclusive =
-                  sellerPrice.is_calculated_price_tax_inclusive || false
-              } else {
-                input.unitPrice = variant.calculated_price?.calculated_amount
-                input.isTaxInclusive =
-                  variant.calculated_price?.is_calculated_price_tax_inclusive ||
-                  false
+              if (!item.is_custom_price) {
+                // Use seller-specific price if available, otherwise fall back to default
+                if (
+                  sellerPrice &&
+                  sellerPrice.calculated_amount !== undefined
+                ) {
+                  input.unitPrice = sellerPrice.calculated_amount
+                  input.isTaxInclusive =
+                    sellerPrice.is_calculated_price_tax_inclusive || false
+                } else {
+                  input.unitPrice = variant.calculated_price?.calculated_amount
+                  input.isTaxInclusive =
+                    variant.calculated_price
+                      ?.is_calculated_price_tax_inclusive || false
+                }
               }
-            }
 
-            const preparedItem = prepareLineItemData(input)
+              const preparedItem = prepareLineItemData(input)
 
-            itemsToUpdate.push({
-              selector: { id: item.id },
-              data: preparedItem
+              return {
+                selector: { id: item.id },
+                data: preparedItem
+              }
             })
-          }
+            .filter((item): item is { selector: { id: any }; data: any } => !!item)
 
-          return itemsToUpdate
-        }
-      )
+          return items
+        }) as any
+      ) as any
 
       updateLineItemsStep({
-        id: cart?.id,
-        items: lineItems
+        id: cart.id,
+        items: lineItems as any
       })
     })
 
@@ -688,14 +639,14 @@ export const refreshCartItemsWorkflow = createWorkflow(
     })
 
     const refreshCartInput = transform(
-      { refetchedCart: refetchedCart as any, input },
-      ({ refetchedCart, input }) => {
+      { refetchedCart, input } as any,
+      (({ refetchedCart, input }: any) => {
         return {
           cart: !input.force_refresh ? refetchedCart : undefined,
           cart_id: input.force_refresh ? input.cart_id : undefined
         }
-      }
-    )
+      }) as any
+    ) as any
 
     refreshCartShippingMethodsWorkflow.runAsStep({
       input: refreshCartInput
@@ -721,24 +672,24 @@ export const refreshCartItemsWorkflow = createWorkflow(
     }).then(() => {
       upsertTaxLinesWorkflow.runAsStep({
         input: transform(
-          { refetchedCart: refetchedCart as any, input },
-          ({ refetchedCart, input }) => {
+          { refetchedCart, input } as any,
+          (({ refetchedCart, input }: any) => {
             return {
               cart: refetchedCart,
               items: input.items ?? [],
               shipping_methods: input.shipping_methods ?? [],
               force_tax_calculation: input.force_tax_calculation
             }
-          }
-        )
+          }) as any
+        ) as any
       })
     })
 
     // Reapply existing promotions after cart items are refreshed
     // This ensures promotions are recalculated with updated prices/quantities
     const cartPromoCodes = transform(
-      { refetchedCart: refetchedCart as any, input, deviceRestrictedResult },
-      ({ refetchedCart, input, deviceRestrictedResult }) => {
+      { refetchedCart, input, deviceRestrictedResult } as any,
+      (({ refetchedCart, input, deviceRestrictedResult }: any) => {
         // Get existing promotion codes and combine with input promo codes
         const existingPromotions = refetchedCart.promotions || []
         const removedCodes = deviceRestrictedResult?.removedCodes || []
@@ -751,8 +702,8 @@ export const refreshCartItemsWorkflow = createWorkflow(
         const allCodes = [...new Set([...existingCodes, ...(input.promo_codes || [])])]
 
         return allCodes
-      }
-    )
+      }) as any 
+    ) as any
 
     // Simple check: refresh promotions if there are any promotion codes to apply
     // Promotions depend on cart items/prices, so recalculation is needed when cart refreshes

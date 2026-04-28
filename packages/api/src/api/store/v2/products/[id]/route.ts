@@ -16,7 +16,6 @@ import {
   addWishlistFlagToProducts,
 } from "../../../products/helpers"
 import { HttpTypes } from "@medusajs/framework/types"
-import stockLocationSellerLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
 import { calculateProductPromotions } from '../../../product-list/utils/calculate-product-promotions'
 import { Modules } from '@medusajs/framework/utils'
 

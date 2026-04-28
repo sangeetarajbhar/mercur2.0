@@ -21,30 +21,30 @@ import {
 import { useQueryGraphStep } from "@medusajs/medusa/core-flows"
 import { emitEventStep } from "@medusajs/medusa/core-flows"
 import { useRemoteQueryStep } from "@medusajs/medusa/core-flows"
-import { createLineItemsStep, ExtendedLineItem } from "../steps/create-line-items"
+import { ExtendedLineItem } from "../utils/extend-dto"
+import { createLineItemsStep } from "../steps"
 import {
   updateLineItemsStep,
 } from "@medusajs/medusa/core-flows"
-import { getSellerLineItemActionsStep } from "../steps/get-seller-line-item-actions"
+import { getSellerLineItemActionsStep } from "../steps"
 import { validateCartStep } from "@medusajs/medusa/core-flows"
 import { validateLineItemPricesStep } from "@medusajs/medusa/core-flows"
 import { validateVariantPricesStep } from "@medusajs/medusa/core-flows"
 import {
   cartFieldsForPricingContext,
   productVariantsFields,
-} from "../utils/fields"
-import { requiredVariantFieldsForInventoryConfirmation } from "../utils/prepare-confirm-inventory-input"
+} from "../utils"
+import { requiredVariantFieldsForInventoryConfirmation } from "../utils"
 import {
   prepareLineItemData,
   Input
-} from "../utils/prepare-line-item-data"
-import { pricingContextResult } from "../utils/schemas"
-// import { confirmVariantInventoryWorkflow } from "@medusajs/medusa/core-flows"
-import { confirmVariantInventoryWorkflow } from "../workflows/confirm-variant-inventory"
-// import { refreshCartItemsWorkflow } from "@medusajs/medusa/core-flows"
-import { refreshCartItemsWorkflow } from '../../cart/workflows/refresh-cart-items'
-import { wrapVariantsWithSellerPricingStep } from "../steps/wrap-variants-with-seller-pricing"
-import stockLocationExtensionLink from "../../../links/stock-location-stock-location-extension"
+} from "../utils"
+import { pricingContextResult } from "../utils"
+import { confirmVariantInventoryWorkflow } from "../workflows"
+import { refreshCartItemsWorkflow } from '../../cart/workflows'
+import { wrapVariantsWithSellerPricingStep } from "../steps"
+import { fetchStockLocationExtensionsStep } from "../steps"
+import { fetchLocationHierarchiesStep } from "../steps"
 import { MedusaError } from "@medusajs/framework/utils"
 import { LocationType } from "../../../modules/stock-location-extension/types/common"
 
@@ -117,8 +117,11 @@ export const addToCartWorkflowId = "add-to-cart-v2"
  *
  * :::
  */
-export const addToCartWorkflow = createWorkflow(
-  addToCartWorkflowId,
+export const addToCartWorkflow = createWorkflow({
+  name: addToCartWorkflowId,
+  store: true,
+  retentionTime: 99999
+},
   (input: WorkflowData<AddToCartWorkflowInputDTO & AdditionalData & { fields?: string[] }>) => {
     // Merge input fields with required fields for pricing context
     // Only add minimal fields needed for pricing (currency_code, region_id)
@@ -141,14 +144,11 @@ export const addToCartWorkflow = createWorkflow(
       options: { throwIfKeyNotFound: true },
     }).config({ name: "get-cart" })
 
-    const cart: any = transform(
-      { cartQuery } as any,
-      ({ cartQuery }: any) => {
-        return cartQuery.data[0]
-      }
-    ) as any
+    const cart = transform({ cartQuery: cartQuery as any }, ({ cartQuery }) => {
+      return cartQuery.data[0]
+    })
 
-    validateCartStep({ cart: cart as any })
+    validateCartStep({ cart })
     const validate = createHook("validate", {
       input,
       cart,
@@ -214,17 +214,9 @@ export const addToCartWorkflow = createWorkflow(
     const locationExtensionsQuery = when({ cluster_id }, ({ cluster_id }) => {
       return !!cluster_id
     }).then(() => {
-      return useQueryGraphStep({
-        entity: stockLocationExtensionLink.entryPoint,
-        fields: [
-          'stock_location_id',
-          'stock_location_extension.location_type',
-          'stock_location_extension.id'
-        ],
-        filters: {
-          stock_location_id: cluster_id
-        }
-      }).config({ name: "get-location-extensions" })
+      return fetchStockLocationExtensionsStep({
+        stock_location_id: cluster_id as string
+      })
     })
 
     // Step 2: Filter for dark store and validate
@@ -254,11 +246,9 @@ export const addToCartWorkflow = createWorkflow(
     const locationHierarchiesQuery = when({ darkStoreData }, ({ darkStoreData }) => {
       return !!darkStoreData?.darkStoreLocationId
     }).then(() => {
-      return useQueryGraphStep({
-        entity: 'location_hierarchy',
-        fields: ['parent_location_id', 'child_location_id'],
-        filters: { parent_location_id: darkStoreData.darkStoreLocationId }
-      }).config({ name: "get-location-hierarchies" })
+      return fetchLocationHierarchiesStep({
+        parent_location_id: darkStoreData.darkStoreLocationId,
+      })
     })
 
     // Step 4: Combine dark store + omni store locations
@@ -277,11 +267,11 @@ export const addToCartWorkflow = createWorkflow(
       }
     )
 
-    const wrapVariantPrices = wrapVariantsWithSellerPricingStep({priceContext:pricingContext, variants:variants, extraData: {location_ids: darkStoreWithChildrenStockLocation, filterToSingleSeller: false, seller_id: undefined}})
+    const wrapVariantPrices = wrapVariantsWithSellerPricingStep({priceContext:pricingContext, variants:variants, extraData: {location_ids: darkStoreWithChildrenStockLocation}})
+
     const variantsWithPrices = transform({ wrapVariantPrices }, ({ wrapVariantPrices }) => {
       return wrapVariantPrices
     })
-
 
     validateVariantPricesStep({ variants:variantsWithPrices })
 
@@ -293,25 +283,6 @@ export const addToCartWorkflow = createWorkflow(
 
         // Extract seller_id from item metadata
         const sellerId:any = item.metadata?.seller_id
-
-      //   const sellerId = typeof item.metadata?.seller_id === "string"
-      //   ? item.metadata.seller_id
-      //   : undefined
-
-      //   // Default to variant.calculated_price.calculated_amount
-      //   let unitPrice = variant.calculated_price?.calculated_amount
-
-      // // If sellerId and seller_prices exist, use seller-specific price
-      //     if (
-      //       sellerId &&
-      //       variant.calculated_price?.seller_prices &&
-      //       variant.calculated_price.seller_prices[sellerId]
-      //     ) {
-      //       unitPrice = variant.calculated_price.seller_prices[sellerId].calculated_amount
-      //     }else{
-      //       unitPrice = variant.calculated_price?.calculated_amount
-      //     }
-
 
         const inputData: Input = {
           item,
@@ -329,13 +300,6 @@ export const addToCartWorkflow = createWorkflow(
           const calculatedPrice = variant.calculated_price as Record<string, any>
           const sellerPrices = calculatedPrice?.seller_prices as Record<string, any>
 
-
-        // if (!isDefined(sellerPrices[sellerId])) {
-        //   throw new MedusaError(
-        //     MedusaError.Types.INVALID_DATA,
-        //     `Line item ${item.title} has no seller-specific unit price`
-        //   )
-        // }
 
           if (sellerId && sellerPrices && typeof sellerPrices === 'object' && sellerPrices[sellerId]) {
             // Use seller-specific price
@@ -400,6 +364,7 @@ export const addToCartWorkflow = createWorkflow(
         variants,
         items: input.items,
         itemsToUpdate: itemsToConfirmInventory,
+        extraData: {location_ids: darkStoreWithChildrenStockLocation},
       },
     })
 

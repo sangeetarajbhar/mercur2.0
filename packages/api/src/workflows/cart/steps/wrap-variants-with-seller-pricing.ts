@@ -21,6 +21,7 @@ export const wrapVariantsWithSellerPricingStep = createStep(
     { container }
   ) => {
     try {
+      
       const result = await wrapVariantsWithSellerPricing(container, variants, priceContext, extraData)
 
       return new StepResponse(result)

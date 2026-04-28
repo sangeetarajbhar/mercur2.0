@@ -49,9 +49,11 @@ export const removeDeviceRestrictedPromotionsStep = createStep(
       filters: { id: cart_id }
     })
 
-    const promotionIds = (cart?.promotions ?? [])
-      .map((p: any) => p?.id)
-      .filter((id: any): id is string => typeof id === "string" && id.length > 0)
+    const promotionIds =
+      (cart?.promotions ?? [])
+        .filter((p) => p != null && p.id != null)
+        .map((p) => p?.id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
 
     if (promotionIds.length === 0) {
       return emptyResponse()
@@ -93,9 +95,11 @@ export const removeDeviceRestrictedPromotionsStep = createStep(
       filters: { id: restrictedPromotionIds }
     })
 
-    const removedCodes = (promotions ?? [])
-      .map((p: any) => p?.code)
-      .filter((code: any): code is string => typeof code === "string" && code.length > 0)
+    const removedCodes =
+      (promotions ?? [])
+        .filter((p) => p != null && p.code != null)
+        .map((p) => p?.code)
+        .filter((code): code is string => typeof code === "string" && code.length > 0)
 
     // Get line items to find adjustments
     const lineItems = await knex('cart_line_item')

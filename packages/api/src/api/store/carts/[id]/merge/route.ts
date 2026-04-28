@@ -1,7 +1,7 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { transferCartCustomerWorkflow } from "@medusajs/medusa/core-flows"
-import { mergeCartIntoActiveWorkflow } from "../../../../../workflows/cart/workflows/merge-cart-into-active"
+import { mergeCartIntoActiveWorkflow } from "../../../../../workflows/cart/workflows"
 
 export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
   try {

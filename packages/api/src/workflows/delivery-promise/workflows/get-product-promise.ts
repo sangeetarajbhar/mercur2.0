@@ -21,7 +21,6 @@ export async function getProductPromise({
   seller_id
 }: GetProductPromiseInput): Promise<DeliveryPromiseErrorResult | DeliveryPromiseResult> {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
-  const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
   try {
     // 1) Get variant inventory mapping
     const { data: variants } = await query.graph({
@@ -40,7 +39,7 @@ export async function getProductPromise({
     }
 
     // 2) Get zone for the pincode
-    const zone = await fetchZoneByPincode(pincode, knex)
+    const zone = await fetchZoneByPincode(pincode)
 
     if (!zone) {
       return {

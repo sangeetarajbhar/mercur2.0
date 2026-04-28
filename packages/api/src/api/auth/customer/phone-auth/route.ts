@@ -5,6 +5,7 @@ import { createCustomerAccountWorkflow } from '@medusajs/medusa/core-flows'
 import { MoEngageChannels } from '../../../../modules/moengage/types/channels'
 import { MoEngageAlertName } from '../../../../shared/utils/moEngageAlertName'
 import { AuthenticationResponse, FilterableCustomerProps, IAuthModuleService, ICustomerModuleService } from '@mercurjs/types'
+import { CustomerWorkflowEvents } from '../../../../subscribers/notification-buyer-account-created'
 
 // Extend the FilterableCustomerProps type to include phone
 type ExtendedFilterableCustomerProps = FilterableCustomerProps & {
@@ -75,6 +76,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const existingCustomers = await customerModuleService.listCustomers({ phone: normalizedPhone, deleted_at: null } as ExtendedFilterableCustomerProps)
     const isNewUser = existingCustomers.length === 0
 
+
     // Ensure customer exists - create if needed
     if (isNewUser) {
       const registeredUser = await authModuleService.register('phone-auth', {
@@ -92,6 +94,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             }
           }
         })
+
       } catch (error) {
         console.log('error creating customer', error)
       }

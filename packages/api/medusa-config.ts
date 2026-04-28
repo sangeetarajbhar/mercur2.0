@@ -67,10 +67,19 @@ module.exports = defineConfig({
       options: {
         providers: [
           {
+            resolve: '@mercurjs/resend/providers/resend',
+            id: 'resend',
+            options: {
+              channels: ['email'],
+              api_key: process.env.RESEND_API_KEY,
+              from: process.env.RESEND_FROM_EMAIL
+            }
+          },
+          {
             resolve: "@medusajs/medusa/notification-local",
             id: "local",
             options: {
-              channels: ["email", "feed", "seller_feed"],
+              channels: [ "feed", "seller_feed"],
             },
           },
           {
@@ -225,6 +234,9 @@ module.exports = defineConfig({
     },
     {
       resolve: './src/modules/enhanced-product-import'
+    },
+    {
+      resolve: './src/modules/config-audit-logs'
     },
     {
       resolve: '@medusajs/medusa/file',

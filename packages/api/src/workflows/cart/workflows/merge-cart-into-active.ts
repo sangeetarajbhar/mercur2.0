@@ -5,7 +5,7 @@ import { useQueryGraphStep } from "@medusajs/medusa/core-flows"
 // import sellerSellerCartLineItemLink from "../../../links/seller-cart-line-item"
 // import { addToCartWorkflow } from "./add-to-cart"
 // NEW IMPORT:
-import { updateLineItemCartIdStep } from "../steps/update-line-item-cart-id"
+import { updateLineItemCartIdStep } from "../steps"
 
 
 type MergeCartInput = {
@@ -39,58 +39,17 @@ export const mergeCartIntoActiveWorkflow = createWorkflow(
       target_cart_id: input.target_cart_id as string
     })
     
-    // ============================================================================
-    // OLD LOGIC (COMMENTED OUT - DO NOT REMOVE)
-    // ============================================================================
-    
-    // Fetch seller link rows with embedded line item
-    // const { data: linkRows } = useQueryGraphStep({
-    //   entity: sellerSellerCartLineItemLink.entryPoint,
-    //   fields: ["line_item_id", "seller_id", "line_item.*"],
-    //   filters: { line_item_id: lineItemIds },
-    // }).config({ name: "seller-cart-line-links" })
-    
-    // Process items to add
-    // type LinkRow = { 
-    //   seller_id?: string; 
-    //   line_item?: { 
-    //     variant_id: string; 
-    //     quantity: number; 
-    //     metadata?: Record<string, unknown> 
-    //   } 
-    // }
-    
-    // const itemsToAdd = transform({ linkRows }, ({ linkRows }) => {
-    //   const rows = (Array.isArray(linkRows) ? linkRows : []) as LinkRow[]
-    //   return rows
-    //     .filter((r) => !!r.line_item)
-    //     .map((r) => {
-    //       const li = r.line_item as NonNullable<LinkRow["line_item"]>
-    //       const baseMeta = li.metadata && typeof li.metadata === "object" ? li.metadata : {}
-    //       const metadata = r.seller_id ? { ...baseMeta, seller_id: r.seller_id } : baseMeta
-    //       return {
-    //         variant_id: li.variant_id,
-    //         quantity: li.quantity,
-    //         metadata,
-    //       }
-    //     })
-    // })
-    
-    // Add items to target cart
-    // addToCartWorkflow.runAsStep({
-    //   input: {
-    //     cart_id: input.target_cart_id as string,
-    //     items: itemsToAdd,
-    //   },
-    // })
-    
     // Get the final updated cart
-    const { data: updatedCart  } = useQueryGraphStep({
+    const { data: updatedCart } = useQueryGraphStep({
       entity: "cart",
       fields: ["*", "items.*"],
-      filters: { id: input.target_cart_id as any },
+      filters: { id: input.target_cart_id as string },
     }).config({ name: "refetch-cart" })
-    
-    return new WorkflowResponse({ cart: updatedCart[0] as any })
+
+    const mergedCart = transform({ updatedCart: updatedCart as any }, ({ updatedCart }: { updatedCart: any[] }) => {
+      return updatedCart[0] ?? null
+    })
+
+    return new WorkflowResponse({ cart: mergedCart })
   }
 )

@@ -1,16 +1,8 @@
-import {
-  CreateLineItemForCartDTO,
-} from "@medusajs/framework/types"
+
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
+import { ExtendedLineItem } from "../utils/extend-dto"
 
-export interface ExtendedLineItem extends CreateLineItemForCartDTO {
-  seller_id?: string
-}
-
-/**
- * Input for the getSellerLineItemActionsStep
- */
 export type GetSellerLineItemActionsStepInput = {
   id: string
   items: ExtendedLineItem[]
@@ -43,12 +35,6 @@ export const getSellerLineItemActionsStep = createStep(
     // Get knex connection
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION)
 
-    // Fetch existing line items
-    // const existingLineItems = await knex("cart_line_item")
-    //   .select(["id", "variant_id", "quantity", "unit_price", "metadata"])
-    //   .where("cart_id", data.id)
-    //   .whereNull("deleted_at")
-
     const existingLineItems = await knex("cart_line_item as cli")
       .select([
         "cli.id",
@@ -67,6 +53,7 @@ export const getSellerLineItemActionsStep = createStep(
       .where("cli.cart_id", data.id)
       .whereNull("cli.deleted_at")
 
+  
     // Group new items by variant_id and seller_id
     const itemsByVariantAndSeller = {}
 
@@ -111,7 +98,7 @@ export const getSellerLineItemActionsStep = createStep(
       })
 
       if (existingLineItem) {
-        console.log(`Found existing line item ${existingLineItem.id} for variant ${variantId} and seller ${sellerId}`)
+        // console.log(`Found existing line item ${existingLineItem.id} for variant ${variantId} and seller ${sellerId}`)
         // Update existing line item
         itemsToUpdate.push({
           id: existingLineItem.id,
@@ -122,7 +109,7 @@ export const getSellerLineItemActionsStep = createStep(
             item.compare_at_unit_price ?? existingLineItem.compare_at_unit_price         
         })
       } else {
-        console.log(`No existing line item found for variant ${variantId} and seller ${sellerId}, creating new one`)
+        // console.log(`No existing line item found for variant ${variantId} and seller ${sellerId}, creating new one`)
         // Create new line item
         itemsToCreate.push({
           ...item,
