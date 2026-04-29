@@ -7,7 +7,7 @@ import {
 } from '@medusajs/medusa/core-flows'
 
 import sellerShippingOptionLink from '@mercurjs/core-plugin/links/shipping-option-seller-link'
-import { validateCartShippingOptionsStep } from '../steps'
+import { validateCartShippingOptionsStep } from '../steps/validate-cart-shipping-options'
 
 type AddSellerShippingMethodToCartWorkflowInput = {
   cart_id: string
