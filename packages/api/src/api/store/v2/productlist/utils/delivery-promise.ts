@@ -89,8 +89,7 @@ export async function resolveZoneForPromise({
 
   // Priority 1: Use pincode to resolve zone (preferred method)
   if (pincode?.trim()) {
-    const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
-    const zone = await fetchZoneByPincode(pincode.trim(), knex)
+    const zone = await fetchZoneByPincode(pincode.trim())
     if (zone) {
       zone_id = zone.id
       cluster_id = zone.location_id

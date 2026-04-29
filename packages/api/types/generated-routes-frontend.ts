@@ -258,7 +258,7 @@ export type Routes = {
                 applicableAttributes: typeof import("./mercur-custom-route-stub");
             };
             batch: typeof import("@medusajs/medusa/api/admin/products/batch/route");
-            export: typeof import("@medusajs/medusa/api/admin/products/export/route");
+            export: typeof import("./mercur-custom-route-stub");
             import: typeof import("@medusajs/medusa/api/admin/products/import/route") & {
                 $transactionId: {
                     confirm: typeof import("@medusajs/medusa/api/admin/products/import/[transaction_id]/confirm/route");
@@ -442,8 +442,9 @@ export type Routes = {
             $id: typeof import("@mercurjs/core-plugin/api/admin/payouts/[id]/route");
         };
         sellers: typeof import("@mercurjs/core-plugin/api/admin/sellers/route") & {
-            invite: typeof import("@mercurjs/core-plugin/api/admin/sellers/invite/route");
+            // invite: typeof import("@mercurjs/core-plugin/api/admin/sellers/invite/route");
             $id: typeof import("@mercurjs/core-plugin/api/admin/sellers/[id]/route");
+            create: typeof import("./mercur-custom-route-stub");
         };
         attributes: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
@@ -453,6 +454,10 @@ export type Routes = {
         };
         controls: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
+        };
+        customCacheClear: typeof import("./mercur-custom-route-stub");
+        customProducts: {
+            export: typeof import("./mercur-custom-route-stub");
         };
         custom: typeof import("./mercur-custom-route-stub");
         customerBankAccountVerification: typeof import("./mercur-custom-route-stub");
@@ -471,6 +476,10 @@ export type Routes = {
         };
         extraCharge: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
+        };
+        feeds: {
+            productVariantsInventory: typeof import("./mercur-custom-route-stub");
+            productVariants: typeof import("./mercur-custom-route-stub");
         };
         icons: typeof import("./mercur-custom-route-stub");
         imageConfiguration: {
@@ -497,6 +506,13 @@ export type Routes = {
         priceListRequests: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
         };
+        rating: {
+            config: typeof import("./mercur-custom-route-stub");
+            feedback: typeof import("./mercur-custom-route-stub");
+            options: typeof import("./mercur-custom-route-stub") & {
+                $id: typeof import("./mercur-custom-route-stub");
+            };
+        };
         refundMethods: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub");
         };
@@ -508,12 +524,19 @@ export type Routes = {
                 };
             };
         };
+        returnRequest: typeof import("./mercur-custom-route-stub") & {
+            export: typeof import("./mercur-custom-route-stub");
+        };
+        sellerProducts: typeof import("./mercur-custom-route-stub");
         shopifyProductVariantImport: typeof import("./mercur-custom-route-stub");
         stockLocationExtension: typeof import("./mercur-custom-route-stub");
         tiers: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub") & {
                 customers: typeof import("./mercur-custom-route-stub");
             };
+        };
+        variantImagesSettings: {
+            $id: typeof import("./mercur-custom-route-stub");
         };
         videoEncodingJobs: typeof import("./mercur-custom-route-stub") & {
             encodingJobId: {
@@ -871,6 +894,9 @@ export type Routes = {
             $id: typeof import("./mercur-custom-route-stub");
         };
         brands: typeof import("./mercur-custom-route-stub");
+        notifications: typeof import("./mercur-custom-route-stub") & {
+            $id: typeof import("./mercur-custom-route-stub");
+        };
         partner: typeof import("./mercur-custom-route-stub");
         priceList: {
             import: typeof import("./mercur-custom-route-stub");
