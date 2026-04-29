@@ -6,7 +6,7 @@ import { createAllSearchStrategies } from './search-product-factory'
 import { wrapVariantsWithSellerPricing } from '../../api/utils/middlewares/products/variant-seller-pricing'
 import { wrapVariantsWithSellerInventory } from '../../api/utils/middlewares/products/variant-inventory-quantity'
 import { constructS3Url } from '../../shared/utils/common'
-import { selectProductsAvailableLocationsBatch } from '../../subscribers/utils/algolia-product'
+import { selectProductsAvailableLocationsBatch } from '../search/utils'
 
 // SearchModuleOptions interface removed - no options needed
 // Strategies are initialized internally, not passed in
