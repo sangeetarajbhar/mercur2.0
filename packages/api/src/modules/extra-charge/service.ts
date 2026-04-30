@@ -152,6 +152,9 @@ class ExtraChargeService extends MedusaService({
       case 'customer_email_domain':
         contextValue = context.customer?.email?.split('@')[1]
         break
+      case 'cart_shipping_type':
+        contextValue = context.cart.cart_extra_detail.shipping_type
+        break
       default:
         // Check metadata or custom attributes
         contextValue = this.getCustomAttribute(attribute, context)

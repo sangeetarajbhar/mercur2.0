@@ -53,7 +53,6 @@ export const POST = async (
     const { result } = await createCartWorkflow(req.scope).run({
       input: workflowInput as CreateCartWorkflowInputDTO,
     })
-
     const cart = await refetchCart(result.id, req.scope, req.queryConfig.fields)
 
     res.status(200).json({ cart })

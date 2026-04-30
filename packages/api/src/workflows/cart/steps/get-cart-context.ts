@@ -26,7 +26,8 @@ export const getCartContextStep = createStep(
         'items.variant.product.categories.*',
         'customer.*',
         'customer.groups.*',
-        'region.*'
+        'region.*',
+        'cart_extra_detail.*'
       ]
     })
 
