@@ -589,19 +589,17 @@ export type Routes = {
     store: {
         carts: typeof import("./mercur-custom-route-stub") & {
             $id: typeof import("./mercur-custom-route-stub") & {
-                complete: typeof import("./mercur-custom-route-stub");
+                complete: typeof import("@mercurjs/core-plugin/api/store/carts/[id]/complete/route");
                 customer: typeof import("@medusajs/medusa/api/store/carts/[id]/customer/route");
-                lineItems: typeof import("./mercur-custom-route-stub") & {
-                    $lineId: typeof import("./mercur-custom-route-stub");
+                lineItems: typeof import("@medusajs/medusa/api/store/carts/[id]/line-items/route") & {
+                    $lineId: typeof import("@medusajs/medusa/api/store/carts/[id]/line-items/[line_id]/route");
                 };
-                promotions: typeof import("./mercur-custom-route-stub");
-                shippingMethods: typeof import("./mercur-custom-route-stub");
+                promotions: typeof import("@mercurjs/core-plugin/api/store/carts/[id]/promotions/route");
+                shippingMethods: typeof import("@mercurjs/core-plugin/api/store/carts/[id]/shipping-methods/route");
                 taxes: typeof import("@medusajs/medusa/api/store/carts/[id]/taxes/route");
-                applySellerPrices: typeof import("./mercur-custom-route-stub");
                 deliveryPromise: {
                     $pincode: typeof import("./mercur-custom-route-stub");
                 };
-                merge: typeof import("./mercur-custom-route-stub");
             };
         };
         collections: typeof import("@medusajs/medusa/api/store/collections/route") & {
