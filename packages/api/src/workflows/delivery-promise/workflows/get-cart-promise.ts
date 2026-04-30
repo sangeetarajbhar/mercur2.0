@@ -198,10 +198,10 @@ export async function getCartPromise({ scope, cart, postal_code, lat, long }: Ge
 
     // STEP 10: Fetch delivery options (instant promise + available slots)
     // effectiveSellerId: Omni when any Omni in cart (instant +60 mins), Zilo when only-Zilo (base promise)
-    const deliveryOptions = await fetchDeliveryOptions(zone, query, effectiveSellerId, {
+    const deliveryOptions = await fetchDeliveryOptions(zone, query,  {
       scope,
       variant_id: firstOmniItem?.variant_id ?? null,
-    })
+    }, effectiveSellerId)
 
     // STEP 10b: When cart has any Omni products (mixed or only-Omni), filter slots by Omni location timing
     // See filterSlotsByOmniTiming step: uses first Omni line item to get minSlotStartTime from DB, then keeps only slots with start >= that time

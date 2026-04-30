@@ -273,9 +273,9 @@ export const addToCartWorkflow = createWorkflow({
       return wrapVariantPrices
     })
 
-    validateVariantPricesStep({ variants:variantsWithPrices })
+    validateVariantPricesStep({ variants: variantsWithPrices })
 
-    const lineItems = transform({ input, variants:variantsWithPrices }, (data) => {
+    const lineItems = transform({ input, variants: variantsWithPrices }, (data) => {
       const items = (data.input.items ?? []).map((item) => {
         const variant: any = (data.variants ?? []).find(
           (v) => v.id === item.variant_id
