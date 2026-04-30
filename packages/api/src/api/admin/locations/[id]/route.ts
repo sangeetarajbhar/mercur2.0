@@ -85,64 +85,6 @@ export const POST = async (
     .first()
   previousSellerId = sellerStockLocationLink?.seller_id
 
-  const extractProvidedPdfUrl = (file: any): string | undefined => {
-    const raw =
-      file?.url ??
-      file?.pdf_url ??
-      file?.pdfUrl ??
-      file?.file_url ??
-      file?.fileUrl ??
-      file?.path
-
-    if (typeof raw !== "string" || !raw.trim()) {
-      return undefined
-    }
-
-    if (raw.startsWith("blob:")) {
-      return undefined
-    }
-
-    return raw
-  }
-
-  const uploadDocumentAndGetPath = async (
-    file: any,
-    type: DocumentType
-  ): Promise<string | undefined> => {
-    if (
-      typeof file !== "object" ||
-      file === null ||
-      !("base64Content" in file) ||
-      !file.base64Content
-    ) {
-      return undefined
-    }
-
-    try {
-      const base64Data = file.base64Content.split(",")[1]
-      const fileBuffer = Buffer.from(base64Data, "base64")
-
-      const now = new Date()
-      const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}` // yyyy-mm
-      const fullDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}` // yyyy-mm-dd
-      const documentTypeName = DocumentType[type].toLowerCase() // pan, gst, fssai
-      const sellerName = (seller?.name || "seller").replace(/\s+/g, "")
-      const sellerId = seller?.id || additional_data?.seller_id || "unknown"
-
-      const fileNameWithPath = `documents/${yearMonth}/${sellerId}/${documentTypeName}/${sellerName}_${documentTypeName}_${stock_location_id}_${fullDate}.pdf`
-
-      const uploadResult = await uploadToS3WithPath(
-        fileNameWithPath,
-        fileBuffer,
-        file.file?.type || "application/pdf"
-      )
-      return uploadResult ? fileNameWithPath : (file.base64Content as string | undefined)
-    } catch (uploadError) {
-      console.error(`Failed to upload ${DocumentType[type]} to S3:`, uploadError)
-      return file.base64Content as string | undefined
-    }
-  }
-
 
   // Update core stock location fields if any are provided
   if (Object.keys(coreUpdateData).length > 0) {
@@ -331,32 +273,53 @@ export const POST = async (
                 try {
                   // Get existing document from the pre-fetched map
                   const existingDoc = documentMap.get(doc.type.toString())
-                  const uploadedPath = await uploadDocumentAndGetPath(doc.file, doc.type)
-                  const providedPath = extractProvidedPdfUrl(doc.file)
-                  const resolvedPdfUrl = uploadedPath || providedPath
 
                   if (existingDoc) {
                     const docUpdate: any = { id: existingDoc.id }
 
                     // Always update document number if provided
                     docUpdate.document_number = doc.number
-                    if (resolvedPdfUrl) {
-                      docUpdate.pdf_url = resolvedPdfUrl
+
+                    // Handle file upload only if doc.file is an object and has base64Content
+                    if (typeof doc.file === 'object' && doc.file !== null && 'base64Content' in doc.file && doc.file.base64Content) {
+                      // console.log("Starting S3 upload for", DocumentType[doc.type])
+                      try {
+                        // Convert base64 to binary format for S3 upload
+                        const base64Data = doc.file.base64Content.split(',')[1]
+                        const fileBuffer = Buffer.from(base64Data, 'base64')
+
+                        // Generate organized filename with seller info and date
+                        const now = new Date()
+                        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` // yyyy-mm
+                        const fullDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}` // yyyy-mm-dd
+                        const documentTypeName = DocumentType[doc.type].toLowerCase() // pan, gst, fssai
+                        const sellerName = seller.name.replace(/\s+/g, '')
+
+                        const fileNameWithPath = `documents/${yearMonth}/${seller.id}/${documentTypeName}/${sellerName}_${documentTypeName}_${stock_location_id}_${fullDate}.pdf`
+
+                        // Upload file to S3
+                        await uploadToS3WithPath(
+                          fileNameWithPath,
+                          fileBuffer,
+                          doc.file.file?.type || 'application/pdf'
+                        )
+
+                        // Update document record with new S3 URL
+                        docUpdate.pdf_url = fileNameWithPath
+                      } catch (uploadError) {
+                        console.error(`Failed to upload ${DocumentType[doc.type]} to S3:`, uploadError)
+                        // throw uploadError // Re-throw to catch outer block
+                      }
+                    } else {
+                      console.log("No new file to upload, keeping existing URL")
                     }
 
                     // Update document record in database
+
                     await documentService.updateStockLocationDocuments(docUpdate)
 
-                  } else if (resolvedPdfUrl) {
-                    await assignStockLocationSectionToStockLocationDocument.run({
-                      container: req.scope,
-                      input: {
-                        stock_location_section_id: additional_data.stock_location_section_id,
-                        document_type: doc.type,
-                        document_number: doc.number || "",
-                        pdf_url: resolvedPdfUrl,
-                      },
-                    })
+                  } else {
+                    console.log("No existing document found, cannot update")
                   }
                 } catch (error) {
                   console.error(`Error processing ${DocumentType[doc.type]} document:`, error)
@@ -412,19 +375,19 @@ export const POST = async (
           if (stockLocationSection.result?.id) {
             const documentTypes = [
               {
-                condition: additional_data.pan_number !== undefined || (additional_data.pan_pdf as any[])?.length > 0,
+                condition: additional_data.pan_number && (additional_data.pan_pdf as any[])?.length > 0,
                 type: DocumentType.PAN,
                 number: additional_data.pan_number,
                 file: (additional_data.pan_pdf as any[])[0] // Full file object with base64Content
               },
               {
-                condition: additional_data.gst_number !== undefined || (additional_data.gst_pdf as any[])?.length > 0,
+                condition: additional_data.gst_number && (additional_data.gst_pdf as any[])?.length > 0,
                 type: DocumentType.GST,
                 number: additional_data.gst_number,
                 file: (additional_data.gst_pdf as any[])[0] // Full file object with base64Content
               },
               {
-                condition: additional_data.fssai_number !== undefined || (additional_data.fssai_pdf as any[])?.length > 0,
+                condition: additional_data.fssai_number && (additional_data.fssai_pdf as any[])?.length > 0,
                 type: DocumentType.FSSAI,
                 number: additional_data.fssai_number,
                 file: (additional_data.fssai_pdf as any[])[0] // Full file object with base64Content
@@ -432,20 +395,37 @@ export const POST = async (
             ]
 
             for (const doc of documentTypes) {
-              if (doc.condition) {
+              if (doc.condition && doc.file?.base64Content) {
                 try {
-                  const uploadedPath = await uploadDocumentAndGetPath(doc.file, doc.type)
-                  const providedPath = extractProvidedPdfUrl(doc.file)
-                  const resolvedPdfUrl = uploadedPath || providedPath
+                  // Convert base64 to binary format for Medusa upload
+                  const base64Data = doc.file.base64Content.split(',')[1] // Remove data:application/pdf;base64, prefix
+                  const fileBuffer = Buffer.from(base64Data, 'base64') // Convert to Buffer instead of binary string
 
-                  if (resolvedPdfUrl) {
+                  // Generate organized filename with seller info and date
+                  const now = new Date()
+                  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` // yyyy-mm
+                  const fullDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}` // yyyy-mm-dd
+                  const documentTypeName = DocumentType[doc.type].toLowerCase() // pan, gst, fssai
+                  const sellerName = seller.name.replace(/\s+/g, '')
+
+                  const fileNameWithPath = `documents/${yearMonth}/${seller.id}/${documentTypeName}/${sellerName}_${documentTypeName}_${stock_location_id}_${fullDate}.pdf`
+
+                  // Upload file to S3 using custom uploadToS3WithPath function
+                  const fileUrl = await uploadToS3WithPath(
+                    fileNameWithPath,
+                    fileBuffer,
+                    doc.file.file?.type || 'application/pdf'
+                  );
+
+                  if (fileUrl) {
+                    // Create document record with permanent S3 URL
                     await assignStockLocationSectionToStockLocationDocument.run({
                       container: req.scope,
                       input: {
                         stock_location_section_id: stockLocationSection.result?.id,
                         document_type: doc.type,
-                        document_number: doc.number || "",
-                        pdf_url: resolvedPdfUrl, // only store file path, s3 URL can be changed in future
+                        document_number: doc.number,
+                        pdf_url: fileNameWithPath, // only store file path, s3 URL can be changed in future
                       }
                     })
                   }
