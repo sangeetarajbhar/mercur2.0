@@ -183,12 +183,12 @@ export async function validateExistingDeliveryData(
     cartItems?: any[] | null
 ): Promise<ValidationResult> {
     try {
-        const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+        const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
         const query = scope.resolve(ContainerRegistrationKeys.QUERY) as RemoteQueryFunction
         const now = new Date()
 
         // Get zone for current cart address
-        const zone = await fetchZoneByPincode(cartPincode, knex)
+        const zone = await fetchZoneByPincode(cartPincode)
         if (!zone) {
             return {
                 isValid: false,
@@ -310,12 +310,12 @@ export async function validatePayloadDeliveryData(
     cartItems: any[] | null | undefined
 ): Promise<ValidationResult> {
     try {
-        const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Knex
+        const knex = scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as unknown as Knex
         const query = scope.resolve(ContainerRegistrationKeys.QUERY) as RemoteQueryFunction
         const now = new Date()
 
         // Get zone for cart address
-        const zone = await fetchZoneByPincode(cartPincode, knex)
+        const zone = await fetchZoneByPincode(cartPincode)
         if (!zone) {
             return {
                 isValid: false,
