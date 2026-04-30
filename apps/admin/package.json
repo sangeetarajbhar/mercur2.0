@@ -10,12 +10,10 @@
     "preview": "vite preview --port 7000"
   },
   "dependencies": {
-    "@acme/api": "*",
-    "@medusajs/types": "2.13.6",
-    "@mercurjs/admin": "2.0.2"
+    "@mercurjs/admin": "2.0.2",
+    "@acme/api": "*"
   },
   "devDependencies": {
-    "@medusajs/admin-vite-plugin": "2.13.6",
     "@types/node": "^24.10.1"
   }
 }
