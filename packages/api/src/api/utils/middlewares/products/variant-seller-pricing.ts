@@ -933,8 +933,14 @@ export const wrapVariantsWithSellerPricing = async (
     const pricePreferenceService = (pricingService as any).pricePreferenceService_
 
 
+    let validSellers: string[] = [];
+    if(seller_ids?.length) {
+      validSellers = seller_ids;
+    } else {
+      validSellers = await getValidSellersForLocationAndProducts(container, extraData?.location_ids, productIds)
+    }
     // const validSellers = await getValidSellersForLocationAndProducts(container, extraData?.location_ids, productIds)
-    const validSellers = seller_ids
+    // const validSellers = seller_ids
 
     // Calculate default prices (without price lists)
     const defaultPrices = await calculatePrices(

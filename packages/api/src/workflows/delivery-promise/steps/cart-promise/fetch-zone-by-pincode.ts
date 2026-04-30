@@ -19,14 +19,8 @@ export type ZoneData = {
  */
 export async function fetchZoneByPincode(
   pincode: string,
-  knex: Knex
 ): Promise<ZoneData | null> {
   try {
-    // const zones = await knex('zone')
-    //   .select('*')
-    //   .whereRaw('postcodes::jsonb @> ?', [JSON.stringify([pincode])])
-    //   .where('is_active', true)
-    //   .whereNull('deleted_at')
 
     const ttl = CacheTTLMap[QueryGraphCacheKey.FETCH_ZONE_BY_PINCODE]
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
