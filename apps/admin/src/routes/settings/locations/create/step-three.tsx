@@ -9,6 +9,43 @@ type Props = { form: UseFormReturn<CreateLocationSchemaType> };
 
 const SUPPORTED_FORMATS = ["application/pdf"];
 
+const toDisplayFile = (value: unknown): FileType | null => {
+  if (!value) return null;
+
+  const fromUrl = (url: string): FileType => {
+    const clean = url.split("?")[0];
+    const fallbackName = "document.pdf";
+    const name = clean.split("/").filter(Boolean).pop() || fallbackName;
+    return {
+      id: `existing-${name}`,
+      url,
+      file: { name, type: "application/pdf", size: 0 } as unknown as File,
+    };
+  };
+
+  if (typeof value === "string") {
+    return fromUrl(value);
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const url =
+      (record.url as string | undefined) ||
+      (record.pdf_url as string | undefined) ||
+      (record.pdfUrl as string | undefined);
+
+    if (record.file && record.id && record.url) {
+      return value as FileType;
+    }
+
+    if (url) {
+      return fromUrl(url);
+    }
+  }
+
+  return null;
+};
+
 const PDFFileDisplay = ({ file }: { file: FileType }) => {
   const getFileName = () => {
     if (file.file instanceof File) {
@@ -133,6 +170,9 @@ export const StepThree = ({ form }: Props) => {
   const onPanUploaded = createUploadHandler("pan_pdf");
   const onGstUploaded = createUploadHandler("gst_pdf");
   const onFssaiUploaded = createUploadHandler("fssai_pdf");
+  const panDisplayFile = toDisplayFile(panPdf?.[0]);
+  const gstDisplayFile = toDisplayFile(gstPdf?.[0]);
+  const fssaiDisplayFile = toDisplayFile(fssaiPdf?.[0]);
 
   return (
     <div className="flex flex-1 flex-col items-center overflow-y-auto">
@@ -163,7 +203,7 @@ export const StepThree = ({ form }: Props) => {
                   {errors.pan_pdf?.message ? (
                     <p className="text-ui-fg-error mt-1 text-xs">{String(errors.pan_pdf.message)}</p>
                   ) : null}
-                  {panPdf && panPdf.length > 0 && typeof panPdf[0] !== 'string' ? <PDFFileDisplay file={panPdf[0] as FileType} /> : null}
+                  {panDisplayFile ? <PDFFileDisplay file={panDisplayFile} /> : null}
                 </div>
               </ProgressAccordion.Content>
             </ProgressAccordion.Item>
@@ -192,7 +232,7 @@ export const StepThree = ({ form }: Props) => {
                   {errors.gst_pdf?.message ? (
                     <p className="text-ui-fg-error mt-1 text-xs">{String(errors.gst_pdf.message)}</p>
                   ) : null}
-                  {gstPdf && gstPdf.length > 0 && typeof gstPdf[0] !== 'string' ? <PDFFileDisplay file={gstPdf[0] as FileType} /> : null}
+                  {gstDisplayFile ? <PDFFileDisplay file={gstDisplayFile} /> : null}
                 </div>
               </ProgressAccordion.Content>
             </ProgressAccordion.Item>
@@ -223,7 +263,7 @@ export const StepThree = ({ form }: Props) => {
                   {errors.fssai_pdf?.message ? (
                     <p className="text-ui-fg-error mt-1 text-xs">{String(errors.fssai_pdf.message)}</p>
                   ) : null}
-                  {fssaiPdf && fssaiPdf.length > 0 && typeof fssaiPdf[0] !== 'string' ? <PDFFileDisplay file={fssaiPdf[0] as FileType} /> : null}
+                  {fssaiDisplayFile ? <PDFFileDisplay file={fssaiDisplayFile} /> : null}
                 </div>
               </ProgressAccordion.Content>
             </ProgressAccordion.Item>
