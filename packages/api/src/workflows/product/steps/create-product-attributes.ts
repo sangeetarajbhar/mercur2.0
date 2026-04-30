@@ -1,7 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import AttributeModuleService from "../../../modules/attribute/service"
-import { ATTRIBUTE_MODULE } from "../../../modules/attribute"
+import { ATTRIBUTE_MODULE } from "@mercurjs/core-plugin/modules/attribute"
 
 export const createProductAttributesStepId = "create-product-attributes"
 
@@ -33,7 +32,7 @@ export const createProductAttributesStep = createStep(
 
   // Main execution - direct MercurJS usage
   async (input: CreateProductAttributesStepInput, { container }) => {
-    const attributeModuleService = container.resolve<AttributeModuleService>(ATTRIBUTE_MODULE)
+    const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
     const linkService = container.resolve(ContainerRegistrationKeys.LINK)
     const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
     const logger = container.resolve("logger")
