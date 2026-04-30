@@ -3,8 +3,8 @@ import { Logger, Query, ICacheService, LinkDefinition, Context, IModuleService, 
 import { InjectManager, InjectTransactionManager, MedusaContext } from "@medusajs/framework/utils"
 import { EnhancedProductRow, AttributeMapping, ValidationError, CategoryAttribute, AttributePossibleValue, CategoryAttributeWithValues, CSVValidationContext, CSVValidationError, CategoryWithAttributes } from "../types"
 import SellerBrandLink from "../../../links/seller-brand"
-import AttributeModuleService from "../../attribute/service"
-import { ATTRIBUTE_MODULE } from "../../attribute"
+// import AttributeModuleService from "@mercurjs/core-plugin/modules/attribute/service"
+import { ATTRIBUTE_MODULE } from "@mercurjs/core-plugin/modules/attribute"
 import { PRODUCT_CONFIGURATION_MODULE, ProductConfigurationInput } from "../../product-configuration"
 import ProductConfigurationService from "../../product-configuration/service"
 
@@ -175,7 +175,7 @@ export default class EnhancedProductImportService extends MedusaService({}) {
     // Resolve dependencies from container
     const linkService = container.resolve(ContainerRegistrationKeys.LINK)
     const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
-    const attributeModuleService: AttributeModuleService = container.resolve(ATTRIBUTE_MODULE)
+    const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
 
     for (const attr of attributes) {
       let attrId = attr.attribute_id
@@ -233,7 +233,7 @@ export default class EnhancedProductImportService extends MedusaService({}) {
     // Resolve dependencies from container
     const linkService = container.resolve(ContainerRegistrationKeys.LINK)
     const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
-    const attributeModuleService: AttributeModuleService = container.resolve(ATTRIBUTE_MODULE)
+    const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
 
     // Step 1: Collect and lookup attribute IDs (Single Responsibility: ID Resolution)
     const attributeIdMap = await this.batchLookupAttributeIds(assignments, queryService)
@@ -359,7 +359,7 @@ export default class EnhancedProductImportService extends MedusaService({}) {
    */
   private async batchCreateAttributeValues(
     valuesToCreate: any[],
-    attributeModuleService: AttributeModuleService
+    attributeModuleService
   ): Promise<any[]> {
     const createdAttributeValues = await attributeModuleService.createAttributeValues(
       valuesToCreate
@@ -1095,7 +1095,7 @@ export default class EnhancedProductImportService extends MedusaService({}) {
   ): Promise<void> {
     const linkService = container.resolve(ContainerRegistrationKeys.LINK)
     const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
-    const attributeModuleService: AttributeModuleService = container.resolve(ATTRIBUTE_MODULE)
+    const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
 
     try {
       // Query to get all attribute_value_ids linked to this product
@@ -1138,7 +1138,7 @@ export default class EnhancedProductImportService extends MedusaService({}) {
 
     const linkService = container.resolve(ContainerRegistrationKeys.LINK)
     const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
-    const attributeModuleService: AttributeModuleService = container.resolve(ATTRIBUTE_MODULE)
+    const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
 
     try {
       // 1. Query all linked attribute values for these products
@@ -2083,7 +2083,7 @@ export default class EnhancedProductImportService extends MedusaService({}) {
     container: any
   ): Promise<{ name: string; value: string; attribute_id?: string }[]> {
     const linkService = container.resolve(ContainerRegistrationKeys.LINK)
-    const attributeModuleService: AttributeModuleService = container.resolve(ATTRIBUTE_MODULE)
+    const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
     const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
 
     try {
