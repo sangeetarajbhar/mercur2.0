@@ -52,6 +52,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/seller",
     },
     {
+      resolve: "./src/modules/cart-extra-detail",
+    },
+    {
       resolve: "@medusajs/medusa/notification",
       options: {
         providers: [
