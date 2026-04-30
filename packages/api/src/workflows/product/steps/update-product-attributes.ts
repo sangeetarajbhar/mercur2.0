@@ -1,7 +1,6 @@
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import AttributeModuleService from "../../../modules/attribute/service"
-import { ATTRIBUTE_MODULE } from "../../../modules/attribute"
+import { ATTRIBUTE_MODULE } from "@mercurjs/core-plugin/modules/attribute"
 
 export const updateProductAttributesStepId = "update-product-attributes"
 
@@ -42,7 +41,7 @@ export const updateProductAttributesStep = createStep(
 
     // Main execution - ultra-simplified selective updates
     async (input: UpdateProductAttributesStepInput, { container }) => {
-        const attributeModuleService = container.resolve<AttributeModuleService>(ATTRIBUTE_MODULE)
+        const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
         const linkService = container.resolve(ContainerRegistrationKeys.LINK)
         const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
         const logger = container.resolve("logger")
@@ -180,7 +179,7 @@ export const updateProductAttributesStep = createStep(
     async (compensationData: UpdateCompensationData[] | undefined, { container }) => {
         if (!compensationData?.length) return
 
-        const attributeModuleService = container.resolve<AttributeModuleService>(ATTRIBUTE_MODULE)
+        const attributeModuleService = container.resolve(ATTRIBUTE_MODULE)
         const linkService = container.resolve(ContainerRegistrationKeys.LINK)
         const queryService = container.resolve(ContainerRegistrationKeys.QUERY)
         const logger = container.resolve("logger")

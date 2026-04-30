@@ -1,6 +1,5 @@
 import { MiddlewareRoute } from "@medusajs/medusa"
 
-import { adminAttributesMiddlewares } from "./attributes/middlewares"
 import { adminBrandsMiddlewares } from "./brands/middlewares"
 import { adminCustomerBankAccountVerificationMiddlewares } from "./customer-bank-account-verification/middlewares"
 import { adminCustomerBankDetailMiddlewares } from "./customer-bank-detail/middlewares"
@@ -30,7 +29,6 @@ import { yesplzTagMappingUploadMiddlewares } from "./yesplz-tag-mapping/upload/m
 export const adminMiddlewares: MiddlewareRoute[] = [
   ...adminRequestsMiddlewares,
   ...adminPriceListRequestsMiddlewares,
-  ...adminAttributesMiddlewares,
   ...adminBrandsMiddlewares,
   ...adminCustomerBankAccountVerificationMiddlewares,
   ...adminCustomerBankDetailMiddlewares,
