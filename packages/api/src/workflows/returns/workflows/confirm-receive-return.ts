@@ -1,7 +1,7 @@
 import { createWorkflow, WorkflowResponse, transform } from '@medusajs/framework/workflows-sdk'
+import { useRemoteQueryStep } from '@medusajs/medusa/core-flows'
 import { confirmReturnReceiveWorkflow } from '../../order/workflows/return/confirm-receive-return-request'
 import { updateLineItemStatusToReturnedStep } from '../steps'
-import { useRemoteQueryStep } from '../../common/steps'
 
 export interface ConfirmReceiveReturnWorkflowInput {
   return_id: string

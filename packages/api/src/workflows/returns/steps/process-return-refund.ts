@@ -1,6 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { processAdminPaymentRefundV4Workflow } from "../../admin-payment-refund-v4/workflows"
-import type { ProcessAdminPaymentRefundV4Output } from "../../admin-payment-refund-v4/steps"
+import type { ProcessAdminPaymentRefundV4Output } from "../../admin-payment-refund-v4/steps/process-admin-payment-refund-v4"
 
 export interface ProcessReturnRefundInput {
   return_id: string
