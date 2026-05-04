@@ -126,6 +126,15 @@
           "expression": "CREATE INDEX IF NOT EXISTS \"IDX_cart_delivery_detail_deleted_at\" ON \"cart_delivery_detail\" (\"deleted_at\") WHERE deleted_at IS NULL"
         },
         {
+          "keyName": "IDX_cart_delivery_detail_promise_key",
+          "columnNames": [],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_cart_delivery_detail_promise_key\" ON \"cart_delivery_detail\" (\"promise_key\") WHERE deleted_at IS NULL"
+        },
+        {
           "keyName": "cart_delivery_detail_pkey",
           "columnNames": [
             "id"

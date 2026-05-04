@@ -10,6 +10,12 @@ export const CartDeliveryDetail = model.define('cart_delivery_detail', {
   start_time: model.text(),
   end_time: model.text(),
   slot_id: model.text().nullable(), // For slotted delivery, stores the slot_override id
-})
+}).indexes(
+  [
+    {
+      on: ["promise_key"],
+    },
+  ]
+)
 
 export default CartDeliveryDetail
