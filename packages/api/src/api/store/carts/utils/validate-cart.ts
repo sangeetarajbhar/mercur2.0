@@ -1,10 +1,11 @@
 import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
+import { QueryGraphCacheKey, CacheTTLMap, CACHE_ENABLE } from '../../../../shared/utils/redisKey'
 
 interface CartValidationResult {
   cartData: {
     id: string
-    completed_at: Date | null
+    completed_at: string | Date | null
   }
   isCompleted: boolean
 }
@@ -29,49 +30,37 @@ export async function validateCart(
 ): Promise<CartValidationResult> {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
 
-  const { data: carts } = await query.graph({
-    entity: 'cart',
-    filters: { id: cartId },
-    fields: ['id', 'completed_at']
-  })
+  const ttl = CacheTTLMap[QueryGraphCacheKey.CHECK_CART_IS_COMPLETED]
 
-  const cartData = carts?.[0] as any
+  const { data: carts } = await query.graph({
+      entity: 'cart',
+      filters: { id: cartId },
+      fields: ['id', 'completed_at']
+    },
+    {
+      cache: {
+        enable: CACHE_ENABLE,
+        ttl: ttl,
+        key: QueryGraphCacheKey.CHECK_CART_IS_COMPLETED+`${cartId}`
+      }
+    }
+  )
+
+  const cartData = carts?.[0]
   if (!cartData) {
     throw new MedusaError(
       MedusaError.Types.NOT_FOUND,
       `Cart with id: ${cartId} was not found`
     )
   }
-  
 
   return {
-    cartData: cartData,
+    cartData: {
+      id: cartData.id,
+      completed_at: cartData.completed_at ?? null
+    },
     isCompleted: !!cartData.completed_at
   }
-}
-
-/**
- * Validates cart and throws an error if it's completed
- * @param cartId - The cart ID to validate
- * @param scope - The Medusa container scope
- * @returns Cart data if validation passes
- * @throws MedusaError if cart is not found or is completed
- */
-export async function validateCartNotCompleted(
-  cartId: string,
-  scope: MedusaContainer
-): Promise<{ id: string; completed_at: Date | null }> {
-  const { cartData, isCompleted } = await validateCart(cartId, scope)
-
-  if (isCompleted) {
-    throw new MedusaError(
-      MedusaError.Types.INVALID_DATA,
-      'CART_COMPLETED',
-      `This cart is already completed. Please create a new cart.`
-    )
-  }
-
-  return cartData
 }
 
 /**

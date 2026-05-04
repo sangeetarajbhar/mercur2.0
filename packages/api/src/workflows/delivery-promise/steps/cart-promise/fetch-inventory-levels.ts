@@ -31,7 +31,7 @@ export async function fetchInventoryLevels(
       'il.location_id',
       'sl.name as stock_location_name'
     )
-    .join('seller_seller_stock_location_stock_location as ssl', 'ssl.stock_location_id', 'il.location_id')
+    .join('stock_location_stock_location_seller_seller as ssl', 'ssl.stock_location_id', 'il.location_id')
     .join('stock_location as sl', 'sl.id', 'il.location_id')
     .whereIn('ssl.seller_id', sellerIds)
     .whereIn('il.location_id', locationIds)
