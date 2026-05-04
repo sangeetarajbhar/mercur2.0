@@ -255,7 +255,6 @@ export const refreshCartItemsWorkflow = createWorkflow(
       }) as any
     ) as any
 
-    
     // 3. Conditionally fetch customer
     const customerQuery = when(
       'fetch-customer-details',
@@ -375,7 +374,6 @@ export const refreshCartItemsWorkflow = createWorkflow(
       return fetchStockLocationExtensionsStep({
         stock_location_id: cluster_id as string
       })
-     
     })
 
     // Step 2: Filter for dark store and validate
@@ -702,7 +700,7 @@ export const refreshCartItemsWorkflow = createWorkflow(
         const allCodes = [...new Set([...existingCodes, ...(input.promo_codes || [])])]
 
         return allCodes
-      }) as any 
+      }) as any
     ) as any
 
     // Simple check: refresh promotions if there are any promotion codes to apply
