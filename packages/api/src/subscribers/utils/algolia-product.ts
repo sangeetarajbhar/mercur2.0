@@ -6,7 +6,7 @@ import { ContainerRegistrationKeys, QueryContext } from '@medusajs/framework/uti
 import priceExtendLink from '../../links/price-extend-price'
 
 
-import productSellerLink from '@mercurjs/core-plugin/links/product-seller-link'
+import productSellerLink from '@mercurjs/core/links/product-seller-link'
 import { wrapVariantsWithSellerPricing, wrapVariantsWithInventoryQuantityForSalesChannel, transformProductImageUrls } from '../../api/utils/middlewares'
 import { dataNormalization } from '../../api/utils/middlewares/products/data-for-sorting'
 

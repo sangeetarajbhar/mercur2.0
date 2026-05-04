@@ -4,7 +4,7 @@ import {
 } from "@medusajs/framework/workflows-sdk"
 
 import { validateRemoveSellerMemberStep, deleteSellerMemberStep } from "../steps"
-import { SellerMemberWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerMemberWorkflowEvents } from "@mercurjs/core/workflows"
 import { emitEventStep } from "@medusajs/medusa/core-flows"
 
 export const removeSellerMemberWorkflowId = "remove-seller-member"

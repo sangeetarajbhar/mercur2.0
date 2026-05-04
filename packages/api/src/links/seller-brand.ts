@@ -1,5 +1,5 @@
 import { defineLink } from "@medusajs/framework/utils"
-import SellerModule from "@mercurjs/core-plugin/modules/seller"
+import SellerModule from "@mercurjs/core/modules/seller"
 
 import BrandModule from "../modules/brand"
 

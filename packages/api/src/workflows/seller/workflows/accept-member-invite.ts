@@ -15,9 +15,9 @@ import {
   createSellerMembersStep,
   deleteMemberInviteStep,
 } from "../steps"
-import { MemberInviteWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { MemberInviteWorkflowEvents } from "@mercurjs/core/workflows"
 
-export const acceptMemberInviteWorkflowId = "accept-member-invite"
+export const acceptMemberInviteWorkflowId = "accept-member-invite-v2"
 
 type AcceptMemberInviteWorkflowInput = {
   invite_token: string

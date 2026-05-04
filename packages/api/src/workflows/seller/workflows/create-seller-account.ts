@@ -17,7 +17,7 @@ import {
   UpdateProfessionalDetailsDTO,
   UpdatePaymentDetailsDTO,
 } from "@mercurjs/types"
-import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 import { AdditionalData } from "@medusajs/framework/types"
 
 import {

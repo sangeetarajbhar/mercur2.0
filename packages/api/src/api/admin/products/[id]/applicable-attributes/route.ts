@@ -1,7 +1,7 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 
-import categoryAttribute from '@mercurjs/core-plugin/links/category-attribute-link'
+import categoryAttribute from '@mercurjs/core/links/category-attribute-link'
 
 /**
  * @oas [get] /admin/products/{id}/applicable-attributes

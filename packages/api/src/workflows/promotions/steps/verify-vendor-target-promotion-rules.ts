@@ -5,7 +5,7 @@ import {
 } from '@medusajs/framework/utils'
 import { createStep } from '@medusajs/framework/workflows-sdk'
 
-import sellerProduct from '@mercurjs/core-plugin/links/product-seller-link'
+import sellerProduct from '@mercurjs/core/links/product-seller-link'
 
 export const verifyVendorTargetPromotionRulesStep = createStep(
   'verify-vendor-target-promotion-rules',

@@ -3,8 +3,8 @@ import { Logger, Query, ICacheService, LinkDefinition, Context, IModuleService, 
 import { InjectManager, InjectTransactionManager, MedusaContext } from "@medusajs/framework/utils"
 import { EnhancedProductRow, AttributeMapping, ValidationError, CategoryAttribute, AttributePossibleValue, CategoryAttributeWithValues, CSVValidationContext, CSVValidationError, CategoryWithAttributes } from "../types"
 import SellerBrandLink from "../../../links/seller-brand"
-// import AttributeModuleService from "@mercurjs/core-plugin/modules/attribute/service"
-import { ATTRIBUTE_MODULE } from "@mercurjs/core-plugin/modules/attribute"
+// import AttributeModuleService from "@mercurjs/core/modules/attribute/service"
+import { ATTRIBUTE_MODULE } from "@mercurjs/core/modules/attribute"
 import { PRODUCT_CONFIGURATION_MODULE, ProductConfigurationInput } from "../../product-configuration"
 import ProductConfigurationService from "../../product-configuration/service"
 

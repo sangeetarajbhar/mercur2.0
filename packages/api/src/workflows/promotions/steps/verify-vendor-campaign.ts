@@ -4,7 +4,7 @@ import {
 } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
-import sellerCampaign from '@mercurjs/core-plugin/links/campaign-seller-link'
+import sellerCampaign from '@mercurjs/core/links/campaign-seller-link'
 
 export const verifyVendorCampaignStep = createStep(
   'verify-vendor-campaign',

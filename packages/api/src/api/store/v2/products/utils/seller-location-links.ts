@@ -1,4 +1,4 @@
-import stockLocationSellerLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
+import stockLocationSellerLink from "@mercurjs/core/links/stock-location-seller-link"
 
 type QueryLike = {
   graph: (input: Record<string, unknown>, options?: Record<string, unknown>) => Promise<{ data: any[] }>

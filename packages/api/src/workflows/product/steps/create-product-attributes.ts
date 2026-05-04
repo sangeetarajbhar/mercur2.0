@@ -1,6 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import { ATTRIBUTE_MODULE } from "@mercurjs/core-plugin/modules/attribute"
+import { ATTRIBUTE_MODULE } from "@mercurjs/core/modules/attribute"
 
 export const createProductAttributesStepId = "create-product-attributes"
 

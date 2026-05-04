@@ -6,7 +6,7 @@ import {
 import { emitEventStep } from "@medusajs/medusa/core-flows"
 
 import { createMemberInvitesStep } from "../steps"
-import { MemberInviteWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { MemberInviteWorkflowEvents } from "@mercurjs/core/workflows"
 
 export const createMemberInvitesWorkflowId = "create-member-invites"
 

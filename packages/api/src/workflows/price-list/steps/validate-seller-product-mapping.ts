@@ -1,7 +1,7 @@
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 
-import sellerProduct from "@mercurjs/core-plugin/links/product-seller-link"
+import sellerProduct from "@mercurjs/core/links/product-seller-link"
 
 export const validateSellerProductMappingStep = createStep(
   "validate-seller-product-mapping",

@@ -3,7 +3,7 @@ import { createRemoteLinkStep, useQueryGraphStep } from "@medusajs/medusa/core-f
 import { Modules } from "@medusajs/framework/utils"
 import {MercurModules} from "@mercurjs/types"
 const SELLER_MODULE = MercurModules.SELLER
-import productSellerLink from "@mercurjs/core-plugin/links/product-seller-link"
+import productSellerLink from "@mercurjs/core/links/product-seller-link"
 
 type WorkflowInput = { product: string, sellerId: string }
 
