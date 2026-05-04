@@ -25,17 +25,6 @@ module.exports = defineConfig({
   },
   modules: [
     {
-      resolve: "@mercurjs/core-plugin/modules/custom-fields",
-      options: {
-        customFields: {
-          Seller: {
-            company_spocs: { type: "string", },
-          },
-
-        },
-      },
-    },
-    {
       resolve: '@mercurjs/core-plugin/modules/admin-ui',
       options: {
         appDir: path.join(__dirname, '../../apps/admin'),
