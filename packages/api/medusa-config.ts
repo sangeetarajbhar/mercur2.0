@@ -390,7 +390,10 @@ module.exports = defineConfig({
       definition: {
         isQueryable: true,
       },
-    }
+    },
+    {
+      resolve: "./src/modules/cart-delivery-detail",
+    },
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",

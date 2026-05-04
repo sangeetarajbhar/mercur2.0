@@ -15,6 +15,16 @@
           "nullable": false,
           "mappedType": "text"
         },
+        "promise_key": {
+          "name": "promise_key",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "0",
+          "mappedType": "integer"
+        },
         "cart_id": {
           "name": "cart_id",
           "type": "text",
@@ -113,7 +123,7 @@
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_cart_delivery_detail_deleted_at\" ON \"cart_delivery_detail\" (deleted_at) WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_cart_delivery_detail_deleted_at\" ON \"cart_delivery_detail\" (\"deleted_at\") WHERE deleted_at IS NULL"
         },
         {
           "keyName": "cart_delivery_detail_pkey",
