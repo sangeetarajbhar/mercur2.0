@@ -25,17 +25,6 @@ module.exports = defineConfig({
   },
   modules: [
     {
-      resolve: "@mercurjs/core-plugin/modules/custom-fields",
-      options: {
-        customFields: {
-          Seller: {
-            company_spocs: { type: "string", },
-          },
-
-        },
-      },
-    },
-    {
       resolve: '@mercurjs/core-plugin/modules/admin-ui',
       options: {
         appDir: path.join(__dirname, '../../apps/admin'),
@@ -61,6 +50,9 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/seller",
+    },
+    {
+      resolve: "./src/modules/cart-extra-detail",
     },
     {
       resolve: "@medusajs/medusa/notification",
@@ -152,6 +144,9 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/system-config",
+    },
+    {
+      resolve: "./src/modules/cart-delivery-detail",
     },
     {
       resolve: "./src/modules/customer-bank-account-verification",

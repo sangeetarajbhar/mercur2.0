@@ -7,7 +7,7 @@ import type { AvailableSlots } from './fetch-available-slots'
 import type { ZoneData } from './fetch-zone-by-pincode'
 import type { MedusaContainer } from '@medusajs/framework'
 import { getOmniExtraPromiseMinutesForDsAndChild } from '../../../../shared/utils/location-hierarchy'
-import { fetchLocationTiming } from '../../../../modules/zone/utils/location-timing'
+import { fetchLocationTiming, LocationTiming } from '../../../../modules/zone/utils/location-timing'
 
 export type DeliveryOptions = {
   instantPromise: InstantPromiseData | null
@@ -30,11 +30,12 @@ export type DeliveryOptions = {
 export async function fetchDeliveryOptions(
   zone: ZoneData,
   query: any,
+  options: {
+    scope: MedusaContainer
+    variant_id: string | null
+  },
   seller_id?: string | null,
-  options?: {
-    scope?: MedusaContainer
-    variant_id?: string | null
-  }
+
 ): Promise<DeliveryOptions> {
   const zone_id = zone.id
   const darkStoreLocationId = zone.location_id
@@ -47,7 +48,8 @@ export async function fetchDeliveryOptions(
   // Resolve omni location + timings for non-zilo seller when variant is available.
   // This keeps cart instant promise aligned with omni operating hours, same as PDP/PLP.
   // let locationHours = await fetchLocationOperatingHours(query, locationId)
-  let locationHours = await fetchLocationTiming(query, locationId)
+  let locationHours = await fetchLocationTiming(options?.scope, locationId)
+
   if (
     options?.scope &&
     options?.variant_id &&
