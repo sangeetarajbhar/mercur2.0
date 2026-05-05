@@ -381,6 +381,14 @@ module.exports = defineConfig({
       },
     },
     { resolve: './src/modules/cart-delivery-detail' },
+    {
+      resolve: "@medusajs/medusa/workflow-engine-redis",
+      options: {
+        redis: {
+          redisUrl: process.env.REDIS_URL,
+        },
+      },
+    },
   ],
   plugins: [{
     resolve: "@mercurjs/core",
