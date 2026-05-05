@@ -9,12 +9,18 @@ export type DeliveryPromiseMinutes = {
   total: number
 }
 
+export type DeliveryOption = {
+  key: 'standard' | 'home_trial'
+  eligible: boolean
+}
+
 export type DeliveryPromiseGroup = {
   promise_key: string
   kind: 'zilo' | 'omni' | 'mixed'  // mixed = group contains both zilo and omni items
   minutes: DeliveryPromiseMinutes
   instant_promise: InstantPromiseData | null
   available_slots: AvailableSlots
+  delivery_options: DeliveryOption[]
   line_item_ids: string[]
   locations_included: string[]  // List of all location IDs (DS + Omni) used in this group
 }

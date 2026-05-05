@@ -68,6 +68,20 @@ export type {
  */
 export async function getCartPromise({ scope, cart, postal_code, lat, long }: GetCartPromiseInput) {
   try {
+    const lineItemTryAndBuyMap = new Map<string, boolean>()
+    for (const item of Array.isArray(cart?.items) ? cart.items : []) {
+      const cfg = item?.variant?.product?.product_configuration ?? item?.product?.product_configuration ?? null
+      let isTryAndBuy = false
+      if (typeof cfg?.is_try_and_buy === 'boolean') {
+        isTryAndBuy = cfg.is_try_and_buy
+      } else if (typeof item?.metadata?.is_try_and_buy === 'boolean') {
+        isTryAndBuy = item.metadata.is_try_and_buy
+      }
+      if (item?.id) {
+        lineItemTryAndBuyMap.set(item.id, isTryAndBuy)
+      }
+    }
+
     // STEP 1: Validate cart pincode
     const pincode = validateCartPincode(cart, postal_code)
 
@@ -220,7 +234,8 @@ export async function getCartPromise({ scope, cart, postal_code, lat, long }: Ge
       lineItems: eligibleLineItems,
       inventoryLevels,
       variants,
-      omniPromiseMinutesByChildLocation
+      omniPromiseMinutesByChildLocation,
+      lineItemTryAndBuyMap
     })
 
     return buildCartPromiseResponse(

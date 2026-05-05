@@ -316,11 +316,6 @@ function roundCartMonetaryValues(cart: HttpTypes.StoreCart): void {
   })
 }
 
-type DeliveryOption = {
-  key: "standard" | "home_trial"
-  eligible: boolean
-}
-
 function enrichCartWithSavingsMetrics(cart: HttpTypes.StoreCart): void {
   const items = Array.isArray(cart.items) ? cart.items : []
 
@@ -358,66 +353,59 @@ function enrichCartWithSavingsMetrics(cart: HttpTypes.StoreCart): void {
 
 const HOME_TRIAL_DISABLED_MESSAGE = "Due to this item home trial is disabled"
 
-function getIsTryAndBuyFromItem(item: any): boolean {
-  const cfg =
-    item?.variant?.product?.product_configuration ??
-    item?.product?.product_configuration ??
-    null
+// function getIsTryAndBuyFromItem(item: any): boolean {
+//   const cfg =
+//     item?.variant?.product?.product_configuration ??
+//     item?.product?.product_configuration ??
+//     null
 
-  if (typeof cfg?.is_try_and_buy === "boolean") {
-    return cfg.is_try_and_buy
-  }
+//   if (typeof cfg?.is_try_and_buy === "boolean") {
+//     return cfg.is_try_and_buy
+//   }
 
-  // Fallback if we already store this flag on metadata (added in prepare-line-item-data)
-  if (typeof item?.metadata?.is_try_and_buy === "boolean") {
-    return item.metadata.is_try_and_buy
-  }
+//   // Fallback if we already store this flag on metadata (added in prepare-line-item-data)
+//   if (typeof item?.metadata?.is_try_and_buy === "boolean") {
+//     return item.metadata.is_try_and_buy
+//   }
 
-  return false
-}
+//   return false
+// }
 
-export function enrichCartWithDeliveryOptions(cart: HttpTypes.StoreCart): HttpTypes.StoreCart {
-  const items = Array.isArray(cart.items) ? cart.items : []
-  const allItemsTryAndBuy =
-    items.length > 0 ? items.every((i: any) => getIsTryAndBuyFromItem(i) === true) : false
+// export function enrichCartWithDeliveryOptions(cart: HttpTypes.StoreCart): HttpTypes.StoreCart {
+//   const items = Array.isArray(cart.items) ? cart.items : []
+//   const allItemsTryAndBuy =
+//     items.length > 0 ? items.every((i: any) => getIsTryAndBuyFromItem(i) === true) : false
 
-  const delivery_options: DeliveryOption[] = [
-    { key: "standard", eligible: true },
-    { key: "home_trial", eligible: allItemsTryAndBuy },
-  ]
+//   // Check for delivery delay due to non-zilo seller items
+//   const ziloSellerId = process.env.ZILO_SELLER_ID
+//   const delayedItems: string[] = []
 
-    ; (cart as any).delivery_options = delivery_options
+//   items.forEach((item: any) => {
+//     // Check if item has a seller and it's not zilo seller
+//     if (item.seller?.id && item.seller.id !== ziloSellerId) {
+//       delayedItems.push(item.id)
+//     }
+//   })
 
-  // Check for delivery delay due to non-zilo seller items
-  const ziloSellerId = process.env.ZILO_SELLER_ID
-  const delayedItems: string[] = []
+//     // Add delivery delay info to cart
+//     ; (cart as any).is_delivery_delayed = delayedItems.length > 0
+//     ; (cart as any).delayed_items = delayedItems
 
-  items.forEach((item: any) => {
-    // Check if item has a seller and it's not zilo seller
-    if (item.seller?.id && item.seller.id !== ziloSellerId) {
-      delayedItems.push(item.id)
-    }
-  })
+//   // If cart is not eligible for home trial and delivery_details has type 'home_trial', clear it
+//   if (!allItemsTryAndBuy && (cart as any).delivery_details?.delivery_type === 'home_trial') {
+//     ; (cart as any).delivery_details = null
+//   }
 
-    // Add delivery delay info to cart
-    ; (cart as any).is_delivery_delayed = delayedItems.length > 0
-    ; (cart as any).delayed_items = delayedItems
+//   cart.items = items.map((item: any) => {
+//     const isTryAndBuy = getIsTryAndBuyFromItem(item)
+//     return {
+//       ...item,
+//       home_trial_message: isTryAndBuy ? null : HOME_TRIAL_DISABLED_MESSAGE,
+//     }
+//   })
 
-  // If cart is not eligible for home trial and delivery_details has type 'home_trial', clear it
-  if (!allItemsTryAndBuy && (cart as any).delivery_details?.delivery_type === 'home_trial') {
-    ; (cart as any).delivery_details = null
-  }
-
-  cart.items = items.map((item: any) => {
-    const isTryAndBuy = getIsTryAndBuyFromItem(item)
-    return {
-      ...item,
-      home_trial_message: isTryAndBuy ? null : HOME_TRIAL_DISABLED_MESSAGE,
-    }
-  })
-
-  return cart
-}
+//   return cart
+// }
 
 export const transformCart = (cart: HttpTypes.StoreCart & { deliveryPromiseResult?: DeliveryPromiseResult }): HttpTypes.StoreCart => {
   const dp = cart.deliveryPromiseResult ?? {} as DeliveryPromiseResult;
@@ -515,8 +503,9 @@ export const transformCart = (cart: HttpTypes.StoreCart & { deliveryPromiseResul
     cart.deliveryPromiseResult = { ...rest };
   }
 
-  // Delivery options (cart-level) + home_trial_message (item-level)
-  enrichCartWithDeliveryOptions(cart)
+  // Ensure deprecated delay keys are not exposed in response
+  delete (cart as any).is_delivery_delayed
+  delete (cart as any).delayed_items
 
   return cart;
 };

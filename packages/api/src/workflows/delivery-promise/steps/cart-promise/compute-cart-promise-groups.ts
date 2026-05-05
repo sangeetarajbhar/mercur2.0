@@ -2,7 +2,7 @@ import type { MedusaContainer } from '@medusajs/framework'
 import type { CartLineItem } from './fetch-cart-line-items'
 import type { ServiceableVariant } from './check-variant-serviceability'
 import type { ZoneData } from './fetch-zone-by-pincode'
-import type { DeliveryPromiseGroup, DeliveryPromiseMinutes } from './build-cart-promise-response'
+import type { DeliveryOption, DeliveryPromiseGroup, DeliveryPromiseMinutes } from './build-cart-promise-response'
 import type { DeliveryPromiseResult as InstantPromiseData } from '../calculate-delivery-promise-from-zone'
 import type { AvailableSlots } from './fetch-available-slots'
 import type { InventoryLevel } from './fetch-inventory-levels'
@@ -22,6 +22,7 @@ export type ComputeCartPromiseGroupsInput = {
   inventoryLevels: InventoryLevel[]
   variants: VariantInventoryMapping[]
   omniPromiseMinutesByChildLocation?: Map<string, number>
+  lineItemTryAndBuyMap?: Map<string, boolean>
 }
 
 export type ComputeCartPromiseGroupsResult = {
@@ -55,7 +56,8 @@ export async function computeCartPromiseGroups({
   lineItems,
   inventoryLevels,
   variants,
-  omniPromiseMinutesByChildLocation
+  omniPromiseMinutesByChildLocation,
+  lineItemTryAndBuyMap
 }: ComputeCartPromiseGroupsInput): Promise<ComputeCartPromiseGroupsResult> {
   const ziloSellerId = process.env.ZILO_SELLER_ID
 
@@ -334,6 +336,13 @@ export async function computeCartPromiseGroups({
 
     // Build promise key based on PURE PROMISE TIME (just minutes, no kind prefix)
     const promise_key = String(minutesBreakdown.total)
+    const allItemsTryAndBuy = desc.lineItemIds.length > 0
+      ? desc.lineItemIds.every((id) => lineItemTryAndBuyMap?.get(id) === true)
+      : false
+    const delivery_options: DeliveryOption[] = [
+      { key: 'standard', eligible: true },
+      { key: 'home_trial', eligible: allItemsTryAndBuy }
+    ]
 
     return {
       promise_key,
@@ -341,6 +350,7 @@ export async function computeCartPromiseGroups({
       minutes: minutesBreakdown,
       instant_promise: instantPromise,
       available_slots: slotsToUse,
+      delivery_options,
       line_item_ids: [...desc.lineItemIds],
       locations_included: Array.from(uniqueLocationIds)  // All locations (DS + Omni) in this group
     }
