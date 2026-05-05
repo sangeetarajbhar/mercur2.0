@@ -62,3 +62,21 @@ export const adminSellerCustomerGroupsQueryConfig = {
     isList: false
   }
 }
+
+/** Graph fields for GET /admin/sellers/:id/members/invites (member_invite entity only). */
+export const adminSellerMemberInvitesQueryConfig = {
+  list: {
+    defaults: [
+      "id",
+      "email",
+      "accepted",
+      "role_id",
+      "token",
+      "expires_at",
+      "created_at",
+      "updated_at",
+    ],
+    defaultLimit: 50,
+    isList: true,
+  },
+}

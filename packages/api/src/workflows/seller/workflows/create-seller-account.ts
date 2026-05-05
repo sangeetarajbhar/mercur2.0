@@ -17,25 +17,28 @@ import {
   UpdateProfessionalDetailsDTO,
   UpdatePaymentDetailsDTO,
 } from "@mercurjs/types"
-import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 import { AdditionalData } from "@medusajs/framework/types"
 
 import {
   createSellersStep,
   upsertMembersStep,
   createSellerMembersStep,
+  createSellerDefaultRolesStep,
 } from "../steps"
 import { updateSellerAddressWorkflow } from "./update-seller-address"
 import { updateSellerProfessionalDetailsWorkflow } from "./update-seller-professional-details"
 import { updateSellerPaymentDetailsWorkflow } from "./update-seller-payment-details"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 
-export const createSellerAccountWorkflowId = "create-seller-account-v2"
+export const createSellerAccountWorkflowId = "create-seller-account"
 
 type CreateSellerAccountWorkflowInput = {
   auth_identity_id: string
   seller: CreateSellerDTO
   member_email?: string
   member_id?: string
+  first_name?: string
+  last_name?: string
   address?: UpdateSellerAddressDTO
   professional_details?: UpdateProfessionalDetailsDTO
   payment_details?: UpdatePaymentDetailsDTO
@@ -44,6 +47,8 @@ type CreateSellerAccountWorkflowInput = {
 export const createSellerAccountWorkflow = createWorkflow(
   createSellerAccountWorkflowId,
   function (input: CreateSellerAccountWorkflowInput) {
+    createSellerDefaultRolesStep()
+
     const sellerData = transform(input, ({ seller }) => [
       { ...seller, status: SellerStatus.PENDING_APPROVAL },
     ])
@@ -53,7 +58,13 @@ export const createSellerAccountWorkflow = createWorkflow(
 
     const newMember = when('no-existing-member', input, ({ member_id }) => !member_id).then(() => {
       const members = upsertMembersStep(
-        transform(input, ({ member_email }) => [{ email: member_email! }])
+        transform(input, ({ member_email, first_name, last_name }) => [
+          {
+            email: member_email!,
+            first_name: first_name ?? null,
+            last_name: last_name ?? null,
+          },
+        ])
       )
       const member = transform({ members }, ({ members }) => members[0])
 

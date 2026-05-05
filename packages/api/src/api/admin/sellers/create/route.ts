@@ -73,7 +73,9 @@ export const POST = async (
           auth_identity_id: authIdentity.id,
         },
       })
-    
+
+
+      
       res.json({ 
         seller: result.seller,
         companySpocs: result.companySpocs,
