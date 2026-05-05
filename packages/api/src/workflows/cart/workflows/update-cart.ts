@@ -26,7 +26,7 @@ import {
     useQueryGraphStep,
     useRemoteQueryStep,
   } from '@medusajs/medusa/core-flows'
-  
+
   import { refreshCartItemsWorkflow } from './refresh-cart-items'
 
   import { CACHE_ENABLE, CacheTTLMap, UseQueryGraphStepCacheKey } from "../../../shared/utils/redisKey";
@@ -34,13 +34,13 @@ import { validateSalesChannelStep } from '../steps/validate-sales-channel'
 import { validateCartDeliveryDataStep } from '../steps/validate-cart-delivery-data'
 import { updateSlottedDeliveryDetailStep } from '../steps/update-slotted-delivery-detail'
 import { updateStandardDeliveryDetailStep } from '../steps/update-standard-delivery-detail'
-  
+
   /**
    * The data to update the cart, along with custom data that's passed to the workflow's hooks.
    */
   export type UpdateCartWorkflowInput = UpdateCartWorkflowInputDTO &
     AdditionalData
-  
+
   export const updateCartWorkflowId = 'custom-update-cart'
   /**
    * This workflow updates a cart and returns it. You can update the cart's region, address, and more. This workflow is executed by the
@@ -108,7 +108,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
         list: false,
         throw_if_key_not_found: true
       }).config({ name: 'get-cart' })
-  
+
       const cartDataInput = transform({ input, cartToUpdate }, (data) => {
         return {
           sales_channel_id:
@@ -117,7 +117,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           email: data.input.email ?? data.cartToUpdate.email
         }
       })
-  
+
       const [salesChannel, customer] = parallelize(
         findSalesChannelStep({
           salesChannelId: cartDataInput.sales_channel_id
@@ -127,9 +127,9 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           email: cartDataInput.email
         })
       )
-  
+
       validateSalesChannelStep({ salesChannel })
-  
+
       const newRegion = when("check-region-id", { input }, (data) => {
         return !!data.input.region_id
       }).then(() => {
@@ -166,11 +166,11 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           }
         )
       })
-  
+
       const region = transform({ cartToUpdate, newRegion }, (data) => {
         return data.newRegion ?? data.cartToUpdate.region
       })
-  
+
       const cartInput = transform(
         {
           input,
@@ -185,53 +185,53 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
             additional_data: _additionalData, // eslint-disable-line @typescript-eslint/no-unused-vars
             ...updateCartData
           } = data.input
-  
+
           const data_ = {
             ...updateCartData,
             currency_code: data.region?.currency_code,
             region_id: data.region?.id // This is either the region from the input or the region from the cart or null
           }
-  
+
           // When the region is updated, we do a few things:
           // - We need to make sure the provided shipping address country code is in the new region
           // - We clear the shipping address if the new region has more than one country
           const regionIsNew = data.region?.id !== data.cartToUpdate.region?.id
           const shippingAddress = data.input.shipping_address
-  
+
           if (shippingAddress?.country_code) {
             const country = data.region.countries.find(
               (c) => c.iso_2 === shippingAddress.country_code
             )
-  
+
             if (!country) {
               throw new MedusaError(
                 MedusaError.Types.INVALID_DATA,
                 `Country with code ${shippingAddress.country_code} is not within region ${data.region.name}`
               )
             }
-  
+
             data_.shipping_address = {
               ...shippingAddress,
               country_code: country.iso_2
             }
           }
-  
+
           if (regionIsNew) {
             if (data.region.countries.length === 1) {
               data_.shipping_address = {
                 country_code: data.region.countries[0].iso_2
               }
             }
-  
+
             if (!data_.shipping_address?.country_code) {
               data_.shipping_address = null
             }
           }
-  
+
           if (isDefined(updateCartData.email) && data.customer?.customer) {
             const currentCustomer = data.customer.customer!
             data_.customer_id = currentCustomer.id
-  
+
             // registered customers can update the cart email
             if (currentCustomer.has_account) {
               data_.email = updateCartData.email
@@ -239,20 +239,20 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
               data_.email = data.customer.email
             }
           }
-  
+
           if (isDefined(updateCartData.sales_channel_id)) {
             data_.sales_channel_id = data.salesChannel!.id
           }
-  
+
           return data_
         }
       )
-  
+
       const validate = createHook('validate', {
         input: cartInput,
         cart: cartToUpdate
       })
-  
+
       // Validate delivery data before updating cart
       const validationInput = transform({ input, cartToUpdate }, ({ input, cartToUpdate }) => ({
         cart_id: input.id,
@@ -266,9 +266,9 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
         // becomes invalid after an address change or time passes. We'll clear it and proceed.
         clearInvalidDeliveryData: true
       }))
-  
+
       validateCartDeliveryDataStep(validationInput)
-  
+
       /*
       when({ cartInput }, ({ cartInput }) => {
         return isDefined(cartInput.customer_id) || isDefined(cartInput.email)
@@ -279,7 +279,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
         }).config({ name: "emit-customer-updated" })
       })
       */
-  
+
       const regionUpdated = transform(
         { input, cartToUpdate },
         ({ input, cartToUpdate }) => {
@@ -289,7 +289,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           )
         }
       )
-  
+
       when({ regionUpdated }, ({ regionUpdated }) => {
         return !!regionUpdated
       }).then(() => {
@@ -298,7 +298,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           data: { id: input.id }
         }).config({ name: 'emit-region-updated' })
       })
-  
+
       parallelize(
         updateCartsStep([cartInput]),
         emitEventStep({
@@ -306,7 +306,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           data: { id: input.id }
         })
       )
-  
+
       // In case the region is updated, we might have a new currency OR tax inclusivity setting
       // Therefore, we need to delete line items with a custom price for good measure
       when({ regionUpdated }, ({ regionUpdated }) => {
@@ -328,10 +328,10 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
             return rows?.map((i) => i.id) ?? []
           }
         )
-  
+
         deleteLineItemsStep(lineItemIds)
       })
-  
+
       //@TODO refreshCartItemsWorkflow is not required here, as it is called in route already
       // const cart = refreshCartItemsWorkflow.runAsStep({
       //   input: {
@@ -340,12 +340,12 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
       //     force_refresh: !!newRegion
       //   }
       // })
-  
+
       // const cartUpdated = createHook('cartUpdated', {
       //   cart,
       //   additional_data: input.additional_data
       // })
-  
+
       // Check if slot_id is present to determine instant vs scheduled delivery
       // slot_id must be a non-empty string to be considered slotted
       // null, undefined, or empty string = instant delivery
@@ -354,14 +354,14 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           delivery_type?: string
           slot_id?: string | null
         } | undefined
-  
+
         if (!deliveryDetail) return false
-  
+
         const slotId = deliveryDetail.slot_id
         // Consider as slotted only if slot_id is a non-empty string
         return typeof slotId === 'string' && slotId.trim().length > 0
       })
-  
+
       // Handle instant delivery (no slot_id) - calculate and store delivery promise
       when({ hasSlotId, input, cartInput, cartToUpdate }, ({ hasSlotId, input, cartInput, cartToUpdate }) => {
         const deliveryDetail = input.additional_data?.delivery_detail as { delivery_type?: string } | undefined
@@ -384,10 +384,10 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
             delivery_type: deliveryDetail.delivery_type
           }
         })
-  
+
         updateStandardDeliveryDetailStep(deliveryInput)
       })
-  
+
       // Handle scheduled delivery (with slot_id) - fetch slot from slot_override and validate
       when({ hasSlotId }, ({ hasSlotId }) => {
         return !!hasSlotId
@@ -403,14 +403,13 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
             delivery_type: deliveryDetail.delivery_type
           }
         })
-  
+
         updateSlottedDeliveryDetailStep(slottedInput)
       })
-  
+
       return new WorkflowResponse(void 0, {
         // hooks: [validate, cartUpdated]
         hooks: [validate]
       })
     }
   )
-  
