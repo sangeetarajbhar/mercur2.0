@@ -261,7 +261,7 @@ export const refreshCartItemsWorkflow = createWorkflow(
       { customer_id } as any,
       (({ customer_id }: any) => !!customer_id) as any
     ).then((() => {
-      const customer_idCacheKey = transform({ customer_id } as any, ({ customer_id }: any) => {
+      const customerIdCacheKey = transform({ customer_id } as any, ({ customer_id }: any) => {
         return `${UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME}${customer_id}`
       })
       const ttl = CacheTTLMap[UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME]
@@ -274,7 +274,7 @@ export const refreshCartItemsWorkflow = createWorkflow(
           cache: {
             enable: CACHE_ENABLE,
             ttl: ttl,
-            key: customer_idCacheKey
+            key: customerIdCacheKey
           },
         },
       }).config({ name: 'get-customer-details' })
