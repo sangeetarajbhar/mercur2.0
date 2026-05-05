@@ -15,6 +15,7 @@ interface CaptureResult {
 interface CompensationData {
   paymentCollectionId: string
   previousCapturedAmount: number
+  previousAuthorizedAmount: number
 }
 
 const toNumber = (value: any): number => {
@@ -45,9 +46,10 @@ export const captureOrderSetAuthorizedAmountStep = createStep(
       )
     }
 
+    // Fetch order set with payment_collection_id, shipment_number, and linked order IDs
     const { data: orderSets } = await query.graph({
       entity: 'order_set',
-      fields: ['id', 'payment_collection_id'],
+      fields: ['id', 'payment_collection_id', 'shipment_number', 'orders.id'],
       filters: {
         id: input.orderSetId
       }
@@ -60,7 +62,8 @@ export const captureOrderSetAuthorizedAmountStep = createStep(
       )
     }
 
-    const paymentCollectionId = orderSets[0].payment_collection_id
+    const orderSet = orderSets[0]
+    const paymentCollectionId = orderSet.payment_collection_id
     if (!paymentCollectionId) {
       return new StepResponse<CaptureResult, CompensationData>(
         { paymentCaptured: false },
@@ -122,6 +125,66 @@ export const captureOrderSetAuthorizedAmountStep = createStep(
       )
     }
 
+    // --- Calculate the amount to capture ---
+
+    // Step A: Sum item_total for all line items of this order set
+    const orderIds: string[] = (orderSet.orders ?? [])
+      .map((o: any) => o?.id)
+      .filter(Boolean)
+
+    let itemTotalsSum = 0
+
+    if (orderIds.length > 0) {
+      // Resolve line item IDs for all orders in the order set
+      const { data: orderItems } = await query.graph({
+        entity: 'order_item',
+        fields: ['item_id'],
+        filters: { order_id: orderIds } as any
+      }) as any
+
+      const lineItemIds: string[] = (orderItems ?? [])
+        .map((oi: any) => oi?.item_id)
+        .filter(Boolean)
+
+      if (lineItemIds.length > 0) {
+        const extensionRows = await knex('order_line_item_extension')
+          .select('item_total')
+          .whereIn('order_line_item_id', lineItemIds)
+
+        for (const row of extensionRows ?? []) {
+          itemTotalsSum += toNumber(row.item_total)
+        }
+      }
+    }
+
+    // Step B: If shipment_number === 1, add extra charges for the order set
+    let extraChargesSum = 0
+    const shipmentNumber = toNumber(orderSet.shipment_number)
+
+    if (shipmentNumber === 1) {
+      const extraChargeRows = await knex('cart_order_extra_charge')
+        .select('fee_amount')
+        .where({ order_set_id: input.orderSetId })
+
+      for (const row of extraChargeRows ?? []) {
+        extraChargesSum += toNumber(row.fee_amount)
+      }
+    }
+
+    const capturedAmount = itemTotalsSum + extraChargesSum
+
+    logger.info(
+      `[OrderSet Capture] orderSetId=${input.orderSetId} shipment_number=${shipmentNumber} itemTotalsSum=${itemTotalsSum} extraChargesSum=${extraChargesSum} capturedAmount=${capturedAmount}`
+    )
+
+    if (capturedAmount <= 0) {
+      return new StepResponse<CaptureResult, CompensationData>(
+        { paymentCaptured: false, authorizedAmount },
+        null as any
+      )
+    }
+
+    // Trigger capturePaymentWorkflow for any payment not yet captured
     for (const payment of payments) {
       if (payment?.captured_at) {
         continue
@@ -138,21 +201,26 @@ export const captureOrderSetAuthorizedAmountStep = createStep(
       }
     }
 
+    // Update captured_amount and reduce authorized_amount by the captured amount
+    const newAuthorizedAmount = Math.max(authorizedAmount - capturedAmount, 0)
+
     await knex('payment_collection')
       .where({ id: paymentCollectionId })
       .update({
-        captured_amount: authorizedAmount
+        captured_amount: capturedAmount,
+        authorized_amount: newAuthorizedAmount
       })
 
     return new StepResponse<CaptureResult, CompensationData>(
       {
         paymentCaptured: true,
-        authorizedAmount,
-        capturedAmount: authorizedAmount
+        authorizedAmount: newAuthorizedAmount,
+        capturedAmount
       },
       {
         paymentCollectionId,
-        previousCapturedAmount: currentCapturedAmount
+        previousCapturedAmount: currentCapturedAmount,
+        previousAuthorizedAmount: authorizedAmount
       }
     )
   },
@@ -165,13 +233,14 @@ export const captureOrderSetAuthorizedAmountStep = createStep(
     const knex = container.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
 
     logger.warn(
-      `[OrderSet Capture Compensation] Rolling back captured_amount for payment collection ${compensationData.paymentCollectionId}: ${compensationData.previousCapturedAmount}`
+      `[OrderSet Capture Compensation] Rolling back captured_amount and authorized_amount for payment collection ${compensationData.paymentCollectionId}`
     )
 
     await knex('payment_collection')
       .where({ id: compensationData.paymentCollectionId })
       .update({
-        captured_amount: compensationData.previousCapturedAmount
+        captured_amount: compensationData.previousCapturedAmount,
+        authorized_amount: compensationData.previousAuthorizedAmount
       })
   }
 )
