@@ -31,6 +31,7 @@ import {
 import {
   useLocationHierarchies,
   useCreateLocationHierarchy,
+  useUpdateLocationHierarchy,
   useDeleteLocationHierarchy,
   fetchLocationHierarchyTree,
   type LocationHierarchyRow,
@@ -124,6 +125,7 @@ function buildParentRows(
           name: childMeta?.name ?? c.child_location_id,
           hierarchyId: c.id,
           created_at: c.created_at ?? "",
+          promise_minutes: c.promise_minutes,
           stock_location_extension: {
             location_type: childMeta?.location_type ?? "2",
           },
@@ -140,6 +142,8 @@ function buildParentRows(
 const LocationHierarchyPage = () => {
   const [selectedParentId, setSelectedParentId] = useState<string>("");
   const [selectedChildIds, setSelectedChildIds] = useState<string[]>([]);
+  const [childPromiseMinutes, setChildPromiseMinutes] = useState<Record<string, number>>({});
+  const [editingPromise, setEditingPromise] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchForApi, setSearchForApi] = useState<string>("");
   const [pageOffset, setPageOffset] = useState(0);
@@ -244,11 +248,13 @@ const LocationHierarchyPage = () => {
   const canNextOmniPage = omniPageOffset + OMNI_PAGE_SIZE < childLocationsTotal;
 
   const { mutateAsync: createHierarchyAsync } = useCreateLocationHierarchy();
+  const { mutateAsync: updateHierarchyAsync } = useUpdateLocationHierarchy();
   const { mutate: deleteHierarchy } = useDeleteLocationHierarchy();
 
   const resetCreateForm = () => {
     setSelectedParentId("");
     setSelectedChildIds([]);
+    setChildPromiseMinutes({});
     setSearchQuery("");
     setSearchForApi("");
     setOmniPageOffset(0);
@@ -267,9 +273,11 @@ const LocationHierarchyPage = () => {
 
     try {
       for (const childId of selectedChildIds) {
+        const mins = childPromiseMinutes[childId];
         await createHierarchyAsync({
           parent_location_id: selectedParentId,
           child_location_id: childId,
+          ...(mins !== undefined && mins > 0 ? { promise_minutes: mins } : {}),
         });
       }
 
@@ -300,6 +308,19 @@ const LocationHierarchyPage = () => {
         );
       },
     });
+  };
+
+  const handleUpdatePromiseMinutes = async (hierarchyId: string) => {
+    const minutes = editingPromise[hierarchyId];
+    if (minutes === undefined) return;
+    try {
+      await updateHierarchyAsync({ id: hierarchyId, payload: { promise_minutes: minutes } });
+      toast.success("Promise minutes updated");
+      refetchHierarchies();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update promise minutes";
+      toast.error(message);
+    }
   };
 
   const handleDownloadTree = async (locationId: string) => {
@@ -357,6 +378,7 @@ const LocationHierarchyPage = () => {
               <Table.Row>
                 <Table.HeaderCell>Location Hierarchy</Table.HeaderCell>
                 <Table.HeaderCell>Type</Table.HeaderCell>
+                <Table.HeaderCell>Promise (min)</Table.HeaderCell>
                 <Table.HeaderCell>Created At</Table.HeaderCell>
                 <Table.HeaderCell>Actions</Table.HeaderCell>
               </Table.Row>
@@ -366,7 +388,7 @@ const LocationHierarchyPage = () => {
                 <Table.Row>
                   <Table.Cell
                     className="text-center"
-                    style={{ gridColumn: "span 4" }}
+                    style={{ gridColumn: "span 5" }}
                   >
                     No location hierarchies found
                   </Table.Cell>
@@ -410,6 +432,7 @@ const LocationHierarchyPage = () => {
                           </Badge>
                         </Table.Cell>
                         <Table.Cell>—</Table.Cell>
+                        <Table.Cell>—</Table.Cell>
                         <Table.Cell>
                           <IconButton
                             onClick={() => handleDownloadTree(parentId)}
@@ -440,6 +463,38 @@ const LocationHierarchyPage = () => {
                                     ?.location_type ?? "2"
                                 ] ?? LOCATION_TYPE_MAP.Unknown}
                               </Badge>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  className="w-20"
+                                  value={
+                                    editingPromise[childRow.hierarchyId] !== undefined
+                                      ? editingPromise[childRow.hierarchyId]
+                                      : (childRow.promise_minutes ?? 0)
+                                  }
+                                  onChange={(e) =>
+                                    setEditingPromise((prev) => ({
+                                      ...prev,
+                                      [childRow.hierarchyId]: Number(e.target.value),
+                                    }))
+                                  }
+                                  id={`promise-${childRow.hierarchyId}`}
+                                />
+                                <Button
+                                  variant="secondary"
+                                  size="small"
+                                  onClick={() => handleUpdatePromiseMinutes(childRow.hierarchyId)}
+                                  disabled={
+                                    editingPromise[childRow.hierarchyId] === undefined ||
+                                    editingPromise[childRow.hierarchyId] === (childRow.promise_minutes ?? 0)
+                                  }
+                                >
+                                  Save
+                                </Button>
+                              </div>
                             </Table.Cell>
                             <Table.Cell>
                               {childRow.created_at
@@ -541,7 +596,6 @@ const LocationHierarchyPage = () => {
                   </Select.Content>
                 </Select>
               </div>
-
               <div className="mb-6">
                 <Text className="mb-2">Child Locations (Multiple)</Text>
                 <div className="mb-4">
@@ -574,6 +628,7 @@ const LocationHierarchyPage = () => {
                         <Table.HeaderCell>Select</Table.HeaderCell>
                         <Table.HeaderCell>Name</Table.HeaderCell>
                         <Table.HeaderCell>Type</Table.HeaderCell>
+                        <Table.HeaderCell>Promise (min)</Table.HeaderCell>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -584,6 +639,7 @@ const LocationHierarchyPage = () => {
                           </Table.Cell>
                           <Table.Cell />
                           <Table.Cell />
+                          <Table.Cell />
                         </Table.Row>
                       ) : childLocations.length === 0 ? (
                         <Table.Row>
@@ -592,6 +648,7 @@ const LocationHierarchyPage = () => {
                               ? "No locations found with that name."
                               : "No locations found."}
                           </Table.Cell>
+                          <Table.Cell />
                           <Table.Cell />
                           <Table.Cell />
                         </Table.Row>
@@ -639,6 +696,24 @@ const LocationHierarchyPage = () => {
                             <Table.Cell>{location.name}</Table.Cell>
                             <Table.Cell>
                               <Badge>Omni Store</Badge>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Input
+                                type="number"
+                                min={0}
+                                className="w-20"
+                                value={childPromiseMinutes[location.id] ?? 0}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setChildPromiseMinutes((prev) => ({
+                                    ...prev,
+                                    [location.id]: Number(e.target.value),
+                                  }));
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                id={`create-promise-${location.id}`}
+                                placeholder="0"
+                              />
                             </Table.Cell>
                           </Table.Row>
                         ))

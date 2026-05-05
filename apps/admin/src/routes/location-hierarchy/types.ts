@@ -42,6 +42,7 @@ export type ApiChildItem = {
   stock_location_extension?: { location_type?: string };
   hierarchyId: string;
   created_at: string;
+  promise_minutes?: number;
 };
 
 export type ApiParentRow = {

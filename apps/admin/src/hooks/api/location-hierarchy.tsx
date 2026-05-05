@@ -37,6 +37,10 @@ export type CreateLocationHierarchyPayload = {
   promise_minutes?: number;
 };
 
+export type UpdateLocationHierarchyPayload = {
+  promise_minutes?: number;
+};
+
 const LOCATION_HIERARCHY_QUERY_KEY = "admin_location_hierarchy" as const;
 export const locationHierarchyQueryKeys = queryKeysFactory(
   LOCATION_HIERARCHY_QUERY_KEY
@@ -98,6 +102,35 @@ export const useCreateLocationHierarchy = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.error || errorData.message || "Failed to create location hierarchy"
+        );
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: locationHierarchyQueryKeys.lists(),
+      });
+    },
+  });
+};
+
+export const useUpdateLocationHierarchy = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: UpdateLocationHierarchyPayload }) => {
+      const response = await fetch(`/admin/location-hierarchy/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || errorData.message || "Failed to update location hierarchy"
         );
       }
 
