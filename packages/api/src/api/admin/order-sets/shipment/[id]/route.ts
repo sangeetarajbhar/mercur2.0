@@ -8,7 +8,7 @@ import { MARKETPLACE_MODULE} from '../../../../../modules/marketplace'
 import MarketplaceModuleService from '../../../../../modules/marketplace/service'
 import { ShipmentStatus } from '../../../../../utils/constants/order-statuses'
 import { UpdateShipmentStatusType } from './validators'
-import { cancelOrderSetRtoWorkflow } from '../../../../../workflows/order/workflows/cancel-order-set-rto'
+import { cancelOrderSetRtoWorkflow } from '../../../../../workflows/order-set/workflows/cancel-order-set-rto'
 import { updateOrderSetShipmentStatusWorkflow } from '../../../../../workflows/shipment-status/workflows/update-order-set-shipment-status'
 import { createReturnsForDeliveredItemsWorkflow } from '../../../../../workflows/pidge/workflows/create-returns-for-delivered-items'
 

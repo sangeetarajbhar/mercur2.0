@@ -9,10 +9,9 @@ import { useQueryGraphStep } from '@medusajs/medusa/core-flows'
 import orderSetOrder from '../../../links/order-set-order'
 import {
   cancelFulfillmentsForOrderSetStep,
-  executeCancelOrderWorkflowsStep,
   updateOrderSetLineItemsRtoReasonStep,
-} from '../steps/'
-
+} from '../steps'
+import { executeCancelOrderWorkflowsStep } from '../../order/steps'
 
 export type CancelOrderSetRtoWorkflowInput = {
   order_set_id: string
@@ -35,9 +34,7 @@ export const cancelOrderSetRtoWorkflow = createWorkflow(
     const orderSetOrdersQuery = useQueryGraphStep({
       entity: orderSetOrder.entryPoint,
       fields: ['order_id'],
-      filters: {
-        order_set_id: input.order_set_id,
-      },
+      filters: { order_set_id: input.order_set_id },
     }).config({ name: 'get-order-set-orders' })
 
     const ordersData = transform(
@@ -51,9 +48,7 @@ export const cancelOrderSetRtoWorkflow = createWorkflow(
       }
     )
 
-    cancelFulfillmentsForOrderSetStep({
-      order_set_id: input.order_set_id,
-    })
+    cancelFulfillmentsForOrderSetStep({ order_set_id: input.order_set_id })
 
     executeCancelOrderWorkflowsStep({
       orderIds: ordersData.orderIds,
@@ -61,9 +56,7 @@ export const cancelOrderSetRtoWorkflow = createWorkflow(
       isRTO: true,
     })
 
-    updateOrderSetLineItemsRtoReasonStep({
-      order_set_id: input.order_set_id,
-    })
+    updateOrderSetLineItemsRtoReasonStep({ order_set_id: input.order_set_id })
 
     return new WorkflowResponse(void 0)
   }

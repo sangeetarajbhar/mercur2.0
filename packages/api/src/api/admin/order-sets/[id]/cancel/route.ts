@@ -9,13 +9,13 @@ import {
   remoteQueryObjectFromString,
 } from "@medusajs/framework/utils"
 
-import { cancelOrderSetWorkflow } from "../../../../../workflows/order/workflows/cancel-order-set"
+import { cancelOrderSetWorkflow } from "../../../../../workflows/order-set/workflows/cancel-order-set"
 
 /**
  * @oas [post] /admin/order-sets/{id}/cancel
  * operationId: "AdminCancelOrderSet"
  * summary: "Cancel Order Set"
- * description: "Cancels an order set by canceling all orders in the set sequentially. This will also cancel any uncaptured payments, refund any captured payments, and update all line items to CANCELLED status. The order set must not be already cancelled, must not have a rider assigned, and must not have any orders with status 'RFR'."
+ * description: "Cancels an order set by canceling all orders in the set sequentially. This will also cancel any uncaptured payments, refund any captured payments, and update all line items to CANCELLED status. The order set must not be already cancelled and must not have any orders with status 'RFR'. Rider-assigned guard is enforced at the order-group level."
  * x-authenticated: true
  * parameters:
  *   - name: id
@@ -44,7 +44,7 @@ import { cancelOrderSetWorkflow } from "../../../../../workflows/order/workflows
  *           properties:
  *             message:
  *               type: string
- *               example: "Order set is already cancelled" or "Order set cannot be cancelled because a rider has been assigned" or "Order set cannot be canceled because one or more orders have status 'RFR'"
+ *               example: "Order set is already cancelled" or "Order set cannot be canceled because one or more orders have status 'RFR'"
  *   "404":
  *     description: Order set not found
  *   "401":
@@ -104,12 +104,6 @@ export const POST = async (
       if (errorMessage.includes('already cancelled')) {
         return res.status(400).json({
           message: 'Order set is already cancelled'
-        } as any)
-      }
-
-      if (errorMessage.includes('rider') || errorMessage.includes('assigned')) {
-        return res.status(400).json({
-          message: 'Order set cannot be cancelled because a rider has been assigned'
         } as any)
       }
 

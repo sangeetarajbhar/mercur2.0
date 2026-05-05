@@ -48,34 +48,19 @@ export type CancelValidateOrderStepInput = {
    * The cancelation details.
    */
   input: OrderWorkflow.CancelOrderWorkflowInput
-  /**
-   * The order set's rider_assigned_at value.
-   */
-  riderAssignedAt: Date | string | null | undefined
-  /**
-   * Whether the order is a RTO.
-   */
-  isRTO?: boolean
 }
 
 /**
- * This step validates that an order can be canceled. If the order was canceled
- * previously, or if a rider has been assigned to the order set, the step throws an error.
+ * This step validates that an order can be canceled.
+ * Throws if the order was already canceled.
+ *
+ * Note: rider-assigned guard is intentionally not checked here.
+ * It is enforced at the order-group level before any cancellation begins.
  */
 export const cancelValidateOrder = createStep(
   'cancel-validate-order',
-  ({ order, riderAssignedAt, isRTO }: CancelValidateOrderStepInput) => {
-    
-    // Check if order is already canceled
+  ({ order }: CancelValidateOrderStepInput) => {
     throwIfOrderIsCancelled({ order })
-
-    // Check if rider has been assigned to the order set
-    if (riderAssignedAt && !isRTO) {
-      throw new MedusaError(
-        MedusaError.Types.NOT_ALLOWED,
-        `Order cannot be canceled because a rider has been assigned`
-      )
-    }
   }
 )
 
@@ -120,14 +105,13 @@ export const cancelOrderWorkflow = createWorkflow(
       ({ orderQuery }) => orderQuery.data[0]
     )
 
-    // Query order set link with nested order_set fields (used for both validation and payment collection logic)
+    // Query order set link with nested order_set fields (used for payment collection logic)
     const orderSetLinkQuery = useQueryGraphStep({
       entity: orderSetOrder.entryPoint,
       fields: [
         'order_set_id',
         'order_id',
         'order_set.id',
-        'order_set.rider_assigned_at',
         'order_set.status'
       ],
       filters: {
@@ -135,15 +119,7 @@ export const cancelOrderWorkflow = createWorkflow(
       }
     }).config({ name: 'get-order-set-link' })
 
-    const riderAssignedAt = transform(
-      { orderSetLinkQuery },
-      ({ orderSetLinkQuery }) => {
-        const link = orderSetLinkQuery.data?.[0]
-        return link?.order_set?.rider_assigned_at || null
-      }
-    )
-
-    cancelValidateOrder({ order, input, riderAssignedAt, isRTO: input.isRTO })
+    cancelValidateOrder({ order, input })
 
     const uncapturedPaymentIds = transform({ order }, ({ order }) => {
       const payments = deepFlatMap(
