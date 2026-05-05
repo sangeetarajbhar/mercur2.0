@@ -25,17 +25,6 @@ module.exports = defineConfig({
   },
   modules: [
     {
-      resolve: "@mercurjs/core-plugin/modules/custom-fields",
-      options: {
-        customFields: {
-          Seller: {
-            company_spocs: { type: "string", },
-          },
-
-        },
-      },
-    },
-    {
       resolve: '@mercurjs/core-plugin/modules/admin-ui',
       options: {
         appDir: path.join(__dirname, '../../apps/admin'),
@@ -390,7 +379,16 @@ module.exports = defineConfig({
       definition: {
         isQueryable: true,
       },
-    }
+    },
+    { resolve: './src/modules/cart-delivery-detail' },
+    {
+      resolve: "@medusajs/medusa/workflow-engine-redis",
+      options: {
+        redis: {
+          redisUrl: process.env.REDIS_URL,
+        },
+      },
+    },
   ],
   plugins: [{
     resolve: "@mercurjs/core-plugin",

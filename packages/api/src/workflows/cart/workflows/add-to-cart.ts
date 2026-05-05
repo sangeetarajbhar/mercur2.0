@@ -47,6 +47,7 @@ import { fetchStockLocationExtensionsStep } from "../steps"
 import { fetchLocationHierarchiesStep } from "../steps"
 import { MedusaError } from "@medusajs/framework/utils"
 import { LocationType } from "../../../modules/stock-location-extension/types/common"
+import { storeWorkflow } from "../../../shared/utils/constants";
 
 const cartFields = ["completed_at"].concat(cartFieldsForPricingContext)
 
@@ -119,8 +120,7 @@ export const addToCartWorkflowId = "add-to-cart-v2"
  */
 export const addToCartWorkflow = createWorkflow({
   name: addToCartWorkflowId,
-  store: true,
-  retentionTime: 99999
+  store: storeWorkflow
 },
   (input: WorkflowData<AddToCartWorkflowInputDTO & AdditionalData & { fields?: string[] }>) => {
     // Merge input fields with required fields for pricing context
@@ -273,9 +273,9 @@ export const addToCartWorkflow = createWorkflow({
       return wrapVariantPrices
     })
 
-    validateVariantPricesStep({ variants:variantsWithPrices })
+    validateVariantPricesStep({ variants: variantsWithPrices })
 
-    const lineItems = transform({ input, variants:variantsWithPrices }, (data) => {
+    const lineItems = transform({ input, variants: variantsWithPrices }, (data) => {
       const items = (data.input.items ?? []).map((item) => {
         const variant: any = (data.variants ?? []).find(
           (v) => v.id === item.variant_id

@@ -130,6 +130,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       }
     })
 
+    console.log('OTP sent successfully', result.otp)
+
     return res.json({
       success: true,
       is_new_user: isNewUser,
