@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@mercurjs/admin": "2.1.1",
-    "@acme/api": "*"
+    "@acme/api": "*",
+    "@medusajs/types": "2.13.4"
   },
   "devDependencies": {
+    "@medusajs/admin-vite-plugin": "2.13.4",
     "@types/node": "^24.10.1"
   }
 }
