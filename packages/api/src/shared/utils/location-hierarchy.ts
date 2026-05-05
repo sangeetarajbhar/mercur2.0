@@ -8,6 +8,7 @@ export type LocationHierarchyRow = {
   id: string
   parent_location_id: string
   child_location_id: string
+  promise_minutes?: number | null
 }
 
 export async function getLocationHierarchiesByParent(
@@ -19,7 +20,7 @@ export async function getLocationHierarchiesByParent(
   const { data } = await query.graph(
     {
       entity: "location_hierarchy",
-      fields: ["id", "parent_location_id", "child_location_id"],
+      fields: ["id", "parent_location_id", "child_location_id", "promise_minutes"],
       filters: { parent_location_id: parentLocationId },
     },
     {

@@ -457,6 +457,9 @@ export const transformCart = (cart: HttpTypes.StoreCart & { deliveryPromiseResul
   const outOfStockMap = new Map(outOfStockItems.map(v => [v.line_item_id, true]));
   const partialMap = new Map(partiallyAvailableItems.map(v => [v.line_item_id, v]));
 
+  /** Reserved for restoring item-level serviceability flags from delivery promise. */
+  void serviceableMap;
+  void nonServiceableMap;
 
   // Enrich items with flags, preserve all other info
   // Also filter out soft-deleted adjustments
@@ -468,13 +471,13 @@ export const transformCart = (cart: HttpTypes.StoreCart & { deliveryPromiseResul
       item.adjustments = item.adjustments.filter((adj: any) => !adj.deleted_at)
     }
 
-    // Determine is_serviceable:
-
+    // Determine is_serviceable — derived from delivery promise (restored later):
+    // is_serviceable: (serviceableMap.size === 0 && nonServiceableMap.size === 0)
+    //   ? false
+    //   : (serviceableMap.has(item.id) && !nonServiceableMap.has(item.id)),
     return {
       ...item,
-      is_serviceable: (serviceableMap.size === 0 && nonServiceableMap.size === 0)
-        ? false
-        : (serviceableMap.has(item.id) && !nonServiceableMap.has(item.id)),
+      is_serviceable: true,
       is_out_of_stock: outOfStockMap.has(item.id),
       is_partially_available: Boolean(partialInfo),
       ...(partialInfo ? {

@@ -9,13 +9,11 @@ import {
   calculateInventoryAvailability,
   checkVariantServiceability,
   fetchZoneByPincode,
-  fetchDeliveryOptions,
   buildCartPromiseResponse,
   buildCartPromiseErrorResponse,
-  CartPromiseResponse,
-  filterSlotsByOmniTiming
+  computeCartPromiseGroups
 } from '../steps'
-
+import { getLocationHierarchiesByParent } from '../../../shared/utils/location-hierarchy'
 /**
  * Input parameters for getting cart delivery promise
  */
@@ -39,8 +37,7 @@ export type DeliveryPromiseResult = {
   message?: string
 }
 
-// Re-export CartPromiseResponse from the step
-export type { CartPromiseResponse }
+export type { CartPromiseResponse, DeliveryPromiseGroup } from '../steps'
 
 // Re-export types for backward compatibility
 export type {
@@ -102,16 +99,6 @@ export async function getCartPromise({ scope, cart, postal_code, lat, long }: Ge
     const variantIds = [...new Set(lineItems.map(item => item.variant_id))]
     const sellerIds = [...new Set(lineItems.map(item => item.seller_id))]
 
-    // Effective seller for instant promise: if any Omni product in cart, use Omni so +60 mins; only-Zilo uses base promise
-    const ziloSellerId = process.env.ZILO_SELLER_ID
-    const hasOmni = sellerIds.some((id) => id !== ziloSellerId)
-    const effectiveSellerId = hasOmni
-      ? (sellerIds.find((id) => id !== ziloSellerId) ?? sellerIds[0])
-      : (sellerIds[0] ?? null)
-    const firstOmniItem = hasOmni
-      ? lineItems.find((item) => item.seller_id !== ziloSellerId)
-      : null
-
     // STEP 3: Fetch variant inventory mappings
     const variants = await fetchVariantInventory(variantIds, knex)
 
@@ -125,17 +112,15 @@ export async function getCartPromise({ scope, cart, postal_code, lat, long }: Ge
     // Extract unique inventory item IDs
     const inventoryItemIds = [...new Set(variants.map(item => item.inventory_item_id))]
 
+    const childLocationsListwithPromiseMinutes = await getLocationHierarchiesByParent(query, zone.location_id)
+    const omniPromiseMinutesByChildLocation = new Map<string, number>(
+      (childLocationsListwithPromiseMinutes || []).map((location) => [
+        location.child_location_id,
+        typeof location.promise_minutes === 'number' ? Math.max(0, location.promise_minutes) : 0
+      ])
+    )
 
-    const { data: childLocations } = await query.graph({
-      entity: 'location_hierarchy',
-      fields: ['child_location_id'],
-      filters: {
-        parent_location_id: zone.location_id,
-        deleted_at: { $eq: null }
-      }
-    })
-
-    const allLocationIdsInZone = [zone.location_id, ...(childLocations || []).map(location => location.child_location_id)]
+    const allLocationIdsInZone = [zone.location_id, ...(childLocationsListwithPromiseMinutes || []).map(location => location.child_location_id)]
 
     // STEP 4: Fetch inventory levels
     const inventoryLevels = await fetchInventoryLevels(inventoryItemIds, sellerIds, allLocationIdsInZone, knex)
@@ -196,35 +181,59 @@ export async function getCartPromise({ scope, cart, postal_code, lat, long }: Ge
     }
 
 
-    // STEP 10: Fetch delivery options (instant promise + available slots)
-    // effectiveSellerId: Omni when any Omni in cart (instant +60 mins), Zilo when only-Zilo (base promise)
-    const deliveryOptions = await fetchDeliveryOptions(zone, query,  {
-      scope,
-      variant_id: firstOmniItem?.variant_id ?? null,
-    }, effectiveSellerId)
+    // Eligible lines: serviceable + in-stock (no OOS / partial / non-serviceable issues)
+    // Promise is ONLY calculated for serviceable products
+    const eligibleSvByLineId = new Set(finalServiceableVariants.map((sv) => sv.line_item_id))
+    const eligibleLineItems = lineItems.filter((li) => eligibleSvByLineId.has(li.id))
 
-    // STEP 10b: When cart has any Omni products (mixed or only-Omni), filter slots by Omni location timing
-    // See filterSlotsByOmniTiming step: uses first Omni line item to get minSlotStartTime from DB, then keeps only slots with start >= that time
-    const slotsToUse = await filterSlotsByOmniTiming({
+    // If no eligible items, return error - promise only for serviceable products
+    if (eligibleLineItems.length === 0) {
+      try {
+        const logger = scope.resolve('logger') as {
+          warn: (msg: string, meta?: Record<string, unknown>) => void
+        }
+        logger.warn('cart_delivery_promise:NO_PROMISE_AVAILABLE', {
+          cart_id: cart?.id,
+          line_item_count: lineItems.length,
+          final_serviceable_count: finalServiceableVariants.length,
+          out_of_stock_count: availability.outOfStockItems.length,
+          partially_available_count: availability.partiallyAvailableItems.length,
+          non_serviceable_count: serviceabilityResult.nonServiceableVariants.length
+        })
+      } catch {
+        // logger optional in tests
+      }
+      return buildCartPromiseErrorResponse(
+        'NO_PROMISE_AVAILABLE',
+        'No serviceable in-stock items eligible for delivery promise',
+        [],
+        serviceabilityResult.nonServiceableVariants,
+        availability.outOfStockItems,
+        availability.partiallyAvailableItems
+      )
+    }
+
+    const { deliveryPromiseGroupsData } = await computeCartPromiseGroups({
       scope,
       zone,
-      lineItems,
-      availableSlots: deliveryOptions.availableSlots,
-      hasOmni,
-      ziloSellerId
+      query,
+      lineItems: eligibleLineItems,
+      inventoryLevels,
+      variants,
+      omniPromiseMinutesByChildLocation
     })
 
-    // STEP 11: Build and return comprehensive response
     return buildCartPromiseResponse(
-      deliveryOptions.instantPromise,
-      slotsToUse,
       finalServiceableVariants,
       serviceabilityResult.nonServiceableVariants,
       availability.outOfStockItems,
-      availability.partiallyAvailableItems
+      availability.partiallyAvailableItems,
+      deliveryPromiseGroupsData
     )
 
   } catch (error) {
+
+    console.error('Error in getCartPromise:', error)
     // Handle validation errors
     if (error instanceof Error) {
       if (error.message === 'PINCODE_DOES_NOT_MATCH') {

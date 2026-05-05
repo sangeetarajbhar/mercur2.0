@@ -1,5 +1,4 @@
 import { MedusaContainer } from '@medusajs/framework'
-import { prepareSlottedDeliveryLocation } from '../prepare-slotted-delivery-location'
 import { createISTDateTime, getTodayIST, getTomorrowIST, parseHHMM } from '../../utils/date-time-utils'
 import type { AvailableSlots, DeliverySlot } from './fetch-available-slots'
 
@@ -8,6 +7,10 @@ export type FilterSlotsByOmniTimingInput = {
   zone: { location_id: string }
   lineItems: Array<{ variant_id: string; seller_id: string }>
   availableSlots: AvailableSlots
+  slotWindow?: {
+    minSlotStartTime: Date | null
+    maxSlotEndTime: Date | null
+  } | null
   hasOmni: boolean
   ziloSellerId: string | undefined
 }
@@ -29,63 +32,50 @@ export type FilterSlotsByOmniTimingInput = {
  * @returns Filtered availableSlots (today/tomorrow) when hasOmni and minSlotStartTime is set; otherwise original slots
  */
 export async function filterSlotsByOmniTiming(input: FilterSlotsByOmniTimingInput): Promise<AvailableSlots> {
-  const { scope, zone, lineItems, availableSlots, hasOmni, ziloSellerId } = input
+  const { availableSlots, hasOmni, slotWindow } = input
 
-  if (!hasOmni || !ziloSellerId) {
+  if (!hasOmni) {
     return availableSlots
   }
 
-  const firstOmniItem = lineItems.find((item) => item.seller_id !== ziloSellerId)
-  if (!firstOmniItem?.variant_id || !firstOmniItem?.seller_id) {
+  if (!slotWindow?.minSlotStartTime && !slotWindow?.maxSlotEndTime) {
     return availableSlots
   }
 
   try {
-    const prepared = await prepareSlottedDeliveryLocation({
-      scope,
-      location_id: zone.location_id,
-      variant_id: firstOmniItem.variant_id,
-      seller_id: firstOmniItem.seller_id,
-      // now: new Date()
-    })
-
-    // build error fix
-    // const minSlotStartTime = prepared.minSlotStartTime
-    // if (!minSlotStartTime) {
-    //   return availableSlots
-    // }
-    // const maxSlotEndTime = prepared.maxSlotEndTime
-
-    const minSlotStartTime = new Date()
-    minSlotStartTime.setHours(0, 0, 0, 0)
-    const maxSlotEndTime = new Date()
-    maxSlotEndTime.setHours(23, 59, 59, 999)
+    const minSlotStartTime = slotWindow?.minSlotStartTime ?? null
+    const maxSlotEndTime = slotWindow?.maxSlotEndTime ?? null
 
     const now = new Date()
     const todayStr = getTodayIST(now)
     const tomorrowStr = getTomorrowIST(now)
-    const minHour = minSlotStartTime.getHours() 
-    const minMinute = minSlotStartTime.getMinutes()
-    const minTimeStr = `${String(minHour).padStart(2, '0')}:${String(minMinute).padStart(2, '0')}`
+    const minTimeStr = minSlotStartTime
+      ? `${String(minSlotStartTime.getHours()).padStart(2, '0')}:${String(minSlotStartTime.getMinutes()).padStart(2, '0')}`
+      : null
+    const omniEndStr = maxSlotEndTime
+      ? `${String(maxSlotEndTime.getHours()).padStart(2, '0')}:${String(maxSlotEndTime.getMinutes()).padStart(2, '0')}`
+      : null
 
     const filterSlotsByMinStart = (slots: DeliverySlot[], slotDateStr: string): DeliverySlot[] =>
       slots.filter((slot) => {
-        const startParsed = parseHHMM(slot.start_time)
-        if (!startParsed) return true
-        const slotStartStr = `${String(startParsed.h).padStart(2, '0')}:${String(startParsed.m).padStart(2, '0')}`
-        const slotStartDateTime = createISTDateTime(slotDateStr, slotStartStr)
-        const minSlotStartOnDate = createISTDateTime(slotDateStr, minTimeStr)
-        if (slotStartDateTime < minSlotStartOnDate) {
-          return false
+        if (minTimeStr) {
+          const startParsed = parseHHMM(slot.start_time)
+          if (startParsed) {
+            const slotStartStr = `${String(startParsed.h).padStart(2, '0')}:${String(startParsed.m).padStart(2, '0')}`
+            const slotStartDateTime = createISTDateTime(slotDateStr, slotStartStr)
+            const minSlotStartOnDate = createISTDateTime(slotDateStr, minTimeStr)
+            if (slotStartDateTime < minSlotStartOnDate) {
+              return false
+            }
+          }
         }
 
         // Also enforce omni closing boundary when available:
         // keep only slots ending on/before omni end_time.
-        if (maxSlotEndTime) {
+        if (omniEndStr) {
           const slotEndParsed = parseHHMM(slot.end_time)
           if (slotEndParsed) {
             const slotEndStr = `${String(slotEndParsed.h).padStart(2, '0')}:${String(slotEndParsed.m).padStart(2, '0')}`
-            const omniEndStr = `${String(maxSlotEndTime.getHours()).padStart(2, '0')}:${String(maxSlotEndTime.getMinutes()).padStart(2, '0')}`
             const slotEndDateTime = createISTDateTime(slotDateStr, slotEndStr)
             const omniEndDateTime = createISTDateTime(slotDateStr, omniEndStr)
             if (slotEndDateTime > omniEndDateTime) {

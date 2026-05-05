@@ -3,10 +3,26 @@ import type { NonServiceableVariant, ServiceableVariant } from './check-variant-
 import type { DeliveryPromiseResult as InstantPromiseData } from '../calculate-delivery-promise-from-zone'
 import type { AvailableSlots } from './fetch-available-slots'
 
+export type DeliveryPromiseMinutes = {
+  base: number
+  omni_extra: number
+  total: number
+}
+
+export type DeliveryPromiseGroup = {
+  promise_key: string
+  kind: 'zilo' | 'omni' | 'mixed'  // mixed = group contains both zilo and omni items
+  minutes: DeliveryPromiseMinutes
+  instant_promise: InstantPromiseData | null
+  available_slots: AvailableSlots
+  line_item_ids: string[]
+  locations_included: string[]  // List of all location IDs (DS + Omni) used in this group
+}
+
 export type CartPromiseResponse = {
   status: boolean
-  instant_promise?: InstantPromiseData | null // Always included, can be null
-  available_slots?: AvailableSlots // Always included with today/tomorrow keys
+  /** Per-fulfillment-context groups (deduped compute, slots scoped per group). */
+  deliveryPromiseGroupsData?: DeliveryPromiseGroup[]
   serviceable_variants: ServiceableVariant[]
   non_serviceable_variants: NonServiceableVariant[]
   out_of_stock_items: OutOfStockItem[]
@@ -17,28 +33,25 @@ export type CartPromiseResponse = {
 
 /**
  * Builds the final cart promise response
- * @param instantPromise - Instant delivery promise data
- * @param availableSlots - Available delivery slots grouped by today/tomorrow
  * @param serviceableVariants - List of serviceable variants
  * @param nonServiceableVariants - List of non-serviceable variants
  * @param outOfStockItems - List of out of stock items
  * @param partiallyAvailableItems - List of partially available items
+ * @param deliveryPromiseGroupsData - Per-context delivery groups (instant + slots per fulfillment bucket)
  * @returns Complete cart promise response
  */
 export function buildCartPromiseResponse(
-  instantPromise: InstantPromiseData | null,
-  availableSlots: AvailableSlots,
   serviceableVariants: ServiceableVariant[],
   nonServiceableVariants: NonServiceableVariant[],
   outOfStockItems: OutOfStockItem[],
-  partiallyAvailableItems: PartiallyAvailableItem[]
+  partiallyAvailableItems: PartiallyAvailableItem[],
+  deliveryPromiseGroupsData: DeliveryPromiseGroup[] = []
 ): CartPromiseResponse {
   const hasIssues = nonServiceableVariants.length + outOfStockItems.length + partiallyAvailableItems.length > 0
   
   return {
     status: true,
-    instant_promise: instantPromise, // Always include, even if null
-    available_slots: availableSlots, // Always include with today/tomorrow keys (even if empty arrays)
+    deliveryPromiseGroupsData,
     serviceable_variants: serviceableVariants,
     non_serviceable_variants: nonServiceableVariants,
     out_of_stock_items: outOfStockItems,
@@ -75,4 +88,3 @@ export function buildCartPromiseErrorResponse(
     partially_available_items: partiallyAvailableItems
   }
 }
-

@@ -15,9 +15,9 @@ export * from './cart-promise/fetch-inventory-levels'
 export * from './cart-promise/calculate-inventory-availability'
 export * from './cart-promise/check-variant-serviceability'
 export * from './cart-promise/fetch-zone-by-pincode'
-export * from './cart-promise/fetch-delivery-options'
 export * from './cart-promise/fetch-available-slots'
 export * from './cart-promise/filter-slots-by-omni-timing'
 export * from './cart-promise/build-cart-promise-response'
+export * from './cart-promise/compute-cart-promise-groups'
 
 
