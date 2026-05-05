@@ -31,6 +31,7 @@ import { validateSalesChannelStep } from '../steps/validate-sales-channel'
 import { validateCartDeliveryDataStep } from '../steps/validate-cart-delivery-data'
 import { updateSlottedDeliveryDetailStep } from '../steps/update-slotted-delivery-detail'
 import { updateStandardDeliveryDetailStep } from '../steps/update-standard-delivery-detail'
+import { storeWorkflow } from "../../../shared/utils/constants";
 
 /**
  * The data to update the cart, along with custom data that's passed to the workflow's hooks.
@@ -84,6 +85,7 @@ export const updateCartWorkflowId = 'custom-update-cart'
  */
 export const updateCartWorkflow = createWorkflow({
   name: updateCartWorkflowId,
+  store: storeWorkflow,
 },
   (input: WorkflowData<UpdateCartWorkflowInput>) => {
     const cartToUpdate = useRemoteQueryStep({
