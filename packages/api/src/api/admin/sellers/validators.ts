@@ -8,6 +8,25 @@ export type AdminSellerParamsType = z.infer<typeof AdminSellerParams>
 export const AdminSellerParams = createFindParams({
   offset: 0,
   limit: 50
+}).extend({
+  status: z
+    .preprocess((val) => {
+      const normalize = (input: unknown) =>
+        typeof input === 'string' ? input.toLowerCase() : input
+
+      if (Array.isArray(val)) {
+        return val.map(normalize)
+      }
+
+      // Handles querystring forms like status[0]=open&status[1]=suspended
+      if (val && typeof val === 'object') {
+        const values = Object.values(val as Record<string, unknown>)
+        return values.map(normalize)
+      }
+
+      return normalize(val)
+    }, z.union([z.nativeEnum(SellerStatus), z.array(z.nativeEnum(SellerStatus))]))
+    .optional()
 })
 
 export type AdminGetSellerProductsParamsType = z.infer<

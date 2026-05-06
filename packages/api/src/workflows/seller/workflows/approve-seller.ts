@@ -7,7 +7,7 @@ import {
 import { useQueryGraphStep, emitEventStep } from "@medusajs/medusa/core-flows"
 import { SellerStatus } from "@mercurjs/types"
 
-import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 
 import { validateApproveSellerStep, updateSellersStep } from "../steps"
 

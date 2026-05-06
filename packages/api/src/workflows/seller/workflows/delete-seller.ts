@@ -6,7 +6,7 @@ import {
 import { emitEventStep } from "@medusajs/medusa/core-flows"
 
 import { deleteSellersStep } from "../steps"
-import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 
 export const deleteSellersWorkflowId = "delete-sellers"
 

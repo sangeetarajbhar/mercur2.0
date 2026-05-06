@@ -8,7 +8,7 @@ import { useQueryGraphStep, emitEventStep } from "@medusajs/medusa/core-flows"
 import { SellerStatus } from "@mercurjs/types"
 
 import { validateTerminateSellerStep, updateSellersStep } from "../steps"
-import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 
 export const terminateSellerWorkflowId = "terminate-seller-v2"
 

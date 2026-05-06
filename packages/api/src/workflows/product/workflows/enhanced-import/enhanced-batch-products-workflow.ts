@@ -1,4 +1,5 @@
 import {
+  createHook,
   createWorkflow,
   WorkflowData,
   WorkflowResponse,
@@ -12,9 +13,7 @@ import {
   deleteProductsWorkflow
 } from "@medusajs/medusa/core-flows"
 import type {
-  ProductTypes,
   BatchWorkflowInput,
-  BatchWorkflowOutput,
   CreateProductWorkflowInputDTO,
   UpdateProductWorkflowInputDTO
 } from "@medusajs/framework/types"
@@ -105,7 +104,7 @@ export const enhancedBatchProductsWorkflow = createWorkflow(
   enhancedBatchProductsWorkflowId,
   (
     input: WorkflowData<EnhancedBatchProductWorkflowInput>
-  ): WorkflowResponse<BatchWorkflowOutput<ProductTypes.ProductDTO>> => {
+  ) => {
 
     // Validate image URLs before processing (fail-fast)
     const urlValidation = validateImageUrlsStep({
@@ -129,6 +128,17 @@ export const enhancedBatchProductsWorkflow = createWorkflow(
       conditionallyDeleteProducts(input)
     )
 
+    // Extract the created products so the hook listener can run enhancements
+    // (attributes, configurations, brands, images, seller associations, etc.)
+    // ONLY for products imported through this enhanced batch workflow.
+    const createdProducts = transform({ res }, ({ res }) => res[0] ?? [])
+    
+
+    const productsImported = createHook("productsImported", {
+      products: createdProducts,
+      additional_data: input.additional_data
+    })
+
     // Transform results into standard batch output format (same as original)
     return new WorkflowResponse(
       transform({ res, input }, (data) => {
@@ -137,7 +147,8 @@ export const enhancedBatchProductsWorkflow = createWorkflow(
           updated: data.res[1] ?? [],
           deleted: data.input.delete ?? []
         }
-      })
+      }),
+      { hooks: [productsImported] }
     )
   }
 )

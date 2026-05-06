@@ -8,7 +8,7 @@ import {
 } from "@medusajs/medusa/core-flows"
 
 import { validateNotOwnerStep, updateSellerMembersStep } from "../steps"
-import { SellerMemberWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerMemberWorkflowEvents } from "@mercurjs/core/workflows"
 
 export const updateMemberRoleWorkflowId = "update-member-role"
 

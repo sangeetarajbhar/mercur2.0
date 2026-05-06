@@ -1,8 +1,8 @@
-diff --git a/Users/omkarpawar/zilo/migration/mercur2.0/node_modules/@mercurjs/core-plugin/.bun-tag-3dcc9276b0c7455e b/.bun-tag-3dcc9276b0c7455e
+diff --git a/node_modules/@mercurjs/core/.bun-tag-7b1d87078f4057a1 b/.bun-tag-7b1d87078f4057a1
 new file mode 100644
 index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/.medusa/server/src/links/inventory-item-seller-link.js b/.medusa/server/src/links/inventory-item-seller-link.js
-index 1451f9665bb9407e313ffbc362b00f763f492c26..09868baecf1b0c9b7d6e8a7eedb4af4c90df064b 100644
+index 1451f9665bb9407e313ffbc362b00f763f492c26..ac849c8f3a33ac9156bb4032b3c1b8dc92aacdab 100644
 --- a/.medusa/server/src/links/inventory-item-seller-link.js
 +++ b/.medusa/server/src/links/inventory-item-seller-link.js
 @@ -6,5 +6,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
@@ -10,11 +10,11 @@ index 1451f9665bb9407e313ffbc362b00f763f492c26..09868baecf1b0c9b7d6e8a7eedb4af4c
  const inventory_1 = __importDefault(require("@medusajs/medusa/inventory"));
  const seller_1 = __importDefault(require("../modules/seller"));
 -exports.default = (0, utils_1.defineLink)({ linkable: inventory_1.default.linkable.inventoryItem, isList: true }, seller_1.default.linkable.seller);
-+exports.default = (0, utils_1.defineLink)({ linkable: inventory_1.default.linkable.inventoryItem, isList: true }, { linkable: seller_1.default.linkable.seller, isList: true });
++exports.default = (0, utils_1.defineLink)({ linkable: seller_1.default.linkable.seller, isList: true },{ linkable: inventory_1.default.linkable.inventoryItem, isList: true });
  //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW52ZW50b3J5LWl0ZW0tc2VsbGVyLWxpbmsuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi8uLi9zcmMvbGlua3MvaW52ZW50b3J5LWl0ZW0tc2VsbGVyLWxpbmsudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7QUFBQSxxREFBc0Q7QUFDdEQsMkVBQXdEO0FBQ3hELCtEQUE0QztBQUU1QyxrQkFBZSxJQUFBLGtCQUFVLEVBQUMsRUFBRSxRQUFRLEVBQUUsbUJBQWUsQ0FBQyxRQUFRLENBQUMsYUFBYSxFQUFFLE1BQU0sRUFBRSxJQUFJLEVBQUUsRUFBRSxnQkFBWSxDQUFDLFFBQVEsQ0FBQyxNQUFNLENBQUMsQ0FBQSJ9
 \ No newline at end of file
 diff --git a/.medusa/server/src/links/product-seller-link.js b/.medusa/server/src/links/product-seller-link.js
-index 2faae8babb89e78fd7014f6955d28eb9b4318507..87d2e95294c77f3b34e90148af9c28d132aa252c 100644
+index 2faae8babb89e78fd7014f6955d28eb9b4318507..265f4acfd5ef0183d6efd4c0f1002b5da9be3976 100644
 --- a/.medusa/server/src/links/product-seller-link.js
 +++ b/.medusa/server/src/links/product-seller-link.js
 @@ -6,5 +6,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
@@ -22,6 +22,6 @@ index 2faae8babb89e78fd7014f6955d28eb9b4318507..87d2e95294c77f3b34e90148af9c28d1
  const product_1 = __importDefault(require("@medusajs/medusa/product"));
  const seller_1 = __importDefault(require("../modules/seller"));
 -exports.default = (0, utils_1.defineLink)({ linkable: product_1.default.linkable.product, isList: true }, seller_1.default.linkable.seller);
-+exports.default = (0, utils_1.defineLink)({ linkable: product_1.default.linkable.product, isList: true }, { linkable:  seller_1.default.linkable.seller, isList: true });
++exports.default = (0, utils_1.defineLink)({ linkable: product_1.default.linkable.product, isList: true }, { linkable: seller_1.default.linkable.seller, isList: true });
  //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicHJvZHVjdC1zZWxsZXItbGluay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uL3NyYy9saW5rcy9wcm9kdWN0LXNlbGxlci1saW5rLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscURBQXNEO0FBQ3RELHVFQUFvRDtBQUNwRCwrREFBNEM7QUFFNUMsa0JBQWUsSUFBQSxrQkFBVSxFQUFDLEVBQUUsUUFBUSxFQUFFLGlCQUFhLENBQUMsUUFBUSxDQUFDLE9BQU8sRUFBRSxNQUFNLEVBQUUsSUFBSSxFQUFFLEVBQUUsZ0JBQVksQ0FBQyxRQUFRLENBQUMsTUFBTSxDQUFDLENBQUEifQ==
 \ No newline at end of file
