@@ -389,6 +389,15 @@ module.exports = defineConfig({
         },
       },
     },
+    {
+      resolve: "./src/modules/order-line-item-extension",
+    },
+    {
+      resolve: "./src/modules/order-extra-detail",
+    },
+    {
+      resolve: "./src/modules/order-delivery-detail",
+    },
   ],
   plugins: [{
     resolve: "@mercurjs/core",
