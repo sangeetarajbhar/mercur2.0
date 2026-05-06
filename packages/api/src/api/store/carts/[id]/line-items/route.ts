@@ -12,7 +12,7 @@ export const POST = async (
   res: MedusaResponse<HttpTypes.StoreCartResponse>
 ) => {
   try {
-    
+
     const { cartData, isCompleted } = await validateCart(req.params.id, req.scope)
     if (isCompleted) {
       return res.status(400).json(getCompletedCartErrorResponse(cartData?.id) as any)
@@ -30,9 +30,6 @@ export const POST = async (
         }
       },
     })
-
-    console.log("cart", cart);
-    console.dir(cart, { depth: null });
 
     res.status(200).json({ cart: cart as HttpTypes.StoreCart })
   } catch (error: any) {
