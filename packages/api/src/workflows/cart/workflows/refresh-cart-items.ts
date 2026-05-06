@@ -56,6 +56,7 @@ import {
 } from '../steps'
 import { getCartPromiseStep } from '../../delivery-promise/steps'
 import { CacheTTLMap, UseQueryGraphStepCacheKey, CACHE_ENABLE } from '../../../shared/utils/redisKey'
+import { storeWorkflow } from "../../../shared/utils/constants";
 
 // import { confirmVariantInventoryWorkflow } from './confirm-variant-inventory'
 
@@ -201,7 +202,8 @@ export const refreshCartItemsWorkflowId = 'custom-refresh-cart-items'
 export const refreshCartItemsWorkflow = createWorkflow(
   {
     name: refreshCartItemsWorkflowId,
-    idempotent: false
+    idempotent: false,
+    store: storeWorkflow,
   },
   (input: WorkflowData<RefreshCartItemsWorkflowInput & AdditionalData>) => {
     // CRITICAL: Acquire lock EARLY to prevent race conditions with updateCartPromotionsWorkflow

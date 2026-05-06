@@ -9,6 +9,7 @@ import {
   validateCartStep
 } from '@medusajs/medusa/core-flows'
 import { refetchCartWithExtraChargesStep } from './refetch-cart-with-extra-charges'
+import { storeWorkflow } from "../../../shared/utils/constants";
 /**
  * The details of the cart to refresh.
  */
@@ -54,6 +55,7 @@ export const refreshPaymentCollectionForCartWorkflow = createWorkflow(
   {
     name: refreshPaymentCollectionForCartWorkflowId,
     idempotent: false,
+    store: storeWorkflow,
   },
   (input: WorkflowData<RefreshPaymentCollectionForCartWorklowInput>) => {
     const shouldExecute = transform({ input }, ({ input }) => {
