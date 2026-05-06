@@ -91,8 +91,9 @@ export const validateCartDeliveryDataStep = createStep(
                 )
             }
 
-            // Scenario 1: If existing delivery data exists, validate it
-            if (existingDeliveryDetail && cartPincode) {
+            // Scenario 1: Validate existing delivery data only when payload does NOT provide replacement delivery detail.
+            // If payload delivery_detail is present, we validate only payload and let update flow overwrite existing data.
+            if (existingDeliveryDetail && cartPincode && !deliveryDetailInPayload) {
                 const cartItems = cart?.items || null
 
                 const validationResult = await validateExistingDeliveryData(
@@ -104,7 +105,7 @@ export const validateCartDeliveryDataStep = createStep(
 
                 if (!validationResult.isValid) {
                     // For update-cart: allow the cart update to proceed by clearing stale/invalid delivery data
-                    // Only do this when the request didn't provide new delivery data and delivery isn't required.
+                    // when request did not provide new delivery data and delivery isn't required.
                     if (
                         clearInvalidDeliveryData &&
                         !requireDeliveryData &&

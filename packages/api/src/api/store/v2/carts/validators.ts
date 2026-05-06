@@ -60,12 +60,27 @@ export const StoreUpdateCartV2 = z.object({
     metadata: z.record(z.unknown()).optional(),
   }).optional(),
   additional_data: z.object({
-    delivery_detail: z.object({
-      delivery_type: z.enum(['standard', 'home_trial'], {
-        errorMap: () => ({ message: "delivery_type must be either 'standard' or 'home_trial'" })
+    delivery_detail: z.union([
+      z.object({
+        shipment_type: z.literal('single'),
+        delivery_type: z.enum(['standard', 'home_trial'], {
+          errorMap: () => ({ message: "delivery_type must be either 'standard' or 'home_trial'" })
+        }),
+        slot_id: z.string().nullable().optional(),
       }),
-      slot_id: z.string().nullable().optional(), // Optional and nullable - if provided, treated as slotted; if not, treated as instant
-    }).optional(),
+      z.object({
+        shipment_type: z.literal('multiple'),
+        shipments: z.array(
+          z.object({
+            promise_key: z.union([z.string(), z.number()]),
+            delivery_type: z.enum(['standard', 'home_trial'], {
+              errorMap: () => ({ message: "delivery_type must be either 'standard' or 'home_trial'" })
+            }),
+            slot_id: z.string().nullable().optional(),
+          })
+        ).min(1),
+      }),
+    ]).optional(),
   }).optional(),
   metadata: z.record(z.unknown()).optional(),
 })

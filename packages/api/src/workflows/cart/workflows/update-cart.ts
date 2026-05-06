@@ -27,13 +27,10 @@ import {
     useRemoteQueryStep,
   } from '@medusajs/medusa/core-flows'
   
-  import { refreshCartItemsWorkflow } from './refresh-cart-items'
-
   import { CACHE_ENABLE, CacheTTLMap, UseQueryGraphStepCacheKey } from "../../../shared/utils/redisKey";
 import { validateSalesChannelStep } from '../steps/validate-sales-channel'
 import { validateCartDeliveryDataStep } from '../steps/validate-cart-delivery-data'
-import { updateSlottedDeliveryDetailStep } from '../steps/update-slotted-delivery-detail'
-import { updateStandardDeliveryDetailStep } from '../steps/update-standard-delivery-detail'
+import { updateShipmentDeliveryDetailsStep } from '../steps/update-shipment-delivery-details'
   
   /**
    * The data to update the cart, along with custom data that's passed to the workflow's hooks.
@@ -101,6 +98,7 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
           'region.*',
           'region.countries.*',
           'items.id',
+          'items.variant_id',
           'items.product.product_configuration.is_try_and_buy',
           'items.product.product_configuration.id',
           'items.metadata'
@@ -332,48 +330,25 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
         deleteLineItemsStep(lineItemIds)
       })
   
-      //@TODO refreshCartItemsWorkflow is not required here, as it is called in route already
-      // const cart = refreshCartItemsWorkflow.runAsStep({
-      //   input: {
-      //     cart_id: cartInput.id,
-      //     promo_codes: input.promo_codes,
-      //     force_refresh: !!newRegion
-      //   }
-      // })
   
-      // const cartUpdated = createHook('cartUpdated', {
-      //   cart,
-      //   additional_data: input.additional_data
-      // })
-  
-      // Check if slot_id is present to determine instant vs scheduled delivery
-      // slot_id must be a non-empty string to be considered slotted
-      // null, undefined, or empty string = instant delivery
-      const hasSlotId = transform({ input }, ({ input }) => {
-        const deliveryDetail = input.additional_data?.delivery_detail as {
-          delivery_type?: string
-          slot_id?: string | null
-        } | undefined
-  
-        if (!deliveryDetail) return false
-  
-        const slotId = deliveryDetail.slot_id
-        // Consider as slotted only if slot_id is a non-empty string
-        return typeof slotId === 'string' && slotId.trim().length > 0
+      const hasShipmentType = transform({ input }, ({ input }) => {
+        const deliveryDetail = input.additional_data?.delivery_detail as { shipment_type?: string } | undefined
+        return !!deliveryDetail?.shipment_type
       })
-  
-      // Handle instant delivery (no slot_id) - calculate and store delivery promise
-      when({ hasSlotId, input, cartInput, cartToUpdate }, ({ hasSlotId, input, cartInput, cartToUpdate }) => {
-        const deliveryDetail = input.additional_data?.delivery_detail as { delivery_type?: string } | undefined
+
+      // New shipment-based flow (single / multiple)
+      when({ hasShipmentType, input, cartInput, cartToUpdate }, ({ hasShipmentType, input, cartInput, cartToUpdate }) => {
+        if (!hasShipmentType) return false
+        const deliveryDetail = input.additional_data?.delivery_detail as { shipment_type?: string } | undefined
         const hasPostalCode = !!(
           cartInput.shipping_address?.postal_code ||
           input.shipping_address?.postal_code ||
           cartToUpdate.shipping_address?.postal_code
         )
-        return !!deliveryDetail && !hasSlotId && hasPostalCode
+        return !!deliveryDetail && hasPostalCode
       }).then(() => {
-        const deliveryInput = transform({ input, cartInput, cartToUpdate }, ({ input, cartInput, cartToUpdate }) => {
-          const deliveryDetail = input.additional_data?.delivery_detail as { delivery_type: string }
+        const shipmentInput = transform({ input, cartInput, cartToUpdate }, ({ input, cartInput, cartToUpdate }) => {
+          const deliveryDetail = input.additional_data?.delivery_detail as any
           return {
             cart_id: input.id,
             postal_code: (
@@ -381,32 +356,14 @@ import { updateStandardDeliveryDetailStep } from '../steps/update-standard-deliv
               input.shipping_address?.postal_code ||
               cartToUpdate.shipping_address?.postal_code
             ) as string,
-            delivery_type: deliveryDetail.delivery_type
+            cart: cartToUpdate,
+            delivery_detail: deliveryDetail
           }
         })
-  
-        updateStandardDeliveryDetailStep(deliveryInput)
+
+        updateShipmentDeliveryDetailsStep(shipmentInput)
       })
-  
-      // Handle scheduled delivery (with slot_id) - fetch slot from slot_override and validate
-      when({ hasSlotId }, ({ hasSlotId }) => {
-        return !!hasSlotId
-      }).then(() => {
-        const slottedInput = transform({ input }, ({ input }) => {
-          const deliveryDetail = input.additional_data?.delivery_detail as {
-            delivery_type: string
-            slot_id: string
-          }
-          return {
-            cart_id: input.id,
-            slot_id: deliveryDetail.slot_id,
-            delivery_type: deliveryDetail.delivery_type
-          }
-        })
-  
-        updateSlottedDeliveryDetailStep(slottedInput)
-      })
-  
+
       return new WorkflowResponse(void 0, {
         // hooks: [validate, cartUpdated]
         hooks: [validate]

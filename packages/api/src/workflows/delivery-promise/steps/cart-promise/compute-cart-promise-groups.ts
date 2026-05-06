@@ -1,10 +1,8 @@
 import type { MedusaContainer } from '@medusajs/framework'
 import type { CartLineItem } from './fetch-cart-line-items'
-import type { ServiceableVariant } from './check-variant-serviceability'
 import type { ZoneData } from './fetch-zone-by-pincode'
 import type { DeliveryOption, DeliveryPromiseGroup, DeliveryPromiseMinutes } from './build-cart-promise-response'
 import type { DeliveryPromiseResult as InstantPromiseData } from '../calculate-delivery-promise-from-zone'
-import type { AvailableSlots } from './fetch-available-slots'
 import type { InventoryLevel } from './fetch-inventory-levels'
 import type { VariantInventoryMapping } from './fetch-variant-inventory'
 import { filterSlotsByOmniTiming } from './filter-slots-by-omni-timing'
@@ -30,16 +28,10 @@ export type ComputeCartPromiseGroupsResult = {
 }
 
 type FulfillmentDescriptor = {
-  dedupeKey: string  // Pure promise time: "${promiseTime}"
   kind: 'zilo' | 'omni' | 'mixed'  // mixed = both zilo and omni items in same group
   lineItemIds: string[]
   lineItemToLocationMap: Map<string, string | null>  // itemId -> omniLocationId (null for zilo items)
   totalPromiseMinutes: number
-}
-
-function groupEtaMinutes(g: DeliveryPromiseGroup): number {
-  const m = g.minutes?.total ?? g.instant_promise?.delivery_minutes
-  return m != null && Number.isFinite(m) ? m : Number.MAX_SAFE_INTEGER
 }
 
 /**
@@ -160,7 +152,6 @@ export async function computeCartPromiseGroups({
     }
 
     descriptors.push({
-      dedupeKey: String(promiseTime),  // Pure promise time as key
       kind: 'mixed',  // Group can contain both zilo and omni items
       lineItemIds: items.map((i) => i.id),
       lineItemToLocationMap,

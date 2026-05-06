@@ -14,6 +14,7 @@ import {
   PdpCrossLink,
 } from "../products/utils/pdp-sections"
 import { refetchProduct } from "../products/helpers"
+import cartItemCartDeliveryDetail from "../../../../links/cart-item-delivery-detail"
 
 
 /**
@@ -81,62 +82,67 @@ export const refetchCartWithDeliveryDetails = async (
       })
     }
 
+    const detailIds = (deliveryDetails || []).map((d: { id: string }) => d.id)
+    const linkRows = detailIds.length
+      ? ((await query.graph({
+        entity: cartItemCartDeliveryDetail.entryPoint,
+        filters: { cart_delivery_detail_id: detailIds },
+        fields: ['cart_delivery_detail_id', 'line_item_id']
+      }))?.data || [])
+      : []
+    const detailToLineItems = new Map<string, string[]>()
+    for (const row of linkRows) {
+      const existing = detailToLineItems.get(row.cart_delivery_detail_id) || []
+      existing.push(row.line_item_id)
+      detailToLineItems.set(row.cart_delivery_detail_id, existing)
+    }
+
+    const now = new Date()
+    const todayStr = extractDateString(now)
+    const validDeliveryDetails = (deliveryDetails || []).reduce((acc: any[], deliveryDetail: any) => {
+      if (!deliveryDetail.delivery_date) {
+        return acc
+      }
+
+      let deliveryDateStr: string
+      if (typeof deliveryDetail.delivery_date === 'string') {
+        deliveryDateStr = /^\d{4}-\d{2}-\d{2}$/.test(deliveryDetail.delivery_date)
+          ? deliveryDetail.delivery_date
+          : extractDateString(new Date(deliveryDetail.delivery_date))
+      } else {
+        deliveryDateStr = extractDateString(new Date(deliveryDetail.delivery_date))
+      }
+
+      // Reject if delivery date has passed
+      if (deliveryDateStr < todayStr) {
+        return acc
+      }
+
+      // If delivery date is today, check if end time has passed
+      if (deliveryDateStr === todayStr && deliveryDetail.end_time) {
+        const endTime = createISTDateTime(deliveryDateStr, deliveryDetail.end_time)
+        if (!isNaN(endTime.getTime()) && endTime <= now) {
+          return acc
+        }
+      }
+
+      acc.push({
+        ...deliveryDetail,
+        delivery_date: deliveryDateStr,
+        line_item_ids: detailToLineItems.get(deliveryDetail.id) || []
+      })
+      return acc
+    }, [])
+
     return {
       ...cart,
-      delivery_details: deliveryDetails.length > 0 ? (() => {
-        const deliveryDetail = deliveryDetails[0]
-
-        if (!deliveryDetail.delivery_date) {
-          return null
-        }
-
-        const now = new Date()
-        const todayStr = extractDateString(now)
-
-        // Extract date string from delivery_date (can be ISO string or YYYY-MM-DD)
-        // Server is already in IST, so extract directly
-        let deliveryDateStr: string
-        if (typeof deliveryDetail.delivery_date === 'string') {
-          // If it's already YYYY-MM-DD format, use it directly
-          if (/^\d{4}-\d{2}-\d{2}$/.test(deliveryDetail.delivery_date)) {
-            deliveryDateStr = deliveryDetail.delivery_date
-          } else {
-            // If it's ISO format, parse and extract date string directly
-            deliveryDateStr = extractDateString(new Date(deliveryDetail.delivery_date))
-          }
-        } else {
-          // If it's a Date object, extract date string directly
-          deliveryDateStr = extractDateString(new Date(deliveryDetail.delivery_date))
-        }
-
-        // Reject if delivery date has passed
-        if (deliveryDateStr < todayStr) {
-          return null
-        }
-
-        // If delivery date is today, check if end time has passed
-        if (deliveryDateStr === todayStr && deliveryDetail.end_time) {
-          // Create datetime for the end time
-          const endTime = createISTDateTime(deliveryDateStr, deliveryDetail.end_time)
-
-          // Reject if end time has passed
-          if (!isNaN(endTime.getTime()) && endTime <= now) {
-            return null
-          }
-        }
-
-        // Return delivery details with formatted date (YYYY-MM-DD)
-        return {
-          ...deliveryDetail,
-          delivery_date: deliveryDateStr
-        }
-      })() : null
+      delivery_details: validDeliveryDetails
     }
   } catch (error) {
     console.error('Error fetching delivery details:', error)
     return {
       ...cart,
-      delivery_details: null
+      delivery_details: []
     }
   }
 }
@@ -416,20 +422,27 @@ export const transformCart = (cart: HttpTypes.StoreCart & { deliveryPromiseResul
 
   // Format delivery_date if delivery_details exists
   // Extract date string directly (server is already in IST)
-  if ((cart as any).delivery_details?.delivery_date) {
+  if (Array.isArray((cart as any).delivery_details)) {
+    ; (cart as any).delivery_details = (cart as any).delivery_details.map((deliveryDetail: any) => {
+      const deliveryDate = deliveryDetail?.delivery_date
+      if (deliveryDate instanceof Date || typeof deliveryDate === 'string') {
+        const date = deliveryDate instanceof Date ? deliveryDate : new Date(deliveryDate)
+        return {
+          ...deliveryDetail,
+          delivery_date: extractDateString(date)
+        }
+      }
+      return deliveryDetail
+    })
+  } else if ((cart as any).delivery_details?.delivery_date) {
     const deliveryDetail = (cart as any).delivery_details
     const deliveryDate = deliveryDetail.delivery_date
-
-    // If delivery_date is a Date object or ISO string, extract date string directly
     if (deliveryDate instanceof Date || typeof deliveryDate === 'string') {
       const date = deliveryDate instanceof Date ? deliveryDate : new Date(deliveryDate)
-      const deliveryDateStr = extractDateString(date)
-
-        // Update delivery_details with formatted date
-        ; (cart as any).delivery_details = {
-          ...deliveryDetail,
-          delivery_date: deliveryDateStr
-        }
+      ; (cart as any).delivery_details = {
+        ...deliveryDetail,
+        delivery_date: extractDateString(date)
+      }
     }
   }
 
