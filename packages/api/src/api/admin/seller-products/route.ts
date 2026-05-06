@@ -1,6 +1,6 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import SellerProductLink from "@mercurjs/core-plugin/links/product-seller-link"
+import SellerProductLink from "@mercurjs/core/links/product-seller-link"
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const {

@@ -3,7 +3,7 @@ import { Modules, ContainerRegistrationKeys, QueryContext } from "@medusajs/fram
 import { INotificationModuleService } from "@medusajs/framework/types"
 import { MedusaContainer } from "@medusajs/framework"
 import { MercurModules } from "@mercurjs/types"
-import sellerProduct from "@mercurjs/core-plugin/links/product-seller-link"
+import sellerProduct from "@mercurjs/core/links/product-seller-link"
 import { PriceListImportEvents } from "../shared/events/price-list-import-events"
 import { parsePriceListsFromCsv } from "../workflows/price-list/utils/parse-price-list-csv"
 import { fetchDefaultRegionId } from "../workflows/price-list/utils/region-utils"

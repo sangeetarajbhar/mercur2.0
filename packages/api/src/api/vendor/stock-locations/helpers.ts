@@ -2,7 +2,7 @@ import { container } from "@medusajs/framework"
 import { RedisKey } from "../../../shared/utils/redisKey"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import CustomCacheModuleService from "../../../modules/cache/service"
-import stockLocationSellerLink from "@mercurjs/core-plugin/links/stock-location-seller-link"
+import stockLocationSellerLink from "@mercurjs/core/links/stock-location-seller-link"
 
 // Function accepts any object and sanitizes to only allowed fields
 export const upsertStockLocationCache = async (params: Record<string, any>) => {

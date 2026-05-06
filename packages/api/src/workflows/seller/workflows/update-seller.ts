@@ -9,7 +9,7 @@ import { UpdateSellerDTO } from "@mercurjs/types"
 import { AdditionalData } from "@medusajs/framework/types"
 
 import { updateSellersStep } from "../steps"
-import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 
 export const updateSellersWorkflowId = "update-sellers"
 

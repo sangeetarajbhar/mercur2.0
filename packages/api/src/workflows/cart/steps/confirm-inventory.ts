@@ -12,7 +12,7 @@ import {
 import { StepResponse, createStep } from "@medusajs/framework/workflows-sdk"
 import { Knex } from 'knex'
 import { CACHE_ENABLE, CacheTTLMap, UseQueryGraphStepCacheKey } from "../../../shared/utils/redisKey";
-import sellerStockLocation from "@mercurjs/core-plugin/links/stock-location-seller-link";
+import sellerStockLocation from "@mercurjs/core/links/stock-location-seller-link";
 /**
  * The details of the cart items to confirm their inventory availability.
  */

@@ -15,11 +15,12 @@
     "@medusajs/icons": "^2.13.4",
     "@medusajs/types": "2.13.4",
     "@medusajs/ui": "4.1.1",
-    "@mercurjs/client": "2.0.2",
-    "@mercurjs/dashboard-sdk": "2.0.2",
-    "@mercurjs/dashboard-shared": "2.0.2",
+    "@mercurjs/client": "2.1.1",
+    "@mercurjs/dashboard-sdk": "2.1.1",
+    "@mercurjs/dashboard-shared": "2.1.1",
     "@tanstack/react-query": "5.64.2",
     "@tanstack/react-table": "8.20.5",
+    "@uiw/react-json-view": "2.0.0-alpha.17",
     "jsonwebtoken": "9.0.2",
     "moment": "^2.30.1",
     "react": "^18.3.1",
@@ -56,6 +57,6 @@
     "apps/*"
   ],
   "patchedDependencies": {
-    "@mercurjs/core-plugin@2.0.2": "patches/@mercurjs%2Fcore-plugin@2.0.2.patch"
+    "@mercurjs/core@2.1.1": "patches/@mercurjs%2Fcore@2.1.1.patch"
   }
 }

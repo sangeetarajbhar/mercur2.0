@@ -2,7 +2,7 @@ import { ulid } from 'ulid'
 
 /**
  * Structural type for the seller module service where the full class type
- * is not imported (e.g. from `@mercurjs/core-plugin`). Only methods used in
+ * is not imported (e.g. from `@mercurjs/core`). Only methods used in
  * this module are declared.
  */
 export type SellerModuleService = {

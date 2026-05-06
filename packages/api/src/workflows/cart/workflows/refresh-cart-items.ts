@@ -56,6 +56,7 @@ import {
 } from '../steps'
 import { getCartPromiseStep } from '../../delivery-promise/steps'
 import { CacheTTLMap, UseQueryGraphStepCacheKey, CACHE_ENABLE } from '../../../shared/utils/redisKey'
+import { storeWorkflow } from "../../../shared/utils/constants";
 
 // import { confirmVariantInventoryWorkflow } from './confirm-variant-inventory'
 
@@ -201,7 +202,8 @@ export const refreshCartItemsWorkflowId = 'custom-refresh-cart-items'
 export const refreshCartItemsWorkflow = createWorkflow(
   {
     name: refreshCartItemsWorkflowId,
-    idempotent: false
+    idempotent: false,
+    store: storeWorkflow,
   },
   (input: WorkflowData<RefreshCartItemsWorkflowInput & AdditionalData>) => {
     // CRITICAL: Acquire lock EARLY to prevent race conditions with updateCartPromotionsWorkflow
@@ -255,14 +257,13 @@ export const refreshCartItemsWorkflow = createWorkflow(
       }) as any
     ) as any
 
-    
     // 3. Conditionally fetch customer
     const customerQuery = when(
       'fetch-customer-details',
       { customer_id } as any,
       (({ customer_id }: any) => !!customer_id) as any
     ).then((() => {
-      const customer_idCacheKey = transform({ customer_id } as any, ({ customer_id }: any) => {
+      const customerIdCacheKey = transform({ customer_id } as any, ({ customer_id }: any) => {
         return `${UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME}${customer_id}`
       })
       const ttl = CacheTTLMap[UseQueryGraphStepCacheKey.GET_CUSTOMER_NAME]
@@ -275,7 +276,7 @@ export const refreshCartItemsWorkflow = createWorkflow(
           cache: {
             enable: CACHE_ENABLE,
             ttl: ttl,
-            key: customer_idCacheKey
+            key: customerIdCacheKey
           },
         },
       }).config({ name: 'get-customer-details' })
@@ -375,7 +376,6 @@ export const refreshCartItemsWorkflow = createWorkflow(
       return fetchStockLocationExtensionsStep({
         stock_location_id: cluster_id as string
       })
-     
     })
 
     // Step 2: Filter for dark store and validate
@@ -702,7 +702,7 @@ export const refreshCartItemsWorkflow = createWorkflow(
         const allCodes = [...new Set([...existingCodes, ...(input.promo_codes || [])])]
 
         return allCodes
-      }) as any 
+      }) as any
     ) as any
 
     // Simple check: refresh promotions if there are any promotion codes to apply

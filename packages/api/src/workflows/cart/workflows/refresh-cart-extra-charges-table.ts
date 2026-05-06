@@ -10,7 +10,7 @@ import { getCartContextStep } from '../steps/get-cart-context'
 import { removeCartExtraChargesStep } from '../steps/remove-cart-extra-charges'
 import { storeCartExtraChargesStep } from '../steps/store-cart-extra-charges'
 import { refetchCartWithExtraChargesStep } from '../steps/refetch-cart-with-extra-charges'
-import { defaultRetentionTime } from '../../../shared/utils/constants'
+import { storeWorkflow } from '../../../shared/utils/constants'
 
 /**
  * This workflow refreshes a cart's extra charges by:
@@ -23,8 +23,7 @@ import { defaultRetentionTime } from '../../../shared/utils/constants'
  */
 export const refreshCartExtraChargesTableWorkflow = createWorkflow({
     name: 'refresh-cart-extra-charges-table',
-    store: true,
-    retentionTime: defaultRetentionTime
+    store: storeWorkflow,
   },
   function (input: {
     cart_id: string

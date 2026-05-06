@@ -4,7 +4,7 @@ import { createStockLocationsWorkflow } from '@medusajs/medusa/core-flows'
 
 
 
-import stockLocationSellerLink from '@mercurjs/core-plugin/links/stock-location-seller-link'
+import stockLocationSellerLink from '@mercurjs/core/links/stock-location-seller-link'
 import { fetchSellerByAuthActorId } from '../../../shared/infra/http/utils'
 import { UpsertStockLocationAddressType, VendorCreateStockLocationType } from './validators'
 import { assignStockLocationToStockLocationExtension } from "../../../workflows/stock-location-extension/workflows";

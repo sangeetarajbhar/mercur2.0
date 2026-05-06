@@ -1,6 +1,6 @@
 import {defineLink} from '@medusajs/framework/utils'
 import MarketplaceModule from '../modules/marketplace'
-import SellerModule from "@mercurjs/core-plugin/modules/seller";
+import SellerModule from "@mercurjs/core/modules/seller";
 
 export default defineLink(SellerModule.linkable.orderGroup,
   {

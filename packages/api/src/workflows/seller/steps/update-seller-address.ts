@@ -29,7 +29,7 @@ export const updateSellerAddressStep = createStep<
         id: seller.address.id,
         ...data,
       })
-      return new StepResponse(updated, {
+      return new StepResponse(updated as unknown as SellerAddressDTO, {
         existing: seller.address,
         seller_id,
       })
@@ -39,7 +39,10 @@ export const updateSellerAddressStep = createStep<
       ...data,
       seller_id,
     })
-    return new StepResponse(created, { existing: null, seller_id })
+    return new StepResponse(created as unknown as SellerAddressDTO, {
+      existing: null,
+      seller_id,
+    })
   },
   async ({ existing, seller_id }, { container }) => {
     const service =

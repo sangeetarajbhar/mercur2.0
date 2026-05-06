@@ -12,7 +12,7 @@ export const updateSellersStep = createStep(
   "update-sellers",
   async ({ selector, update }: UpdateSellersStepInput, { container }) => {
     const service = container.resolve<SellerModuleService>(MercurModules.SELLER)
-    const prevSellers = await service.listSellers(selector)
+    const prevSellers = await service.listSellers(selector) as  unknown as SellerDTO[]
 
     const sellers = await service.updateSellers(
       prevSellers.map((s) => ({ id: s.id, ...update }))

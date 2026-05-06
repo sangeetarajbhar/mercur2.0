@@ -169,7 +169,7 @@ async function validateImageUrls(
 
                 if (response.status === 200) {
                     const contentType = response.headers['content-type']
-                    if (contentType && !contentType.startsWith('image/')) {
+                    if (contentType && typeof contentType === 'string'&& !contentType.startsWith('image/')) {
                         return {
                             productId,
                             url,
