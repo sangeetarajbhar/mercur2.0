@@ -3,7 +3,7 @@ import { Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import CustomCacheModuleService from '../../modules/cache/service'
 import promotionExtensionLink from '../../links/promotion-custom'
 import { getCustomPromotionService } from './get-custom-promotion-service'
-import promotionSellerLink from '@mercurjs/core-plugin/links/promotion-seller-link'
+import promotionSellerLink from '@mercurjs/core/links/promotion-seller-link'
 
 /**
  * Standard fields to fetch for promotion extension queries

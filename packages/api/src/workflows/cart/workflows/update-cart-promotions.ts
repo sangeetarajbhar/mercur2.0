@@ -20,9 +20,10 @@ import {
   releaseLockStep
   } from "@medusajs/medusa/core-flows"
 
-  import {prepareAdjustmentsFromPromotionActionsStep ,removeLineItemAdjustmentsStep , getActionsToComputeFromPromotionsStep , 
+  import {prepareAdjustmentsFromPromotionActionsStep ,removeLineItemAdjustmentsStep , getActionsToComputeFromPromotionsStep ,
     getPromotionCodesToApply, removeCartPromotionsStep, validateNoOrderSetForCartStep} from "../steps"
   import { refreshPaymentCollectionForCartWorkflow } from '../steps'
+import { storeWorkflow } from "../../../shared/utils/constants";
 
 /**
  * The details of the promotion updates on a cart.
@@ -88,7 +89,8 @@ export const updateCartPromotionsWorkflowId = "update-cart-promotions-v2"
  * @property hooks.validate - This hook is executed before all operations. You can consume this hook to perform any custom validation. If validation fails, you can throw an error to stop the workflow execution.
  */
 export const updateCartPromotionsWorkflow = createWorkflow({
-  name: updateCartPromotionsWorkflowId
+  name: updateCartPromotionsWorkflowId,
+  store: storeWorkflow,
 },
   (input: WorkflowData<UpdateCartPromotionsWorkflowInput>) => {
     // Trim all promotion codes at the workflow entry point to handle whitespace

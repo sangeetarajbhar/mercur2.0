@@ -49,11 +49,11 @@ export const createSellerAssociationsStep = createStep(
 
       // 1. Create seller-product links
       const sellerProductRemoteLinks: LinkDefinition[] = input.products.map((product) => ({
-        [SELLER_MODULE]: {
-          seller_id: input.sellerId
-        },
         [Modules.PRODUCT]: {
           product_id: product.id
+        },
+        [SELLER_MODULE]: {
+          seller_id: input.sellerId
         }
       }))
 

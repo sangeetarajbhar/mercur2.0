@@ -8,6 +8,7 @@ import { vendorMiddlewares } from "./vendor/middlewares"
 import { unlessBaseUrl } from "../shared/infra/http/utils"
 import { checkSellerApproved, storeActiveGuard } from "../shared/infra/http/middlewares"
 import { authenticate } from "@medusajs/framework"
+import { hooksMiddlewares } from "./hooks/middleware"
 
 export default defineMiddlewares({
   routes: [
@@ -16,5 +17,6 @@ export default defineMiddlewares({
     ...vendorMiddlewares,
     ...storeMiddlewares,
     ...authMiddlewares,
+    ...hooksMiddlewares,
   ],
 })

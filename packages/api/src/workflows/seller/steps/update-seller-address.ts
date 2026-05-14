@@ -32,51 +32,25 @@ export const updateSellerAddressStep = createStep<
       { relations: ["address"] }
     )
 
-    /** Relation hydration on `listSellers` can miss `address`; FK lookup is authoritative. */
-    let existingAddress = (seller as any).address as any
-    if (!existingAddress) {
-      const rows = await service.listSellerAddresses({ seller_id })
-      existingAddress = rows?.[0]
-    }
-
-    const hasPatch = Object.keys(data || {}).length > 0
-
-    if (!hasPatch) {
-      if (existingAddress) {
-        return new StepResponse(existingAddress as SellerAddressDTO, {
-          existing: null,
-          seller_id,
-        })
-      }
-      return new StepResponse(null as unknown as SellerAddressDTO, {
-        existing: null,
+    if (seller.address) {
+      const updated = await service.updateSellerAddresses({
+        id: seller.address.id,
+        ...data,
+      })
+      return new StepResponse(updated as unknown as SellerAddressDTO, {
+        existing: seller.address,
         seller_id,
       })
     }
 
-    /**
-     * Use `seller_id` only. Passing `seller: { id }` makes MikroORM attach a stub `Seller`
-     * without `name`, which then fails validation on flush (`Seller.name is required`).
-     */
-    const patch = { ...(data || {}) } as Record<string, unknown>
-    delete patch.seller_id
-
-    const basePayload = { ...patch, seller_id }
-
-    if (existingAddress) {
-      const updated = await (service as any).updateSellerAddresses([
-        { id: existingAddress.id, ...basePayload },
-      ])
-      const row = Array.isArray(updated) ? updated[0] : updated
-      return new StepResponse(row, {
-        existing: existingAddress,
-        seller_id,
-      })
-    }
-
-    const created = await (service as any).createSellerAddresses([basePayload])
-    const row = Array.isArray(created) ? created[0] : created
-    return new StepResponse(row, { existing: null, seller_id })
+    const created = await service.createSellerAddresses({
+      ...data,
+      seller_id,
+    })
+    return new StepResponse(created as unknown as SellerAddressDTO, {
+      existing: null,
+      seller_id,
+    })
   },
   async ({ existing, seller_id }, { container }) => {
     const service =

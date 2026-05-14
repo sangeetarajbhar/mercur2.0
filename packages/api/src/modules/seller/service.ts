@@ -139,7 +139,7 @@ class SellerModuleService extends MedusaService({
 
     return data.map(
       (d) => existingMap.get(d.email) ?? createdMap.get(d.email)!
-    )
+    ) as unknown as MemberDTO[]
   }
 
   @InjectTransactionManager()

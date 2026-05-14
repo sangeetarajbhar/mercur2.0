@@ -25,13 +25,14 @@ export async function fetchStockLocationExtensionsByStockLocationId(
         "stock_location_id",
         "stock_location_extension.location_type",
         "stock_location_extension.id",
+        'stock_location_extension.status',
       ],
       filters: {
         stock_location_id: stockLocationId,
       },
     },
     {
-      cache: {  
+      cache: {
         enable: CACHE_ENABLE,
         ttl: CacheTTLMap[UseQueryGraphStepCacheKey.GET_LOCATION_EXTENSION],
         key: UseQueryGraphStepCacheKey.GET_LOCATION_EXTENSION + `${stockLocationId}`,

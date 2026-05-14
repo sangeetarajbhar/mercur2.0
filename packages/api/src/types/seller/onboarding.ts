@@ -97,4 +97,5 @@ export type CreateAdminSellerOnboardingInput = {
   kyc_documents: CreateKycDocumentOnboardingInput[]
   brand_associations: BrandAssociationOnboardingInput[]
   bank_detail?: CreateBankDetailOnboardingInput | null
+  auth_identity_id: string
 }

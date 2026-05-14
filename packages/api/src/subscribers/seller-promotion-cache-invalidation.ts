@@ -1,7 +1,7 @@
 import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { invalidatePromotionCacheById } from "../shared/utils/promotion-cache"
-import promotionSellerLink from "@mercurjs/core-plugin/links/promotion-seller-link"
+import promotionSellerLink from "@mercurjs/core/links/promotion-seller-link"
 
 /**
  * Subscriber to invalidate promotion cache when seller-promotion links are created or deleted

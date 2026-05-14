@@ -1,7 +1,7 @@
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { StepResponse, createStep } from '@medusajs/framework/workflows-sdk'
 
-import productSellerLink from '@mercurjs/core-plugin/links/product-seller-link'
+import productSellerLink from '@mercurjs/core/links/product-seller-link'
 
 
 // Extended fields for comprehensive product export including all related data

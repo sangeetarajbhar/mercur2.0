@@ -8,7 +8,7 @@ import {
 } from "@medusajs/medusa/core-flows"
 
 import { createSellerMembersStep } from "../steps"
-import { SellerMemberWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerMemberWorkflowEvents } from "@mercurjs/core/workflows"
 
 export const addSellerMemberWorkflowId = "add-seller-member"
 

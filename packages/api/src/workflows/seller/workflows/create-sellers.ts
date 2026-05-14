@@ -9,7 +9,7 @@ import { CreateSellerDTO, SellerRole } from "@mercurjs/types"
 import { AdditionalData } from "@medusajs/framework/types"
 
 import { createSellersStep } from "../steps"
-import { SellerWorkflowEvents } from "@mercurjs/core-plugin/workflows"
+import { SellerWorkflowEvents } from "@mercurjs/core/workflows"
 import { createMemberInvitesWorkflow } from "./create-member-invites"
 
 export const createSellersWorkflowId = "create-sellers"

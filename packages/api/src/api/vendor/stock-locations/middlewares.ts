@@ -5,7 +5,7 @@ import {
 } from '@medusajs/framework'
 import { createLinkBody } from '@medusajs/medusa/api/utils/validators'
 
-import stockLocationSellerLink from '@mercurjs/core-plugin/links/stock-location-seller-link'
+import stockLocationSellerLink from '@mercurjs/core/links/stock-location-seller-link'
 import {
   checkResourceOwnershipByResourceId,
   filterBySellerId
