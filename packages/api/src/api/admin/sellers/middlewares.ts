@@ -22,15 +22,38 @@ import {
   updateSellerOnboardingSchema
 } from './validators'
 import multer from "multer"
+import { sellerUploadMiddlewares } from "./uploads/middlewares"
 
 const upload = multer({ storage: multer.memoryStorage() })
 
+/** Client `fields` lists (e.g. from dashboard widgets) often include graph-invalid keys → 400. Defaults are correct. */
+const dropClientSellerFieldsQuery = (req: any, _res: any, next: any) => {
+  try {
+    if (req.query && "fields" in req.query) {
+      delete req.query.fields
+    }
+  } catch {
+    /* ignore */
+  }
+  next()
+}
+
+const maybeMulterFields =
+  (fields: Array<{ name: string; maxCount?: number }>) =>
+  (req: any, res: any, next: any) => {
+    const contentType = req.headers["content-type"] as string | undefined
+    if (contentType?.includes("multipart/form-data")) {
+      return upload.fields(fields)(req, res, next)
+    }
+    return next()
+  }
 
 export const sellerMiddlewares: MiddlewareRoute[] = [
   {
     method: ['GET'],
     matcher: '/admin/sellers',
     middlewares: [
+      dropClientSellerFieldsQuery,
       validateAndTransformQuery(AdminSellerParams, adminSellerQueryConfig.list)
     ]
   },
@@ -38,6 +61,10 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
     method: ['GET'],
     matcher: '/admin/sellers/:id',
     middlewares: [
+      unlessPath(
+        /.*\/sellers\/invite/,
+        dropClientSellerFieldsQuery
+      ),
       unlessPath(
         /.*\/sellers\/invite/,
         validateAndTransformQuery(
@@ -113,9 +140,9 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
       method: ["POST"],
       bodyParser: { sizeLimit: "10mb" },
       middlewares: [
-        upload.fields([
+        maybeMulterFields([
           { name: "member_photo", maxCount: 1 },
-          { name: "kyc_files", maxCount: 10 }
+          { name: "kyc_files", maxCount: 10 },
         ]),
         validateAndTransformBody(createSellerOnboardingSchema)
       ],
@@ -125,9 +152,9 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
       method: ["POST"],
       bodyParser: { sizeLimit: "10mb" },
       middlewares: [
-        upload.fields([
+        maybeMulterFields([
           { name: "member_photo", maxCount: 1 },
-          { name: "kyc_files", maxCount: 10 }
+          { name: "kyc_files", maxCount: 10 },
         ]),
         validateAndTransformBody(updateSellerOnboardingSchema) // Define this schema similarly to create
       ],
@@ -139,5 +166,11 @@ export const sellerMiddlewares: MiddlewareRoute[] = [
         validateAndTransformBody(updateSellerBrandAssociationsSchema)
       ]
     },
-    // ...sellerUploadMiddlewares,
+    {
+      matcher: "/admin/sellers/:id/reset-password",
+      method: ["POST"],
+      bodyParser: { sizeLimit: "1mb" },
+      middlewares: [],
+    },
+    ...sellerUploadMiddlewares,
 ]

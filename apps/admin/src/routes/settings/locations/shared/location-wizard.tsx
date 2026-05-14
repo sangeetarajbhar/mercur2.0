@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FocusModal, ProgressStatus, ProgressTabs, Text, toast } from "@medusajs/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import {
@@ -219,7 +219,7 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
     setActiveTab(tab);
   };
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const submitWizard = form.handleSubmit(async (values) => {
     const additionalData = {
       seller_id: values.seller_id,
       return_location_id: values.return_location_id,
@@ -311,6 +311,16 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
     });
   });
 
+  /** Only Document Details may submit; Enter in earlier steps must not create/update. */
+  const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+    if (activeTab !== Tab.STEP_THREE) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    void submitWizard(e);
+  };
+
   const detailsStatus: ProgressStatus = validStepOne ? "completed" : "in-progress";
   const opsStatus: ProgressStatus = validStepOne
     ? validStepTwo
@@ -349,7 +359,7 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
 
   return (
     <FormProvider {...form}>
-      <form id="location-form" onSubmit={onSubmit}>
+      <form id="location-form" onSubmit={onFormSubmit}>
         <FocusModal open={true} onOpenChange={(open) => !open && handleModalClose()}>
           <FocusModal.Content>
             <ProgressTabs
@@ -384,7 +394,7 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
             </ProgressTabs>
             <FocusModal.Footer>
               <div className="flex items-center justify-end gap-x-2">
-                <Button variant="secondary" size="small" onClick={handleModalClose}>
+                <Button variant="secondary" size="small" type="button" onClick={handleModalClose}>
                   Cancel
                 </Button>
                 {activeTab === Tab.STEP_THREE ? (
@@ -394,11 +404,13 @@ export function LocationWizard({ mode, locationId }: LocationWizardProps) {
                 ) : (
                   <Button
                     size="small"
-                    isLoading={isPending}
                     type="button"
-                    onClick={() =>
-                      onTabChange(activeTab === Tab.STEP_ONE ? Tab.STEP_TWO : Tab.STEP_THREE)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const next = activeTab === Tab.STEP_ONE ? Tab.STEP_TWO : Tab.STEP_THREE;
+                      queueMicrotask(() => onTabChange(next));
+                    }}
                   >
                     Continue
                   </Button>

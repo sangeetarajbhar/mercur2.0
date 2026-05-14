@@ -1,4 +1,5 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
+import { MedusaError } from "@medusajs/framework/utils"
 import {
   MercurModules,
   ProfessionalDetailsDTO,
@@ -18,6 +19,13 @@ export const updateSellerProfessionalDetailsStep = createStep<
     { seller_id, data },
     { container }
   ) => {
+    if (!seller_id || typeof seller_id !== "string") {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "seller_id is required to update seller professional details"
+      )
+    }
+
     const service =
       container.resolve<SellerModuleService>(MercurModules.SELLER)
 
@@ -26,22 +34,50 @@ export const updateSellerProfessionalDetailsStep = createStep<
       { relations: ["professional_details"] }
     )
 
-    if (seller.professional_details) {
-      const updated = await service.updateProfessionalDetails({
-        id: seller.professional_details.id,
-        ...data,
-      })
-      return new StepResponse(updated, {
-        existing: seller.professional_details,
+    let existingProf = (seller as any).professional_details as any
+    if (!existingProf) {
+      const rows = await service.listProfessionalDetails({ seller_id })
+      existingProf = rows?.[0]
+    }
+
+    const hasPatch = Object.keys(data || {}).length > 0
+
+    if (!hasPatch) {
+      if (existingProf) {
+        return new StepResponse(
+          existingProf as ProfessionalDetailsDTO,
+          {
+            existing: null,
+            seller_id,
+          }
+        )
+      }
+      return new StepResponse(null as unknown as ProfessionalDetailsDTO, {
+        existing: null,
         seller_id,
       })
     }
 
-    const created = await service.createProfessionalDetails({
-      ...data,
-      seller_id,
-    })
-    return new StepResponse(created, { existing: null, seller_id })
+    /** Same as address: avoid `seller: { id }` stub — it triggers Seller.name validation errors. */
+    const patch = { ...(data || {}) } as Record<string, unknown>
+    delete patch.seller_id
+
+    const basePayload = { ...patch, seller_id }
+
+    if (existingProf) {
+      const updated = await (service as any).updateProfessionalDetails([
+        { id: existingProf.id, ...basePayload },
+      ])
+      const row = Array.isArray(updated) ? updated[0] : updated
+      return new StepResponse(row, {
+        existing: existingProf,
+        seller_id,
+      })
+    }
+
+    const created = await (service as any).createProfessionalDetails([basePayload])
+    const row = Array.isArray(created) ? created[0] : created
+    return new StepResponse(row, { existing: null, seller_id })
   },
   async ({ existing, seller_id }, { container }) => {
     const service =

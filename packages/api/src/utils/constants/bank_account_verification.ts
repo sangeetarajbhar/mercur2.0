@@ -24,3 +24,7 @@ export enum CustomerBankDetailStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
 }
+export enum CustomerPaymentPreferenceStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+}

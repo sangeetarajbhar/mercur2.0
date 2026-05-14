@@ -44,13 +44,11 @@ export const adminProductsMiddlewares: MiddlewareRoute[] = [
       )
     ]
   },
-  // Transform image URLs for admin products list page
   {
     method: ['GET'],
     matcher: '/admin/products',
     middlewares: [transformAdminProductImageUrls]
   },
-  // Transform image URLs for admin product detail page
   {
     method: ['GET'],
     matcher: '/admin/products/:id',

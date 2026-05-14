@@ -60,10 +60,23 @@ export const AdminInviteSeller = z.object({
   registration_url: z.string().default('http://localhost:5173/register')
 })
 
+/** When omitted (as in legacy Zilo payloads), seller currency defaults to `inr`. */
+const defaultSellerCurrency = z.preprocess(
+  (val: unknown) => {
+    if (val === undefined || val === null) return "inr"
+    if (typeof val === "string") {
+      const t = val.trim()
+      return t.length > 0 ? t.toLowerCase() : "inr"
+    }
+    return "inr"
+  },
+  z.string().min(1)
+)
+
 export const createSellerOnboardingSchema = z.object({
   name: z.string(),
   display_name: z.string().optional(),
-  currency_code: z.string(),
+  currency_code: defaultSellerCurrency,
   barcode: z.string().optional(),
   entity_type: z.enum(["PRIVATE_LIMITED", "PROPRIETORSHIP", "PARTNERSHIP"]).nullable().optional(),
   msme: z.preprocess(

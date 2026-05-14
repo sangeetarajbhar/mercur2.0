@@ -28,22 +28,44 @@ export const createAdminSellerStep = createStep(
       bank_detail,
       brand_associations,
       member,
+      phone: _phone,
+      address_line: _addressLine,
+      city: _city,
+      state: _state,
+      postal_code: _postal,
+      country_code: _country,
+      tax_id: _taxId,
+      auth_identity_id: _authIdentity,
       ...sellerPayload
-    } = input
+    } = input as CreateAdminSellerOnboardingInput & { auth_identity_id?: string }
+
+    const nameTrimmed = String((sellerPayload as any).name ?? input.name ?? "").trim()
+    if (!nameTrimmed) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Seller name is required."
+      )
+    }
 
     // Generate unique barcode if not provided
-    const barcode = input.barcode || await generateUniqueBarcode(input.name, service)
+    const barcode = input.barcode || await generateUniqueBarcode(nameTrimmed, service)
 
     const memberRows = Array.isArray(member) ? member : [member]
+
+    const displayNameTrimmed = String((sellerPayload as any).display_name ?? "").trim()
+    const display_name =
+      displayNameTrimmed.length > 0 ? displayNameTrimmed : nameTrimmed
 
     // Do not nest `members` on createSellers: many-to-many + pivot (SellerMember) is not
     // reliably created that way and can yield "Cannot set field 'id' of Seller member to null".
     // Same pattern as createSellerAccountWorkflow: seller → members → seller_member rows.
     const seller = await service.createSellers({
       ...sellerPayload,
+      name: nameTrimmed,
+      display_name,
       barcode,
       status: SellerStatus.OPEN,
-      handle: toHandle(input.name),
+      handle: toHandle(nameTrimmed),
     })
 
     const memberCreatePayload = memberRows.map((m, index) => ({

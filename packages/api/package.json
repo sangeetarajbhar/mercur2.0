@@ -39,6 +39,7 @@
     "@medusajs/dashboard": "2.13.4",
     "@medusajs/draft-order": "2.13.4",
     "@medusajs/framework": "2.13.4",
+    "@medusajs/index": "2.13.4",
     "@medusajs/medusa": "2.13.4",
     "@medusajs/utils": "^2.14.1",
     "@mercurjs/cli": "2.0.2",

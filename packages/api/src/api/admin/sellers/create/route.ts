@@ -19,7 +19,8 @@ type CreateSellerOnboardingInput = {
     state?: string
     postal_code?: string
     country_code?: string
-    currency_code: string
+    /** Optional; defaults to `inr` when omitted (see createSellerOnboardingSchema). */
+    currency_code?: string
     tax_id?: string
     member: any
     company_spocs: any[]

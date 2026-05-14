@@ -57,6 +57,9 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@medusajs/index",
+    },
+    {
       resolve: "./src/modules/moengage_alert",
     },
     {
@@ -383,6 +386,12 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/rating",
+    },
+    {
+      resolve: "./src/modules/review",
+      definition: {
+        isQueryable: true,
+      },
     },
     { resolve: './src/modules/marketplace' },
     {

@@ -1,6 +1,6 @@
 import { MedusaService } from "@medusajs/framework/utils"
 import { customerRefundMethod } from "./models/customer_refund_method"
-import { decryptFromStorage } from "../../utils/encryption"
+import { decryptFromStorage } from "./utils/encryption"
 
 class CustomerRefundMethodModuleService extends MedusaService({
   customerRefundMethod,
@@ -50,3 +50,4 @@ class CustomerRefundMethodModuleService extends MedusaService({
 }
 
 export default CustomerRefundMethodModuleService
+

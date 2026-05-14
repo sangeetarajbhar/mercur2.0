@@ -95,6 +95,15 @@ function rewriteMercurLocationLazyImports(): import("vite").Plugin {
   };
 }
 
+/** Same rules as `packages/api` `rewriteProductFieldsSellerToSellers` — dashboard still sends `seller.*` on product `fields`. */
+function rewriteProductFieldsSellerToSellersForProxy(fields: string): string {
+  let s = fields;
+  s = s.replace(/\*seller\b/g, "*sellers");
+  s = s.replace(/\bseller\./g, "sellers.");
+  s = s.replace(/(^|,)seller(?=\*|,|$)/g, "$1sellers");
+  return s;
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -118,6 +127,30 @@ export default defineConfig({
       "/admin": {
         target: "http://localhost:9000", // your medusa backend port
         changeOrigin: true,
+        configure(proxy) {
+          proxy.on("proxyReq", (proxyReq, req) => {
+            if (req.method !== "GET") return;
+            const url = req.url;
+            if (!url?.includes("fields=") || !url.includes("/products")) return;
+            try {
+              const parsed = new URL(url, "http://127.0.0.1");
+              const fields = parsed.searchParams.get("fields");
+              if (
+                !fields ||
+                (!fields.includes("seller.") && !fields.includes("*seller"))
+              ) {
+                return;
+              }
+              parsed.searchParams.set(
+                "fields",
+                rewriteProductFieldsSellerToSellersForProxy(fields)
+              );
+              proxyReq.path = parsed.pathname + parsed.search;
+            } catch {
+              /* ignore */
+            }
+          });
+        },
       },
     },
   },

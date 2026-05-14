@@ -75,6 +75,7 @@ export type CreateBankDetailOnboardingInput = {
 }
 
 export type CreateAdminSellerOnboardingInput = {
+  /** Defaults to `inr` when omitted at the API boundary. */
   currency_code: string
   name: string
   display_name?: string

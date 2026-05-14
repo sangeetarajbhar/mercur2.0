@@ -13,11 +13,21 @@ import { unlessBaseUrl } from "../../shared/infra/http/utils"
 import { checkSellerApproved, storeActiveGuard } from "../../shared/infra/http/middlewares"
 import { authenticate } from "@medusajs/framework"
 import { vendorNotificationMiddlewares } from "./notifications/middlewares"
+import { vendorSellersMiddlewares } from "./sellers/middlewares"
 
 export const vendorMiddlewares: MiddlewareRoute[] = [
   {
     matcher: '/vendor*',
     middlewares: [vendorCors]
+  },
+  {
+    matcher: '/vendor/sellers',
+    method: ['POST'],
+    middlewares: [
+      authenticate('member', ['bearer', 'session'], {
+        allowUnregistered: true
+      })
+    ]
   },
   {
     matcher: '/vendor/*',
@@ -46,6 +56,7 @@ export const vendorMiddlewares: MiddlewareRoute[] = [
   ...vendorProductTagRequestsMiddlewares,
   ...vendorPriceListImportMiddlewares,
   ...vendorBrandsMiddlewares,
+  ...vendorSellersMiddlewares,
   ...vendorPartnerMiddlewares,
   ...vendorStockLocationsMiddlewares,
   ...vendorNotificationMiddlewares

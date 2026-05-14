@@ -13,6 +13,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ActionsButton } from "../../common/ActionsButton";
 import { client } from "../../lib/client";
+import { ADMIN_PRODUCT_LIST_FIELDS } from "../../lib/admin-product-list-fields";
 import { EnhancedProductImport } from "./enhanced-import/enhanced-product-import";
 
 type ProductRow = {
@@ -30,8 +31,6 @@ type ProductRow = {
 };
 
 const PAGE_SIZE = 10;
-const PRODUCT_FIELDS =
-  "id,title,handle,status,*collection,*sales_channels,variants.id,thumbnail,sellers.*,created_at,updated_at";
 
 const columnHelper = createColumnHelper<ProductRow>();
 
@@ -64,7 +63,7 @@ const useProductsTableQuery = () => {
     status: status ? String(status).split(",") : undefined,
     created_at: created_at ? JSON.parse(created_at) : undefined,
     updated_at: updated_at ? JSON.parse(updated_at) : undefined,
-    fields: PRODUCT_FIELDS,
+    fields: ADMIN_PRODUCT_LIST_FIELDS,
   };
 
   return { raw: queryObject, searchParams };
