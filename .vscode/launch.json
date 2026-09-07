@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Medusa Dev",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/packages/api/node_modules/.bin/medusa",
+      "runtimeArgs": ["develop"],
+      "cwd": "${workspaceFolder}/packages/api",
+      "env": {
+        "NODE_OPTIONS": "--inspect"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "sourceMaps": true,
+      "restart": true,
+      "timeout": 60000
+    },
+    {
+      "name": "Attach to Medusa (port 9229)",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "sourceMaps": true,
+      "restart": true,
+      "timeout": 30000
+    }
+  ]
+}

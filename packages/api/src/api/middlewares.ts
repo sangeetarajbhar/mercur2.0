@@ -1,19 +1,18 @@
 import { defineMiddlewares } from "@medusajs/medusa"
 
-import { adminRequestsMiddlewares } from "./admin/requests/middlewares"
-import { vendorProductCollectionRequestsMiddlewares } from "./vendor/requests/product-collections/middlewares"
-import { vendorProductCategoryRequestsMiddlewares } from "./vendor/requests/product-categories/middlewares"
-import { vendorProductTypeRequestsMiddlewares } from "./vendor/requests/product-types/middlewares"
-import { vendorProductTagRequestsMiddlewares } from "./vendor/requests/product-tags/middlewares"
-import { storeRequestsMiddlewares } from "./store/requests/middlewares"
+import { adminMiddlewares } from "./admin/middlewares"
+import { authMiddlewares } from "./auth/middlewares"
+import { storeMiddlewares } from "./store/middlewares"
+import { vendorMiddlewares } from "./vendor/middlewares"
+import { unlessBaseUrl } from "../shared/infra/http/utils"
+import { checkSellerApproved, storeActiveGuard } from "../shared/infra/http/middlewares"
+import { authenticate } from "@medusajs/framework"
 
 export default defineMiddlewares({
   routes: [
-    ...adminRequestsMiddlewares,
-    ...vendorProductCollectionRequestsMiddlewares,
-    ...vendorProductCategoryRequestsMiddlewares,
-    ...vendorProductTypeRequestsMiddlewares,
-    ...vendorProductTagRequestsMiddlewares,
-    ...storeRequestsMiddlewares,
+    ...adminMiddlewares,
+    ...vendorMiddlewares,
+    ...storeMiddlewares,
+    ...authMiddlewares,
   ],
 })

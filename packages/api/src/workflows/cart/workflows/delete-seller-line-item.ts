@@ -1,0 +1,87 @@
+import {
+  createWorkflow,
+  parallelize,
+  transform
+} from '@medusajs/framework/workflows-sdk'
+import {
+  deleteLineItemsWorkflow,
+  removeShippingMethodFromCartStep,
+  useQueryGraphStep
+} from '@medusajs/medusa/core-flows'
+
+import sellerShippingOptionLink from '@mercurjs/core-plugin/links/shipping-option-seller-link'
+type DeleteSellerLineItemWorkflowInput = {
+  cart_id: string
+  id: string
+}
+
+export const deleteSellerLineItemWorkflow = createWorkflow(
+  'delete-seller-line-item',
+  function (input: DeleteSellerLineItemWorkflowInput) {
+    const { data: lineItems } = useQueryGraphStep({
+      entity: 'line_item',
+      fields: ['product.id', 'metadata'],
+      filters: {
+        id: input.id
+      },
+      options: { throwIfKeyNotFound: true }
+    }).config({ name: 'line-item-query' })
+
+    const { data: carts } = useQueryGraphStep({
+      entity: 'cart',
+      fields: ['id', 'shipping_methods.shipping_option_id'],
+      filters: { id: input.cart_id },
+      options: { throwIfKeyNotFound: true }
+    }).config({ name: 'cart-query' })
+
+    const optionIds = transform(carts[0] as any, ({ shipping_methods }: any) => {
+      return (shipping_methods ?? [])
+        .filter(Boolean)
+        .map((method: any) => method.shipping_option_id)
+    })
+
+    const { data: sellerShippingOptions } = useQueryGraphStep({
+      entity: sellerShippingOptionLink.entryPoint,
+      fields: ['seller_id', 'shipping_option_id'],
+      filters: { shipping_option_id: optionIds }
+    }).config({ name: 'seller-shipping-option-query' })
+
+    const shippingMethodsToRemove = transform(
+      { sellerShippingOptions, lineItem: lineItems[0], cart: carts[0] } as any,
+      ({ sellerShippingOptions, lineItem, cart }: any) => {
+        // Extract seller_id from line item metadata
+        const metadata = typeof lineItem.metadata === 'string' 
+          ? JSON.parse(lineItem.metadata) 
+          : lineItem.metadata
+        
+        const sellerId = metadata?.seller_id
+        
+        const optionIdToRemove = sellerShippingOptions.find(
+          (option) => option.seller_id === sellerId
+        )?.shipping_option_id
+
+        if (!optionIdToRemove) {
+          return []
+        }
+
+        const methodId = cart.shipping_methods.find(
+          (method) => method.shipping_option_id === optionIdToRemove
+        ).id
+
+        return [methodId]
+      }
+    )
+
+    parallelize(
+      removeShippingMethodFromCartStep({
+        shipping_method_ids: shippingMethodsToRemove
+      }),
+      deleteLineItemsWorkflow.runAsStep({
+        input: {
+          cart_id: input.cart_id,
+          ids: [input.id]
+        }
+      })
+    )
+  }
+)
